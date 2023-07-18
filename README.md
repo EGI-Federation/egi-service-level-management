@@ -1,70 +1,42 @@
-# Template for EGI repositories
+# EGI Service Level Management API
 
-This repository is to be used as a repository template for creating a new EGI
-repository, and is aiming at being a clean basis promoting currently accepted
-good practices.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/EGI-Federation/egi-service-level-management?color=darkcyan&label=Release)
+![GitHub issues](https://img.shields.io/github/issues/EGI-Federation/egi-service-level-management?label=Issues)
+![GitHub issue custom search in repo](https://img.shields.io/github/issues-search/EGI-Federation/egi-service-level-management?label=Bugs&color=red&query=is%3Aopen%20label%3Abug)
 
-It includes:
+The Service Level Management API is a component of the [EGI IMS Tools](../../README.md)
+service, which provides tools to automate and simplify the IMS processes. This component supports the
+[Service Level Management](https://confluence.egi.eu/display/IMS/Service+Level+Management+SLM)
+(SLM) process.
 
-- License information
-- Copyright and author information
-- Code of conduct and contribution guidelines
-- Templates for PR and issues
-- Code owners file for automatic assignment of PR reviewers
-- [GitHub actions](https://github.com/features/actions) workflows for linting
-  and checking links
+This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework.
+It requires [Java 17](https://openjdk.org/projects/jdk/17/).
 
-Content is based on:
+## Authentication and authorization
 
-- [Contributor Covenant](http://contributor-covenant.org)
-- [Semantic Versioning](https://semver.org/)
-- [Chef Cookbook Contributing Guide](https://github.com/chef-cookbooks/community_cookbook_documentation/blob/master/CONTRIBUTING.MD)
+TBD
 
-## Asking for creation of a repository
+## Configuration
 
-It can be done by contacting the
-[administrators](https://github.com/orgs/EGI-Federation/teams/admins).
+TBD
 
-The following information should be provided:
+## Building and packaging
 
-- repository name (lower case, usually not required to mention EGI in the name)
-- repository description (oneliner is enough)
-- optionally additional users that should be able to manage PR and issues
-- optional additional requirements (like disabling Pull Requests for the initial
-  repository population)
+For details on how to build the API, [look here](BUILDING.md).
 
-If required a private repository can be created but public ones are the default,
-but feel free to ask.
+For details on how to package the API and deploy it as a component of the IMS Tools service,
+[look here](../../deploy/README.md).
 
-Once all info will have been agreed the repository will be created.
+## Related guides
 
-## GitHub repository management rules
-
-All changes should go through Pull Requests.
-
-### Merge management
-
-- Only squash should be enforced in the repository settings.
-- Update commit message for the squashed commits as needed.
-
-### Protection on main branch
-
-To be configured on the repository settings.
-
-- Require pull request reviews before merging
-  - Dismiss stale pull request approvals when new commits are pushed
-  - Require review from Code Owners
-- Require status checks to pass before merging
-  - GitHub actions if available
-  - Other checks as available and relevant
-  - Require branches to be up to date before merging
-- Include administrators
-
-## Access
-
-All access should be managed via
-[GitHub teams](https://github.com/orgs/EGI-Federation/teams).
-
-- EGI-Federation/admins: administration right
-- Others participants depending on the requirement: maintain, triage or write or
-  rights
+- [REST server implementation](https://quarkus.io/guides/resteasy-reactive) Writing reactive REST services
+- [REST client implementation](https://quarkus.io/guides/rest-client-reactive): REST client to easily call APIs
+- [Configuration reference](https://quarkus.io/guides/config-reference): Configuration reference guide
+- [YAML Configuration](https://quarkus.io/guides/config#yaml): Use YAML to configure your application
+- [Introduction to CDI](https://quarkus.io/guides/cdi): Contexts and dependency injection guide
+- [OpenTelemetry support](https://quarkus.io/guides/opentelemetry): Adding observability to your application
+- [Metrics with Micrometer](https://quarkus.io/guides/micrometer): Sending API metrics to Prometheus
+- [Swagger UI](https://quarkus.io/guides/openapi-swaggerui): User-friendly UI to document and test your API
+- [Mutiny Guides](https://smallrye.io/smallrye-mutiny/2.1.0/guides): Reactive programming with Mutiny
+- [Optionals](https://dzone.com/articles/optional-in-java): How to use Optional in Java
