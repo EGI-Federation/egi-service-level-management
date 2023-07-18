@@ -18,7 +18,7 @@ egi:
 
 quarkus:
   application:
-    name: capacity-registry-api
+    name: slm-api
   oidc:
     auth-server-url: https://aai-demo.egi.eu/auth/realms/egi
     application-type: service
@@ -42,7 +42,7 @@ quarkus:
         ~: false
     file:
       enable: true
-      path: logs/api.json
+      path: logs/slm-api.json
       format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
       rotation:
         max-file-size: 1M
@@ -103,7 +103,7 @@ quarkus:
       enabled: false
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
-      base-file-name: api-http
+      base-file-name: slm-api-http
       log-directory: logs
   tls:
     trust-all: false
