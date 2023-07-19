@@ -3,6 +3,7 @@ package egi.checkin.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class UserInfo {
     public final static String ATTR_EMAILCHECKED = "emailVerified";
     public final static String ATTR_ASSURANCE = "assurance";
 
+    @Schema(enumeration={ "UserInfo" })
     public String kind = "UserInfo";
 
     @JsonProperty("voperson_id")
