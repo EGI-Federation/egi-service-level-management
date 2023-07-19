@@ -5,7 +5,8 @@
 ![GitHub issues](https://img.shields.io/github/issues/EGI-Federation/egi-service-level-management?label=Issues)
 ![GitHub issue custom search in repo](https://img.shields.io/github/issues-search/EGI-Federation/egi-service-level-management?label=Bugs&color=red&query=is%3Aopen%20label%3Abug)
 
-The Service Level Management API is a component of the [EGI IMS Tools](../../README.md)
+The Service Level Management API is a component of the
+[EGI IMS Tools](https://github.com/EGI-Federation/egi-ims-tool/README.md)
 service, which provides tools to automate and simplify the IMS processes. This component supports the
 [Service Level Management](https://confluence.egi.eu/display/IMS/Service+Level+Management+SLM)
 (SLM) process.
@@ -26,7 +27,7 @@ TBD
 For details on how to build the API, [look here](BUILDING.md).
 
 For details on how to package the API and deploy it as a component of the IMS Tools service,
-[look here](../../deploy/README.md).
+[look here](https://github.com/EGI-Federation/egi-ims-tool/deploy/README.md).
 
 ## Related guides
 
