@@ -1,6 +1,7 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 
 /**
@@ -9,12 +10,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Service extends Version {
 
+    @Schema(enumeration={ "Service" })
     public String kind = "Service";
 
-    int serviceId;
+    @Schema(description="ID of the service, assigned on creation")
+    int id;
 
-    String serviceName;
-    String serviceDescription;
+    String name;
+    String description;
 
     // The fields below are linking this service to a portfolio entry
     // See process Service Portfolio Management (SPM)

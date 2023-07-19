@@ -15,11 +15,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Catalog extends Version {
 
+    @Schema(enumeration={ "Catalog" })
     public String kind = "Catalog";
 
-    int catalogId;
+    @Schema(description="ID of the catalog, assigned on creation")
+    int id;
 
-    String catalogName;
+    String name;
 
     // The fields below are linking this catalog to a service portfolio
     // See process Service Portfolio Management (SPM)
