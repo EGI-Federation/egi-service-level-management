@@ -61,6 +61,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param firstItem The first item to return (0-based).
      * @param pageSize The maximum number of items to return.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link ServiceLevelAgreement}>) or an ActionError entity
      */
     @GET
@@ -90,12 +91,16 @@ public class ServiceLevelAgreements extends BaseResource {
                                   @RestQuery("count") @DefaultValue("100")
                                   @Parameter(required = false,
                                              description = "The maximum number of items to return")
-                                  int pageSize) {
+                                  int pageSize,
+                                  @RestQuery("allVersions") @DefaultValue("false")
+                                  @Parameter(required = false, description = "Whether to retrieve all versions")
+                                  boolean allVersions) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("firstItem", firstItem);
         addToDC("pageSize", pageSize);
+        addToDC("allVersions", allVersions);
 
         log.info("Listing SLAs");
 
@@ -223,6 +228,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * Get existing SLA.
      * @param auth The access token needed to call the service.
      * @param slaId The ID of the SLA to fetch.
+     * @param allVersions True to return all versions.
      * @return API Response, wraps an ActionSuccess({@link ServiceLevelAgreement}) or an ActionError entity
      */
     @GET
@@ -247,11 +253,15 @@ public class ServiceLevelAgreements extends BaseResource {
     public Uni<Response> fetchSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                   @RestPath("slaId")
                                   @Parameter(required = true, description = "ID of agreement to get")
-                                  int slaId) {
+                                  int slaId,
+                                  @RestQuery("allVersions") @DefaultValue("false")
+                                  @Parameter(required = false, description = "Whether to retrieve all versions")
+                                  boolean allVersions) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("slaId", slaId);
+        addToDC("allVersions", allVersions);
 
         log.info("Getting SLA");
 

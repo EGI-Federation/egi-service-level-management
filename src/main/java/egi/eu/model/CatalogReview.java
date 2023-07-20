@@ -7,6 +7,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
+import egi.eu.History;
+
 
 /**
  * Review of a catalog (of services)
@@ -17,7 +19,22 @@ public class CatalogReview extends Version {
     @Schema(enumeration={ "CatalogReview" })
     public String kind = "CatalogReview";
 
-    int one;
-    int two;
-    boolean test;
+    int id;
+    boolean foundInconsistencies;
+
+    // Links
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    List<String> links  = null;
+
+    // Change history
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    HistoryOfCatalogReview history = null;
+
+    /***
+     * History of a catalog review
+     */
+    public class HistoryOfCatalogReview extends History<CatalogReview> {
+        public HistoryOfCatalogReview() { super(); }
+        public HistoryOfCatalogReview(int size) { super(size); }
+    }
 }

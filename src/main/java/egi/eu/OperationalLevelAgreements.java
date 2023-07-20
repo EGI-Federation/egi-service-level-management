@@ -61,6 +61,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param firstItem The first item to return (0-based).
      * @param pageSize The maximum number of items to return.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link OperationalLevelAgreement}>) or an ActionError entity
      */
     @GET
@@ -94,12 +95,16 @@ public class OperationalLevelAgreements extends BaseResource {
                                   @RestQuery("count") @DefaultValue("100")
                                   @Parameter(required = false,
                                              description = "The maximum number of items to return")
-                                  int pageSize)
+                                  int pageSize,
+                                  @RestQuery("allVersions") @DefaultValue("false")
+                                  @Parameter(required = false, description = "Whether to retrieve all versions")
+                                  boolean allVersions)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("firstItem", firstItem);
         addToDC("pageSize", pageSize);
+        addToDC("allVersions", allVersions);
 
         log.info("Listing OLAs");
 
@@ -232,6 +237,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * Get existing OLA.
      * @param auth The access token needed to call the service.
      * @param olaId The ID of the OLA to fetch.
+     * @param allVersions True to return all versions.
      * @return API Response, wraps an ActionSuccess({@link OperationalLevelAgreement}) or an ActionError entity
      */
     @GET
@@ -256,11 +262,15 @@ public class OperationalLevelAgreements extends BaseResource {
     public Uni<Response> fetchOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                   @RestPath("olaId")
                                   @Parameter(required = true, description = "ID of agreement to get")
-                                  int olaId)
+                                  int olaId,
+                                  @RestQuery("allVersions") @DefaultValue("false")
+                                  @Parameter(required = false, description = "Whether to retrieve all versions")
+                                  boolean allVersions)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("olaID", olaId);
+        addToDC("allVersions", allVersions);
 
         log.info("Getting OLA");
 

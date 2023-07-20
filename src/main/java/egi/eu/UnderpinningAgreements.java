@@ -61,6 +61,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param firstItem The first item to return (0-based).
      * @param pageSize The maximum number of items to return.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link UnderpinningAgreement}>) or an ActionError entity
      */
     @GET
@@ -94,12 +95,16 @@ public class UnderpinningAgreements extends BaseResource {
                                  @RestQuery("count") @DefaultValue("100")
                                  @Parameter(required = false,
                                             description = "The maximum number of items to return")
-                                 int pageSize) {
+                                 int pageSize,
+                                 @RestQuery("allVersions") @DefaultValue("false")
+                                 @Parameter(required = false, description = "Whether to retrieve all versions")
+                                 boolean allVersions) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("firstItem", firstItem);
         addToDC("pageSize", pageSize);
+        addToDC("allVersions", allVersions);
 
         log.info("Listing UAs");
 
@@ -232,6 +237,7 @@ public class UnderpinningAgreements extends BaseResource {
      * Get existing UA.
      * @param auth The access token needed to call the service.
      * @param uaId The ID of the UA to fetch.
+     * @param allVersions True to return all versions.
      * @return API Response, wraps an ActionSuccess({@link UnderpinningAgreement}) or an ActionError entity
      */
     @GET
@@ -256,11 +262,15 @@ public class UnderpinningAgreements extends BaseResource {
     public Uni<Response> fetchUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                  @RestPath("uaId")
                                  @Parameter(required = true, description = "ID of agreement to get")
-                                 int uaId) {
+                                 int uaId,
+                                 @RestQuery("allVersions") @DefaultValue("false")
+                                 @Parameter(required = false, description = "Whether to retrieve all versions")
+                                 boolean allVersions) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("uaID", uaId);
+        addToDC("allVersions", allVersions);
 
         log.info("Getting UA");
 

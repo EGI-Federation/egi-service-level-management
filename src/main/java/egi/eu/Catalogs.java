@@ -61,6 +61,7 @@ public class Catalogs extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param firstItem The first item to return (0-based).
      * @param pageSize The maximum number of items to return.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link Catalog>) or an ActionError entity
      */
     @GET
@@ -90,12 +91,16 @@ public class Catalogs extends BaseResource {
                                       @RestQuery("count") @DefaultValue("100")
                                       @Parameter(required = false,
                                                  description = "The maximum number of items to return")
-                                      int pageSize)
+                                      int pageSize,
+                                      @RestQuery("allVersions") @DefaultValue("false")
+                                      @Parameter(required = false, description = "Whether to retrieve all versions")
+                                      boolean allVersions)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("firstItem", firstItem);
         addToDC("pageSize", pageSize);
+        addToDC("allVersions", allVersions);
 
         log.info("Listing catalogs");
 
@@ -165,6 +170,7 @@ public class Catalogs extends BaseResource {
      * Get existing catalog.
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog to fetch.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess({@link Catalog}) or an ActionError entity
      */
     @GET
@@ -189,11 +195,15 @@ public class Catalogs extends BaseResource {
     public Uni<Response> fetchCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                       @RestPath("catalogId")
                                       @Parameter(required = true, description = "ID of catalog to get")
-                                      int catalogId)
+                                      int catalogId,
+                                      @RestQuery("allVersions") @DefaultValue("false")
+                                      @Parameter(required = false, description = "Whether to retrieve all versions")
+                                      boolean allVersions)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
+        addToDC("allVersions", allVersions);
 
         log.info("Getting catalog");
 
@@ -271,6 +281,7 @@ public class Catalogs extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog that contains the service.
      * @param serviceId The ID of the service to fetch.
+     * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess({@link Service}) or an ActionError entity
      */
     @GET
@@ -289,7 +300,7 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "404", description="Not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = ActionError.class))),
+                    schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
@@ -298,12 +309,16 @@ public class Catalogs extends BaseResource {
                                       int catalogId,
                                       @RestPath("serviceId")
                                       @Parameter(required = true, description = "ID of service to get")
-                                      int serviceId)
+                                      int serviceId,
+                                      @RestQuery("allVersions") @DefaultValue("false")
+                                      @Parameter(required = false, description = "Whether to retrieve all versions")
+                                      boolean allVersions)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
         addToDC("serviceID", serviceId);
+        addToDC("allVersions", allVersions);
 
         log.info("Getting service");
 
