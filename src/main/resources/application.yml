@@ -4,14 +4,18 @@ egi:
     # To access the tool(s) users need to be member of the VO and have the appropriate role
     # VO managers will be able to assign/revoke the role to/from VO members
     vo: vo.tools.egi.eu
+    group: slm
     roles:
-      process-owner: slm-owner
-      process-manager: slm-manager
-      catalog-manager: slm-catalog
-      report-owner: slm-report
-      ua-owner: slm-ua
-      sla-owner: slm-sla
-      ola-owner: slm-ola
+      process-owner: process-owner
+      process-manager: process-manager
+      catalog-manager: catalog-process
+      report-owner: report-owner
+      ua-owner: ua-owner
+      sla-owner: sla-owner
+      ola-owner: ola-owner
+  checkin:
+    username: user
+    password: password
   qos:
     quantiles: [0.95]
     slos: [500] # SLOs in milliseconds
@@ -57,7 +61,7 @@ quarkus:
         level: TRACE
         min-level: TRACE
   otel:
-    enabled: false
+    enabled: true
     exporter:
       otlp:
         traces:
