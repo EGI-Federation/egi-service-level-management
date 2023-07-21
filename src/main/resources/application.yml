@@ -82,7 +82,7 @@ quarkus:
     theme: flattop
     urls:
       default: /api/slm/openapi
-      direct: /openapi
+      local: /openapi
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
@@ -106,7 +106,7 @@ quarkus:
       allow-x-forwarded: true
       enable-forwarded-host: true
     access-log:
-      enabled: true
+      enabled: false
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
       base-file-name: slm-api-http
@@ -115,7 +115,3 @@ quarkus:
     trust-all: false
   test:
     continuous-testing: disabled
-
-mp:
-  openapi:
-    servers: https://test.local/api/slm
