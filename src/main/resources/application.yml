@@ -82,6 +82,7 @@ quarkus:
     theme: flattop
     urls:
       default: /api/slm/openapi
+      direct: /openapi
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
@@ -93,9 +94,11 @@ quarkus:
     jwt-bearer-format: JWT
   jackson:
     fail-on-unknown-properties: false
+  servlet:
+    context-path: /api/slm
   http:
     port: 8081
-    root-path: /api/slm
+    #root-path: /api/slm
     auth:
       basic: false
     cors:
