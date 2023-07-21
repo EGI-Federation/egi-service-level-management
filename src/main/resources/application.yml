@@ -81,7 +81,7 @@ quarkus:
     path: /swagger-ui
     theme: flattop
     urls:
-      default: /openapi
+      default: /api/slm/openapi
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
