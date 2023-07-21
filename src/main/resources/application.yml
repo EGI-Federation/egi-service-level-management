@@ -78,7 +78,7 @@ quarkus:
         ignore-patterns: /metrics
   swagger-ui:
     always-include: true
-    path: swagger-ui
+    path: /api/slm/swagger-ui
     theme: flattop
     urls:
       default: /api/slm/openapi
