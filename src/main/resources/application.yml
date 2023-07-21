@@ -94,8 +94,6 @@ quarkus:
     jwt-bearer-format: JWT
   jackson:
     fail-on-unknown-properties: false
-  servlet:
-    context-path: /api/slm
   http:
     port: 8081
     #root-path: /api/slm
@@ -117,3 +115,7 @@ quarkus:
     trust-all: false
   test:
     continuous-testing: disabled
+
+mp:
+  openapi:
+    servers: https://test.local/api/slm
