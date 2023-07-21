@@ -78,13 +78,13 @@ quarkus:
         ignore-patterns: /metrics
   swagger-ui:
     always-include: true
-    path: /api/slm/swagger-ui
+    path: /swagger-ui
     theme: flattop
     urls:
-      default: /api/slm/openapi
+      default: /openapi
     urls-primary-name: default
   smallrye-openapi:
-    path: /api/slm/openapi
+    path: /openapi
     info-version: 1.0.6
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In

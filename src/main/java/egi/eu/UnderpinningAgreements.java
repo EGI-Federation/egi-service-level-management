@@ -30,7 +30,7 @@ import egi.eu.model.*;
 /***
  * Resource for Underpinning Agreement (UA) queries and operations.
  */
-@Path("/api/slm")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class UnderpinningAgreements extends BaseResource {
 

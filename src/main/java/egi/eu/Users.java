@@ -27,7 +27,7 @@ import egi.checkin.model.UserInfo;
 /***
  * Resource for user queries and operations.
  */
-@Path("/api/slm")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class Users extends BaseResource {
 

@@ -30,7 +30,7 @@ import egi.eu.model.*;
 /***
  * Resource for Operational Level Agreement (OLA) queries and operations.
  */
-@Path("/api/slm")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class OperationalLevelAgreements extends BaseResource {
 

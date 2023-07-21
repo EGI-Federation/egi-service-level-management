@@ -30,7 +30,7 @@ import egi.eu.model.*;
 /***
  * Resource for Service Level Agreement (SLA) queries and operations.
  */
-@Path("/api/slm")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class ServiceLevelAgreements extends BaseResource {
 
