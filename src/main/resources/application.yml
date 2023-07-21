@@ -106,7 +106,7 @@ quarkus:
       allow-x-forwarded: true
       enable-forwarded-host: true
     access-log:
-      enabled: false
+      enabled: true
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
       base-file-name: slm-api-http
