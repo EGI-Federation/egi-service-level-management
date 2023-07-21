@@ -81,8 +81,7 @@ quarkus:
     path: /swagger-ui
     theme: flattop
     urls:
-      default: /api/slm/openapi
-      direct: /openapi
+      default: /openapi
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
@@ -96,6 +95,7 @@ quarkus:
     fail-on-unknown-properties: false
   http:
     port: 8081
+    root-path: /api/slm
     auth:
       basic: false
     cors:
