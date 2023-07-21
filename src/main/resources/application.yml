@@ -14,7 +14,7 @@ egi:
       sla-owner: sla-owner
       ola-owner: ola-owner
   checkin:
-    username: user
+    username: co_2.toolsegi
     password: password
   qos:
     quantiles: [0.95]
@@ -81,11 +81,11 @@ quarkus:
     path: swagger-ui
     theme: flattop
     urls:
-      default: /openapi
+      default: /api/slm/openapi
     urls-primary-name: default
   smallrye-openapi:
-    path: /openapi
-    info-version: 1.0.5
+    path: /api/slm/openapi
+    info-version: 1.0.6
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt

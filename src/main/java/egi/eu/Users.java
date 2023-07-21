@@ -27,7 +27,7 @@ import egi.checkin.model.UserInfo;
 /***
  * Resource for user queries and operations.
  */
-@Path("/user")
+@Path("/api/slm")
 @Produces(MediaType.APPLICATION_JSON)
 public class Users extends BaseResource {
 
@@ -51,7 +51,7 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess(UserInfo) or an ActionError entity
      */
     @GET
-    @Path("/info")
+    @Path("/user/info")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
     @Operation(operationId = "getUserInfo",  summary = "Retrieve information about authenticated user")
