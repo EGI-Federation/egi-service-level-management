@@ -8,7 +8,7 @@ egi:
     roles:
       process-owner: process-owner
       process-manager: process-manager
-      catalog-manager: catalog-process
+      catalog-manager: catalog-manager
       report-owner: report-owner
       ua-owner: ua-owner
       sla-owner: sla-owner
