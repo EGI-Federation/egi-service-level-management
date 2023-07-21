@@ -80,8 +80,6 @@ quarkus:
     always-include: true
     path: /swagger-ui
     theme: flattop
-    urls:
-      default: /openapi
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
