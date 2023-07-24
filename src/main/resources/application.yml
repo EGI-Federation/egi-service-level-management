@@ -81,7 +81,7 @@ quarkus:
         ignore-patterns: /metrics
   swagger-ui:
     always-include: true
-    path: /swagger-ui
+    path: /api/slm/swagger-ui
     theme: flattop
     urls:
       default: /api/slm/openapi
@@ -89,7 +89,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.6
+    info-version: 1.0.7
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt
@@ -99,7 +99,6 @@ quarkus:
     fail-on-unknown-properties: false
   http:
     port: 8081
-    #root-path: /api/slm
     auth:
       basic: false
     cors:
