@@ -29,16 +29,14 @@ quarkus:
   oidc:
     auth-server-url: https://aai-demo.egi.eu/auth/realms/egi
     application-type: service
-    #client-id: egi-ims-tool
-    #credentials: secret
     #discovery-enabled: false
     #introspection-path: /protocol/openid-connect/token/introspect
     roles:
       source: userinfo
-#    token-cache:
-#      max-size: 1000              # Set to > 0 to enable cache
-#      time-to-live: 5M            # How long a cache entry can be valid
-#      clean-up-timer-interval: 1M # Enable cleanup timer
+    token-cache:
+      max-size: 1000              # Set to > 0 to enable cache
+      time-to-live: 5M            # How long a cache entry can be valid
+      clean-up-timer-interval: 1M # Enable cleanup timer
   log:
     level: INFO
     min-level: DEBUG
