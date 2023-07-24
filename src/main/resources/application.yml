@@ -29,7 +29,7 @@ quarkus:
   oidc:
     auth-server-url: https://aai-demo.egi.eu/auth/realms/egi
     application-type: service
-    #client-id: egi-capacity-registry
+    #client-id: egi-ims-tool
     #credentials: secret
     #discovery-enabled: false
     #introspection-path: /protocol/openid-connect/token/introspect
@@ -81,7 +81,7 @@ quarkus:
         ignore-patterns: /metrics
   swagger-ui:
     always-include: true
-    path: /api/slm/swagger-ui
+    path: /swagger-ui
     theme: flattop
     urls:
       default: /api/slm/openapi
