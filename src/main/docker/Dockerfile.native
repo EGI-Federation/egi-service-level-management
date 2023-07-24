@@ -7,11 +7,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/capacity-registry-api .
+# docker build -f src/main/docker/Dockerfile.native -t egi/ism-slm-api .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/capacity-registry-api
+# docker run -i --rm -p 8080:8080 egi/ism-slm-api
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6

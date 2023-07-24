@@ -1,18 +1,19 @@
 ---
 egi:
   ims:
-    # To access the tool(s) users need to be member of the VO and have the appropriate role
-    # VO managers will be able to assign/revoke the role to/from VO members
+    # To access the tool(s) you need to be member of the VO.
+    # This is enough for queries, but for operations you must have the appropriate role.
+    # VO managers, process owners, and process managers will be able to assign/revoke roles to/from VO members.
     vo: vo.tools.egi.eu
     group: SLM
     roles:
       process-owner: process-owner
       process-manager: process-manager
       catalog-manager: catalog-manager
-      report-owner: report-owner
-      ua-owner: ua-owner
       sla-owner: sla-owner
       ola-owner: ola-owner
+      ua-owner: ua-owner
+      report-owner: report-owner
     trace-roles: true
   checkin:
     username: co_2.toolsegi
@@ -26,10 +27,10 @@ quarkus:
   application:
     name: slm-api
   oidc:
-    auth-server-url: https://aai.egi.eu/auth/realms/egi
+    auth-server-url: https://aai-demo.egi.eu/auth/realms/egi
     application-type: service
-    client-id: egi-capacity-registry
-    credentials: secret
+    #client-id: egi-capacity-registry
+    #credentials: secret
     #discovery-enabled: false
     #introspection-path: /protocol/openid-connect/token/introspect
     roles:
