@@ -8,7 +8,7 @@ FROM maven:3-eclipse-temurin-17 AS builder
 # Get source code
 WORKDIR /app
 
-RUN git clone --single-branch https://github.com/EGI-Federation/egi-service-level-management.git . && \
+RUN git clone --single-branch https://github.com/EGI-Federation/egi-service-level-management . && \
     chmod a+x mvnw.sh
 
 # Build app
