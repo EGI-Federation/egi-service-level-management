@@ -165,40 +165,8 @@ public class Checkin {
                     }
                 }
 
-                if(traceRoles) {
-                    log.infof("Found %d active group members", users.size());
-                    Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-                    for(var role : members) {
-                        var user = um.containsKey(role.person.Id) ? um.get(role.person.Id) : null;
-                        var trace = String.format("recordId:%d userId:%d", role.roleId, role.person.Id);
-
-                        MDC.put("roleId", role.roleId);
-                        MDC.put("roleStatus", role.status);
-                        MDC.put("checkinUserId", role.person.Id);
-
-                        if(null != user) {
-                            trace = user.fullName + " " + trace;
-
-                            MDC.put("userFullName", user.fullName);
-                            if(null != user.userId)
-                                MDC.put("userId", user.userId);
-                        }
-
-                        if(null != role.from) {
-                            MDC.put("roleFrom", role.from);
-                            MDC.put("roleUntil", role.until);
-                            trace += String.format(" from:(%s) until:(%s)",
-                                                formatter.format(role.from),
-                                                formatter.format(user.lastName));
-                        }
-
-                        log.info(role.status + ": " + trace);
-                    }
-
-                    MDC.remove("roleId");
-                    MDC.remove("roleStatus");
-                }
+                if(traceRoles)
+                    logGroupMembers(members, um);
 
                 return Uni.createFrom().item(users);
             })
@@ -268,6 +236,53 @@ public class Checkin {
             });
 
         return result;
+    }
+
+    /***
+     * Log members of a Check-in group
+     * @param members The Check-in membership records for the group
+     * @param users The identified users that are members
+     */
+    private void logGroupMembers(List<CheckinRole> members, Map<Integer, BasicUserInfo> users) {
+
+        log.infof("Found %d active members of group %s", users.size(), this.imsConfig.group());
+
+        Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        for(var role : members) {
+            var user = users.containsKey(role.person.Id) ? users.get(role.person.Id) : null;
+            var trace = String.format("userId:%d recordId:%d", role.person.Id, role.roleId);
+
+            MDC.put("roleId", role.roleId);
+            MDC.put("roleStatus", role.status);
+            MDC.put("checkinUserId", role.person.Id);
+
+            if(null != user) {
+                trace = user.fullName + " " + trace;
+
+                MDC.put("userFullName", user.fullName);
+                if(null != user.userId)
+                    MDC.put("userId", user.userId);
+            }
+
+            if(null != role.from) {
+                MDC.put("roleFrom", role.from);
+                MDC.put("roleUntil", role.until);
+                trace += String.format(" from:(%s) until:(%s)",
+                        formatter.format(role.from),
+                        formatter.format(user.lastName));
+            }
+
+            log.info(role.status + ": " + trace);
+        }
+
+        MDC.remove("roleId");
+        MDC.remove("roleStatus");
+        MDC.remove("checkinUserId");
+        MDC.remove("userId");
+        MDC.remove("userFullName");
+        MDC.remove("roleFrom");
+        MDC.remove("roleUntil");
     }
 
     /***
