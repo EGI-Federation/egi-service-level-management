@@ -65,7 +65,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * @return API Response, wraps an ActionSuccess(Page<{@link OperationalLevelAgreement}>) or an ActionError entity
      */
     @GET
-    @Path("/ola/list")
+    @Path("/olas")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
     @Operation(operationId = "listOLAs",  summary = "List all Operational Level Agreements")

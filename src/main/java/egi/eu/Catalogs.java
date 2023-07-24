@@ -65,7 +65,7 @@ public class Catalogs extends BaseResource {
      * @return API Response, wraps an ActionSuccess(Page<{@link Catalog>) or an ActionError entity
      */
     @GET
-    @Path("/catalog/list")
+    @Path("/catalogs")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
     @Operation(operationId = "listCatalogs",  summary = "List all catalogs")

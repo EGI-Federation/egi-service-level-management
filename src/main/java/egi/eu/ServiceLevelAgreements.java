@@ -65,7 +65,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * @return API Response, wraps an ActionSuccess(Page<{@link ServiceLevelAgreement}>) or an ActionError entity
      */
     @GET
-    @Path("/sla/list")
+    @Path("/slas")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
     @Operation(operationId = "listSLAs",  summary = "List all Service Level Agreements")

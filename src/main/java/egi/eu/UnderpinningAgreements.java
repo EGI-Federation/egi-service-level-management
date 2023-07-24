@@ -65,7 +65,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @return API Response, wraps an ActionSuccess(Page<{@link UnderpinningAgreement}>) or an ActionError entity
      */
     @GET
-    @Path("/ua/list")
+    @Path("/uas")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
     @Operation(operationId = "listUAs",  summary = "List all Underpinning Agreements")
