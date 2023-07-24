@@ -86,7 +86,7 @@ public class UnderpinningAgreements extends BaseResource {
     public Uni<Response> listUAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                  @RestQuery("olaId")
                                  @Parameter(required = false,
-                                         description = "Filter to the ones supporting specific OLA")
+                                            description = "Filter to the ones supporting specific OLA")
                                  int olaId,
                                  @RestQuery("from") @DefaultValue("0")
                                  @Parameter(required = false,

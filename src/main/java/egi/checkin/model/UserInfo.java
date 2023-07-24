@@ -32,4 +32,15 @@ public class UserInfo extends BasicUserInfo {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("eduperson_entitlement")
     public List<String> entitlements;
+
+
+    /***
+     * Constructor
+     */
+    public UserInfo() {}
+
+    /***
+     * Construct from Check-in membership record
+     */
+    public UserInfo(CheckinRole role) { super(role); }
 }

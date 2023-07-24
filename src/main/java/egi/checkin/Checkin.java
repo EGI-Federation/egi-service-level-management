@@ -104,7 +104,7 @@ public class Checkin {
      * The configured Check-in credentials are usually scoped to just one VO.
      * @return List of all groups
      */
-    public Uni<CheckinGroupList> listAllGroupsAsync() {
+    public Uni<CheckinGroupList> listGroupsAsync() {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ServiceException("notReady"));
@@ -120,16 +120,18 @@ public class Checkin {
      * Although multiple membership records can exist for a user, e.g. with different
      * start/until dates and different statuses, this function returns just one
      * {@link BasicUserInfo} per user.
+     * @param onlyGroup Whether to return only users included in the configured group
+     *                  or all members of the configured VO.
      * @return List of all active members
      */
-    public Uni<List<BasicUserInfo>> listGroupMembersAsync() {
+    public Uni<List<UserInfo>> listGroupMembersAsync(boolean onlyGroup) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ServiceException("notReady"));
         }
 
         final var coId = checkinConfig.coId();
-        final var groupName = this.imsConfig.group();
+        final var groupName = onlyGroup ? this.imsConfig.group() : this.imsConfig.vo();
         final var traceRoles = this.imsConfig.traceRoles();
 
         MDC.put("coId", coId);
@@ -137,16 +139,16 @@ public class Checkin {
 
         log.infof("Getting group members");
 
-        Uni<List<BasicUserInfo>> result = Uni.createFrom().nullItem()
+        Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 // Get membership records
-                return getMemberRecordsAsync();
+                return getMemberRecordsAsync(groupName);
             })
             .chain(roles -> {
                 // Got membership records, keep just membership ones
-                List<BasicUserInfo> users = new ArrayList<>();
-                Map<Integer, BasicUserInfo> um = new HashMap<>();
+                List<UserInfo> users = new ArrayList<>();
+                Map<Integer, UserInfo> um = new HashMap<>();
 
                 var members = filterList(roles.records, role -> role.role.equals("member"));
 
@@ -155,7 +157,7 @@ public class Checkin {
                         // Not an active membership record, skip
                         continue;
 
-                    var user = new BasicUserInfo(role);
+                    var user = new UserInfo(role);
                     if(!um.containsKey(user.checkinUserId)) {
                         // This is a membership record, not a role record
                         users.add(user);
@@ -178,17 +180,14 @@ public class Checkin {
     }
 
     /***
-     * List all members of a group or virtual organization (VO)
-     * Computes the role field
-     * @return List of all member users
+     * List all members of a group or virtual organization (VO).
+     * Computes the role field.
+     * @param groupName The group or VO to list members of.
+     * @return List of member users
      */
-    private Uni<CheckinRoleList> getMemberRecordsAsync() {
+    private Uni<CheckinRoleList> getMemberRecordsAsync(final String groupName) {
 
         final var coId = checkinConfig.coId();
-        final var groupName = this.imsConfig.group();
-
-        MDC.put("coId", coId);
-        MDC.put("groupName", groupName);
 
         log.info("Getting membership records");
 
@@ -243,11 +242,11 @@ public class Checkin {
      * @param members The Check-in membership records for the group
      * @param users The identified users that are members
      */
-    private void logGroupMembers(List<CheckinRole> members, Map<Integer, BasicUserInfo> users) {
+    private void logGroupMembers(List<CheckinRole> members, Map<Integer, UserInfo> users) {
 
         log.infof("Found %d active members of group %s", users.size(), this.imsConfig.group());
 
-        Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         for(var role : members) {
             var user = users.containsKey(role.person.Id) ? users.get(role.person.Id) : null;
@@ -268,9 +267,9 @@ public class Checkin {
             if(null != role.from) {
                 MDC.put("roleFrom", role.from);
                 MDC.put("roleUntil", role.until);
-                trace += String.format(" from:(%s) until:(%s)",
+                trace += String.format(" from:%s until:%s",
                         formatter.format(role.from),
-                        formatter.format(user.lastName));
+                        formatter.format(role.until));
             }
 
             log.info(role.status + ": " + trace);

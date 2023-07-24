@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BasicUserInfo {
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("voperson_id")
     public String userId;
 
