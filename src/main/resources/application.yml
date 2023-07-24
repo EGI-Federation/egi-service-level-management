@@ -4,7 +4,7 @@ egi:
     # To access the tool(s) users need to be member of the VO and have the appropriate role
     # VO managers will be able to assign/revoke the role to/from VO members
     vo: vo.tools.egi.eu
-    group: slm
+    group: SLM
     roles:
       process-owner: process-owner
       process-manager: process-manager
@@ -13,9 +13,11 @@ egi:
       ua-owner: ua-owner
       sla-owner: sla-owner
       ola-owner: ola-owner
+    trace-roles: true
   checkin:
     username: co_2.toolsegi
     password: password
+    co-id: 2
   qos:
     quantiles: [0.95]
     slos: [500] # SLOs in milliseconds
@@ -24,7 +26,7 @@ quarkus:
   application:
     name: slm-api
   oidc:
-    auth-server-url: https://aai-demo.egi.eu/auth/realms/egi
+    auth-server-url: https://aai.egi.eu/auth/realms/egi
     application-type: service
     client-id: egi-capacity-registry
     credentials: secret

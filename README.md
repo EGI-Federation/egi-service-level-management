@@ -12,7 +12,7 @@ service, which provides tools to automate and simplify the IMS processes. This c
 (SLM) process.
 
 This project uses [Quarkus](https://quarkus.io), the Supersonic Subatomic Java Framework.
-It requires [Java 17](https://openjdk.org/projects/jdk/17/).
+It requires [Java 19](https://openjdk.org/projects/jdk/19/).
 
 ## Authentication and authorization
 

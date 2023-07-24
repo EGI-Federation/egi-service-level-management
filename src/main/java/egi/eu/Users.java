@@ -1,5 +1,6 @@
 package egi.eu;
 
+import egi.checkin.CheckinConfig;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -39,6 +40,12 @@ public class Users extends BaseResource {
     @Inject
     SecurityIdentity identity;
 
+    @Inject
+    CheckinConfig checkinConfig;
+
+    @Inject
+    IntegratedManagementSystemConfig imsConfig;
+
 
     /***
      * Construct with meter
@@ -48,7 +55,7 @@ public class Users extends BaseResource {
     /**
      * Retrieve information about current user.
      * @param auth The access token needed to call the service.
-     * @return API Response, wraps an ActionSuccess(UserInfo) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess({@link UserInfo}) or an ActionError entity
      */
     @GET
     @Path("/user/info")
@@ -82,15 +89,17 @@ public class Users extends BaseResource {
 
             .chain(unused -> {
                 // Get REST client for Check-in
-                var params = new ActionParameters();
-                if (!getCheckinService()) {
+                if (!checkin.init(this.checkinConfig, this.imsConfig))
                     // Could not get REST client
                     return Uni.createFrom().failure(new ServiceException("invalidConfig"));
-                }
 
-                return Uni.createFrom().item(params);
+                return Uni.createFrom().item(unused);
             })
-            .chain(params -> {
+            .chain(unused -> {
+                // Get user info
+                return checkin.listGroupMembersAsync();
+            })
+            .chain(unused -> {
                 // Get user info
                 return this.checkin.getUserInfoAsync(auth);
             })
@@ -101,7 +110,7 @@ public class Users extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to get user info");
-                return new ActionError(e, Tuple2.of("oidcInstance", this.oidc.instance())).toResponse();
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkin.instance())).toResponse();
             });
 
         return result;

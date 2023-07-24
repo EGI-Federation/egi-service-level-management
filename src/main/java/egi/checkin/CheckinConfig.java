@@ -6,12 +6,16 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 
 /***
- * The OIDC configuration of EGI Check-in
+ * The EGI Check-in configuration
  */
 @Schema(hidden=true)
-@ConfigMapping(prefix = "quarkus.oidc")
+@ConfigMapping(prefix = "egi.checkin")
 public interface CheckinConfig {
 
-    @WithName("auth-server-url")
-    String instance();
+    // Credentials to call the Check-in COManage API
+    String username();
+    String password();
+
+    @WithName("co-id")
+    String coId();
 }

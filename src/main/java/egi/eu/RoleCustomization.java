@@ -58,8 +58,8 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                     json = ((AbstractJsonObjectResponse)ui).getJsonObject().toString();
                     userInfo = mapper.readValue(json, UserInfo.class);
 
-                    if(null != userInfo.userID)
-                        builder.addAttribute(UserInfo.ATTR_USERID, userInfo.userID);
+                    if(null != userInfo.userId)
+                        builder.addAttribute(UserInfo.ATTR_USERID, userInfo.userId);
 
                     if(null != userInfo.userName)
                         builder.addAttribute(UserInfo.ATTR_USERNAME, userInfo.userName);

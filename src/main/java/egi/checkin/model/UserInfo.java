@@ -12,7 +12,7 @@ import java.util.List;
  * Details of the current user
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserInfo {
+public class UserInfo extends BasicUserInfo {
 
     public final static String ATTR_USERID = "userID";
     public final static String ATTR_USERNAME = "userName";
@@ -24,27 +24,6 @@ public class UserInfo {
 
     @Schema(enumeration={ "UserInfo" })
     public String kind = "UserInfo";
-
-    @JsonProperty("voperson_id")
-    public String userID;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty("preferred_user_name")
-    public String userName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty("given_name")
-    public String firstName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty("family_name")
-    public String lastName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String email;
-
-    @JsonProperty("email_verified")
-    public boolean emailIsVerified;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("eduperson_assurance")
