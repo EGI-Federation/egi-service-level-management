@@ -62,7 +62,7 @@ quarkus:
         level: TRACE
         min-level: TRACE
   otel:
-    enabled: true
+    enabled: false
     exporter:
       otlp:
         traces:
@@ -87,7 +87,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.7
+    info-version: 1.0.8
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt
