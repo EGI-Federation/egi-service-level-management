@@ -9,8 +9,10 @@ import org.jboss.logging.MDC;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -27,6 +29,8 @@ public class Checkin {
 
     private static final Logger log = Logger.getLogger(Checkin.class);
     private static CheckinService checkin;
+    private static Map<Integer, UserInfo> voMembers;
+    private static long voMembersUpdatedAt = 0; // milliseconds since epoch
     private String instance;
     private CheckinConfig checkinConfig;
     private IntegratedManagementSystemConfig imsConfig;
@@ -37,6 +41,19 @@ public class Checkin {
      * @return URL to Check-in instance
      */
     public String instance() { return instance; }
+
+    /***
+     * Check if the VO members are cached, and the cache is not stale
+     * @return True if VO members are available in the cache
+     */
+    private boolean voMembersCached() {
+        if(null == voMembers)
+            return false;
+
+        final long millisecondsSinceEpoch = Instant.now().toEpochMilli();
+        final boolean stale = voMembersUpdatedAt + this.checkinConfig.cacheMembers() < millisecondsSinceEpoch;
+        return !stale;
+    }
 
     /**
      * Prepare REST client for EGI Check-in.
@@ -131,49 +148,100 @@ public class Checkin {
         }
 
         final var coId = checkinConfig.coId();
-        final var groupName = onlyGroup ? this.imsConfig.group() : this.imsConfig.vo();
         final var traceRoles = this.imsConfig.traceRoles();
 
         MDC.put("coId", coId);
-        MDC.put("groupName", groupName);
+        MDC.put("onlyGroup", onlyGroup);
 
-        log.infof("Getting group members");
+        // If we were asked for VO members, first check if we have them cached
+        if(!onlyGroup && voMembersCached()) {
+            // We have a cache, and it's not stale
+            log.info("Returning cached VO members");
+            List<UserInfo> userList = new ArrayList<>(voMembers.values());
+            return Uni.createFrom().item(userList);
+        }
 
         Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                // Get membership records
-                return getMemberRecordsAsync(groupName);
-            })
-            .chain(roles -> {
-                // Got membership records, keep just membership ones
-                List<UserInfo> users = new ArrayList<>();
-                Map<Integer, UserInfo> um = new HashMap<>();
-
-                var members = filterList(roles.records, role -> role.role.equals("member"));
-
-                for(var role : members) {
-                    if(role.deleted || !role.status.equalsIgnoreCase("Active"))
-                        // Not an active membership record, skip
-                        continue;
-
-                    var user = new UserInfo(role);
-                    if(!um.containsKey(user.checkinUserId)) {
-                        // This is a membership record, not a role record
-                        users.add(user);
-
-                        // Remember the user, so we include the user only once
-                        um.put(user.checkinUserId, user);
-                    }
+                // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
+                // Therefore, we must check ourselves and only return group members that are also
+                // members of the VO. This means we need the list of VO members, even if we are being
+                // called just to list members of the configured group.
+                if(!voMembersCached()) {
+                    log.info("Getting VO members");
+                    return getGroupMembersAsync(this.imsConfig.vo());
                 }
 
-                if(traceRoles)
-                    logGroupMembers(members, um);
+                return Uni.createFrom().nullItem();
+            })
+            .chain(voRoles -> {
+                if(null != voRoles) {
+                    // Got VO role records, keep just the membership ones
+                    Map<Integer, UserInfo> users = new HashMap<>();
 
-                return Uni.createFrom().item(users);
+                    var members = filterList(voRoles.records, role -> role.role.equals("member"));
+
+                    for(var role : members) {
+                        if(role.deleted || !role.status.equalsIgnoreCase("Active"))
+                            // Not an active membership record, skip
+                            continue;
+
+                        var user = new UserInfo(role);
+                        if(!users.containsKey(user.checkinUserId)) {
+                            // This is a membership record, not a role record
+                            users.put(user.checkinUserId, user);
+                        }
+                    }
+
+                    // Cache VO member list
+                    voMembers = users;
+                    voMembersUpdatedAt = Instant.now().toEpochMilli();
+
+                    if(traceRoles)
+                        logGroupMemberships(members, users, false);
+
+                    if(!onlyGroup)
+                        return Uni.createFrom().nullItem();
+                }
+
+                // Get membership records
+                log.info("Getting members of group " + imsConfig.group());
+                return getGroupMembersAsync(imsConfig.group());
+            })
+            .chain(groupRoles -> {
+                if(null != groupRoles) {
+                    // Got group role records, keep just the membership ones
+                    Map<Integer, UserInfo> users = new HashMap<>();
+
+                    var members = filterList(groupRoles.records, role -> role.role.equals("member"));
+
+                    for (var role : members) {
+                        if (role.deleted || !role.status.equalsIgnoreCase("Active"))
+                            // Not an active membership record, skip
+                            continue;
+
+                        var user = new UserInfo(role);
+                        if (voMembers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId)) {
+                            // This is a membership record, not a role record
+                            users.put(user.checkinUserId, user);
+                        }
+                    }
+
+                    if(traceRoles)
+                        logGroupMemberships(members, users, true);
+
+                    List<UserInfo> userList = new ArrayList<>(users.values());
+                    return Uni.createFrom().item(userList);
+                }
+
+                // If we get here, then we need to return the VO members
+                // And those were loaded in the previous step
+                List<UserInfo> userList = new ArrayList<>(voMembers.values());
+                return Uni.createFrom().item(userList);
             })
             .onFailure().invoke(e -> {
-                log.error("Failed to get group members");
+                log.errorf("Failed to get %s members", onlyGroup ? "group" : "VO");
             });
 
         return result;
@@ -185,9 +253,11 @@ public class Checkin {
      * @param groupName The group or VO to list members of.
      * @return List of member users
      */
-    private Uni<CheckinRoleList> getMemberRecordsAsync(final String groupName) {
+    private Uni<CheckinRoleList> getGroupMembersAsync(final String groupName) {
 
         final var coId = checkinConfig.coId();
+
+        MDC.put("groupName", groupName);
 
         log.info("Getting membership records");
 
@@ -238,17 +308,21 @@ public class Checkin {
     }
 
     /***
-     * Log members of a Check-in group
-     * @param members The Check-in membership records for the group
-     * @param users The identified users that are members
+     * Log all membership records of a Check-in group or VO
+     * @param roleRecords The Check-in membership records for the group or VO
+     * @param users The users identified to be members
+     * @param onlyGroup Whether logging records only for users included in the configured group
+     *                  or for all members of the configured VO.
      */
-    private void logGroupMembers(List<CheckinRole> members, Map<Integer, UserInfo> users) {
+    private void logGroupMemberships(List<CheckinRole> roleRecords, Map<Integer, UserInfo> users, boolean onlyGroup) {
 
-        log.infof("Found %d active members of group %s", users.size(), this.imsConfig.group());
+        log.infof("Found %d active members in %s %s", users.size(),
+                onlyGroup ? "group" : "VO",
+                onlyGroup ? this.imsConfig.group() : "");
 
         Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 
-        for(var role : members) {
+        for(var role : roleRecords) {
             var user = users.containsKey(role.person.Id) ? users.get(role.person.Id) : null;
             var trace = String.format("userId:%d recordId:%d", role.person.Id, role.roleId);
 

@@ -18,4 +18,7 @@ public interface CheckinConfig {
 
     @WithName("co-id")
     String coId();
+
+    @WithName("cache-vo-members")
+    int cacheMembers();
 }

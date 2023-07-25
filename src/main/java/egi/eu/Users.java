@@ -60,7 +60,7 @@ public class Users extends BaseResource {
         @Schema(enumeration={ "UserList" })
         public String kind = "UserList";
 
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public List<UserInfo> users;
 
         /***
@@ -190,6 +190,72 @@ public class Users extends BaseResource {
                 .chain(unused -> {
                     // List users
                     return checkin.listGroupMembersAsync(onlyGroup);
+                })
+                .chain(users -> {
+                    // Got users, success
+                    log.info("Got user list");
+                    return Uni.createFrom().item(Response.ok(users).build());
+                })
+                .onFailure().recoverWithItem(e -> {
+                    log.error("Failed to list users");
+                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkin.instance())).toResponse();
+                });
+
+        return result;
+    }
+
+    /**
+     * Add a user to the configured group.
+     * @param auth The access token needed to call the service.
+     * @param checkinUserId The Check-in Id of the user to add to the group.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @POST
+    @Path("/user")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed(Role.ISM_USER)
+    @Operation(operationId = "addUserToGroup",  summary = "Included a user in the configured group")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "204", description = "Added"),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="User not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> addUserToGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                   @RestQuery("checkinUserId")
+                                   @Parameter(description = "Id of user to add to the configured group")
+                                   int checkinUserId) {
+
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("checkinUserId", checkinUserId);
+
+        log.info("Adding user to group");
+
+        if(null == auth || auth.trim().isEmpty()) {
+            var ae = new ActionError("badRequest", "Access token missing");
+            return Uni.createFrom().item(ae.setStatus(Response.Status.BAD_REQUEST).toResponse());
+        }
+
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+                .chain(unused -> {
+                    // Get REST client for Check-in
+                    if (!checkin.init(this.checkinConfig, this.imsConfig))
+                        // Could not get REST client
+                        return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+
+                    return Uni.createFrom().item(unused);
+                })
+                .chain(unused -> {
+                    // Add user
+                    return checkin.listGroupMembersAsync(false);
                 })
                 .chain(users -> {
                     // Got users, success
