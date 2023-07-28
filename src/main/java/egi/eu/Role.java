@@ -9,6 +9,7 @@ package egi.eu;
 public class Role {
     public final static String ISM_USER = "ism";
     public final static String ISM_ADMIN = "admin";
+    public final static String PROCESS_MEMBER = "slm";
     public final static String PROCESS_OWNER = "process-owner";
     public final static String PROCESS_MANAGER = "process-manager";
     public final static String CATALOG_MANAGER = "catalog-manager";

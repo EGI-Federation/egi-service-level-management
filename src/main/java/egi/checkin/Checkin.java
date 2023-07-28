@@ -12,7 +12,6 @@ import java.net.URL;
 import java.time.Instant;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -31,16 +30,9 @@ public class Checkin {
     private static CheckinService checkin;
     private static Map<Integer, UserInfo> voMembers;
     private static long voMembersUpdatedAt = 0; // milliseconds since epoch
-    private String instance;
     private CheckinConfig checkinConfig;
     private IntegratedManagementSystemConfig imsConfig;
 
-
-    /***
-     * Return URL to the configured Check-in instance
-     * @return URL to Check-in instance
-     */
-    public String instance() { return instance; }
 
     /***
      * Check if the VO members are cached, and the cache is not stale
@@ -67,16 +59,14 @@ public class Checkin {
         this.checkinConfig = checkinConfig;
         this.imsConfig = imsConfig;
 
-        instance = ConfigProvider.getConfig().getValue("quarkus.oidc.auth-server-url", String.class);
-
-        MDC.put("oidc-server", instance);
+        MDC.put("checkinServer", this.checkinConfig.server());
 
         log.debug("Obtaining REST client for EGI Check-in");
 
         // Check if OIDC authentication URL is valid
         URL urlCheckin;
         try {
-            urlCheckin = new URL(instance);
+            urlCheckin = new URL(this.checkinConfig.server());
             urlCheckin = new URL(urlCheckin.getProtocol(), urlCheckin.getHost(), urlCheckin.getPort(), "");
         } catch (MalformedURLException e) {
             log.error(e.getMessage());
@@ -88,7 +78,7 @@ public class Checkin {
             var rcb = RestClientBuilder.newBuilder().baseUrl(urlCheckin);
             checkin = rcb.build(CheckinService.class);
 
-            MDC.remove("oidc-server");
+            MDC.remove("checkinServer");
 
             return true;
         }

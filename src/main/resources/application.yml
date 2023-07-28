@@ -16,6 +16,7 @@ egi:
       report-owner: report-owner
     trace-roles: true
   checkin:
+    server: https://aai-demo.egi.eu
     username: co_2.toolsegi
     password: password
     co-id: 2
@@ -98,6 +99,7 @@ quarkus:
     fail-on-unknown-properties: false
   http:
     port: 8081
+    test-port: 8082
     auth:
       basic: false
     cors:

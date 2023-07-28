@@ -33,6 +33,10 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
     @Inject
     protected IntegratedManagementSystemConfig config;
 
+    public void setConfig(IntegratedManagementSystemConfig config) {
+        this.config = config;
+    }
+
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
         // NOTE: In case role parsing is a blocking operation, replace with the line below
@@ -47,15 +51,18 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
             // Create a new builder and copy principal, attributes, credentials and roles from the original identity
             QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);
 
+            log.debug("Building security identity");
+
             // Extract the OIDC user information, loaded due to the setting quarkus.roles.source=userinfo
             var ui = identity.getAttribute("userinfo");
-            if(null != ui && ui instanceof AbstractJsonObjectResponse) {
+            var isAJO = ui instanceof AbstractJsonObjectResponse;
+            if(null != ui && (isAJO || ui instanceof String)) {
                 // Construct Check-in UserInfo from the user info fetched by OIDC
                 UserInfo userInfo = null;
                 String json = null;
                 try {
                     var mapper = new ObjectMapper();
-                    json = ((AbstractJsonObjectResponse)ui).getJsonObject().toString();
+                    json = isAJO ? ((AbstractJsonObjectResponse)ui).getJsonObject().toString() : ui.toString();
                     userInfo = mapper.readValue(json, UserInfo.class);
 
                     if(null != userInfo.userId)
@@ -90,7 +97,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                 }
                 catch (JsonProcessingException e) {
                     // Error deserializing JSON info UserInfo instance
-                    MDC.put("OIDC.userinfo", json);
+                    MDC.put("OIDC.userinfo", null != json ? json : "null");
                     log.warn("Cannot deserialize OIDC userinfo");
                 }
 
@@ -99,24 +106,34 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                     var roleNames = config.roles();
 
                     final String voPrefix = "urn:mace:egi.eu:group:" + config.vo().toLowerCase() + ":";
-                    final String rexPrefix = "^urn\\:mace\\:egi.eu\\:group\\:" + config.vo().toLowerCase() + "\\:role=";
                     final String suffix = "#aai.egi.eu";
 
+                    // Only continue checking the roles for members of the configured VO
                     if(userInfo.entitlements.contains(voPrefix + "role=member" + suffix)) {
                         // This user is member of the VO, access to ISM tools is allowed
                         builder.addRole(Role.ISM_USER);
 
-                        // Only continue checking the rest of the roles for VO members
-                        final String rolePrefix = voPrefix + "role=";
                         final String voManager = voPrefix + "admins:role=member" + suffix;
+                        final String rolePrefix = voPrefix + config.group() + ":role=";
 
-                        final String po = roleNames.get("process-owner").toLowerCase();
-                        final String pm = roleNames.get("process-manager").toLowerCase();
-                        final String cm = roleNames.get("catalog-manager").toLowerCase();
-                        final String ro = roleNames.get("report-owner").toLowerCase();
-                        final String uao = roleNames.get("ua-owner").toLowerCase();
-                        final String olao = roleNames.get("ola-owner").toLowerCase();
-                        final String slao = roleNames.get("sla-owner").toLowerCase();
+                        boolean processMember = false;
+                        if(userInfo.entitlements.contains(rolePrefix + "member" + suffix)) {
+                            // This user is member of the SLM group, which is a prerequisite to holding SLM roles
+                            processMember = true;
+                            builder.addRole(Role.PROCESS_MEMBER);
+                        }
+
+                        final String rexPrefix = "^urn\\:mace\\:egi.eu\\:group\\:" +
+                                config.vo().toLowerCase() + "\\:" +
+                                config.group() + "\\:role=";
+
+                        final String po = rolePrefix + roleNames.get("process-owner").toLowerCase() + suffix;
+                        final String pm = rolePrefix + roleNames.get("process-manager").toLowerCase() + suffix;
+                        final String cm = rolePrefix + roleNames.get("catalog-manager").toLowerCase() + suffix;
+                        final String ro = rolePrefix + roleNames.get("report-owner").toLowerCase() + suffix;
+                        final String uao = rolePrefix + roleNames.get("ua-owner").toLowerCase() + suffix;
+                        final String olao = rolePrefix + roleNames.get("ola-owner").toLowerCase() + suffix;
+                        final String slao = rolePrefix + roleNames.get("sla-owner").toLowerCase() + suffix;
 
                         final String roRex = rexPrefix + ro.replace("-", "\\-") + "(\\-[^\\#]+)";
                         final String uaoRex = rexPrefix + uao.replace("-", "\\-") + "(\\-[^\\#]+)";
@@ -128,28 +145,28 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                         Pattern polao = Pattern.compile(olaoRex);
                         Pattern pslao = Pattern.compile(slaoRex);
 
-                        for(var e : userInfo.entitlements) {
+                        for (var e : userInfo.entitlements) {
 
-                            if(e.equals(voManager))
+                            if (e.equals(voManager))
                                 builder.addRole(Role.ISM_ADMIN);
-                            else if(e.equals(rolePrefix + po + suffix))
+                            else if (processMember && e.equals(po))
                                 builder.addRole(Role.PROCESS_OWNER);
-                            else if(e.equals(rolePrefix + pm + suffix))
+                            else if (processMember && e.equals(pm))
                                 builder.addRole(Role.PROCESS_MANAGER);
-                            else if(e.equals(rolePrefix + cm + suffix))
+                            else if (processMember && e.equals(cm))
                                 builder.addRole(Role.CATALOG_MANAGER);
-                            else if(e.equals(rolePrefix + ro + suffix))
+                            else if (processMember && e.equals(ro))
                                 builder.addRole(Role.REPORT_OWNER);
-                            else if(e.equals(rolePrefix + uao + suffix))
+                            else if (processMember && e.equals(uao))
                                 builder.addRole(Role.UA_OWNER);
-                            else if(e.equals(rolePrefix + olao + suffix))
+                            else if (processMember && e.equals(olao))
                                 builder.addRole(Role.OLA_OWNER);
-                            else if(e.equals(rolePrefix + slao + suffix))
+                            else if (processMember && e.equals(slao))
                                 builder.addRole(Role.SLA_OWNER);
                             else {
 
                                 Matcher m = pro.matcher(e);
-                                if(m.find()) {
+                                if (m.find()) {
                                     // The user is the owner of a specific report
                                     var roRole = Role.REPORT_OWNER + m.group(1);
                                     builder.addRole(roRole);
@@ -157,7 +174,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                                 }
 
                                 m = puao.matcher(e);
-                                if(m.find()) {
+                                if (m.find()) {
                                     // The user is the owner of a specific UA
                                     var uaoRole = Role.UA_OWNER + m.group(1);
                                     builder.addRole(uaoRole);
@@ -165,7 +182,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                                 }
 
                                 m = polao.matcher(e);
-                                if(m.find()) {
+                                if (m.find()) {
                                     // The user is the owner of a specific OLA
                                     var olaoRole = Role.OLA_OWNER + m.group(1);
                                     builder.addRole(olaoRole);
@@ -173,14 +190,14 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                                 }
 
                                 m = pslao.matcher(e);
-                                if(m.find()) {
+                                if (m.find()) {
                                     // The user is the owner of a specific SLA
                                     var slaoRole = Role.SLA_OWNER + m.group(1);
                                     builder.addRole(slaoRole);
                                 }
                             }
                         }
-                    }
+                    } // ISM_USER
                 }
             }
 

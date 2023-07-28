@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -43,4 +44,32 @@ public class UserInfo extends BasicUserInfo {
      * Construct from Check-in membership record
      */
     public UserInfo(CheckinRole role) { super(role); }
+
+    /***
+     * Store another level of assurance (LoA)
+     * @param loa The assurance
+     * @return Ourselves, to allow chaining calls with .
+     */
+    public UserInfo addAssurance(String loa) {
+        if(null == this.assurances)
+            this.assurances = new ArrayList<>();
+
+        this.assurances.add(loa);
+
+        return this;
+    }
+
+    /***
+     * Store another entitlement
+     * @param entitlement The entitlement
+     * @return Ourselves, to allow chaining calls with .
+     */
+    public UserInfo addEntitlement(String entitlement) {
+        if(null == this.entitlements)
+            this.entitlements = new ArrayList<>();
+
+        this.entitlements.add(entitlement);
+
+        return this;
+    }
 }

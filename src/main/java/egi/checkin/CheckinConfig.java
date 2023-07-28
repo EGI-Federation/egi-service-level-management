@@ -12,6 +12,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 @ConfigMapping(prefix = "egi.checkin")
 public interface CheckinConfig {
 
+    String server();
+
     // Credentials to call the Check-in COManage API
     String username();
     String password();
