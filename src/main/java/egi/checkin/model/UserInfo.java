@@ -3,6 +3,8 @@ package egi.checkin.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.ArrayList;
@@ -41,9 +43,21 @@ public class UserInfo extends BasicUserInfo {
     public UserInfo() {}
 
     /***
+     * Construct with Check-in user ID
+     */
+    public UserInfo(int checkinUserId) { this.checkinUserId = checkinUserId; }
+
+    /***
      * Construct from Check-in membership record
      */
     public UserInfo(CheckinRole role) { super(role); }
+
+    public UserInfo setUserId(String userId) { this.userId = userId; return this; }
+    public UserInfo setCheckinUserId(int userId) { this.checkinUserId = userId; return this; }
+    public UserInfo setFirstName(String firstName) { this.firstName = firstName; return this; }
+    public UserInfo setLastName(String lastName) { this.lastName = lastName; return this; }
+    public UserInfo setFullName(String fullName) { this.fullName = fullName; return this; }
+    public UserInfo setEmail(String email) { this.email = email; return this; }
 
     /***
      * Store another level of assurance (LoA)
@@ -71,5 +85,17 @@ public class UserInfo extends BasicUserInfo {
         this.entitlements.add(entitlement);
 
         return this;
+    }
+
+    /***
+     * Serialize ourselves to JSON
+     * @return JSON string, empty string on error
+     */
+    public String toJsonString() {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {}
+
+        return "";
     }
 }

@@ -1,7 +1,6 @@
 package egi.checkin;
 
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.jboss.logging.Logger;

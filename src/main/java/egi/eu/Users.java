@@ -107,11 +107,6 @@ public class Users extends BaseResource {
 
         log.info("Getting user info");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.setStatus(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -133,7 +128,7 @@ public class Users extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to get user info");
-                return new ActionError(e, Tuple2.of("oidcInstance", this.checkin.instance())).toResponse();
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
 
         return result;
@@ -148,7 +143,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/users")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed({ Role.ISM_USER })
     @Operation(operationId = "listUsers",  summary = "List users included in the configured VO")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -179,27 +174,27 @@ public class Users extends BaseResource {
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
-                .chain(unused -> {
-                    // Get REST client for Check-in
-                    if (!checkin.init(this.checkinConfig, this.imsConfig))
-                        // Could not get REST client
-                        return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+            .chain(unused -> {
+                // Get REST client for Check-in
+                if (!checkin.init(this.checkinConfig, this.imsConfig))
+                    // Could not get REST client
+                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
 
-                    return Uni.createFrom().item(unused);
-                })
-                .chain(unused -> {
-                    // List users
-                    return checkin.listGroupMembersAsync(onlyGroup);
-                })
-                .chain(users -> {
-                    // Got users, success
-                    log.info("Got user list");
-                    return Uni.createFrom().item(Response.ok(users).build());
-                })
-                .onFailure().recoverWithItem(e -> {
-                    log.error("Failed to list users");
-                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkin.instance())).toResponse();
-                });
+                return Uni.createFrom().item(unused);
+            })
+            .chain(unused -> {
+                // List users
+                return checkin.listGroupMembersAsync(onlyGroup);
+            })
+            .chain(users -> {
+                // Got users, success
+                log.info("Got user list");
+                return Uni.createFrom().item(Response.ok(users).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to list users");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
 
         return result;
     }
@@ -265,7 +260,7 @@ public class Users extends BaseResource {
                 })
                 .onFailure().recoverWithItem(e -> {
                     log.error("Failed to list users");
-                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkin.instance())).toResponse();
+                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
                 });
 
         return result;
