@@ -225,7 +225,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.PROCESS_OWNER);
+                return roles.contains(Role.PROCESS_OWNER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -254,7 +255,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.PROCESS_MANAGER);
+                return roles.contains(Role.PROCESS_MANAGER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -283,7 +285,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.CATALOG_MANAGER);
+                return roles.contains(Role.CATALOG_MANAGER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -312,7 +315,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.REPORT_OWNER);
+                return roles.contains(Role.REPORT_OWNER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -341,7 +345,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.SLA_OWNER);
+                return roles.contains(Role.SLA_OWNER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -370,7 +375,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.OLA_OWNER);
+                return roles.contains(Role.OLA_OWNER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());
@@ -399,7 +405,8 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it have the correct role
-                return roles.contains(Role.UA_OWNER);
+                return roles.contains(Role.UA_OWNER) &&
+                       roles.contains(Role.ISM_USER);
             })
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create());

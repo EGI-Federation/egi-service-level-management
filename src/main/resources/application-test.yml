@@ -1,6 +1,0 @@
----
-quarkus:
-  log:
-    level: INFO
-  http:
-    test-port: 8082
