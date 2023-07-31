@@ -52,8 +52,9 @@ public class UserInfo extends BasicUserInfo {
      */
     public UserInfo(CheckinRole role) { super(role); }
 
+    public long getCheckinUserId() { return this.checkinUserId; }
     public UserInfo setUserId(String userId) { this.userId = userId; return this; }
-    public UserInfo setCheckinUserId(int userId) { this.checkinUserId = userId; return this; }
+    public UserInfo setCheckinUserId(long userId) { this.checkinUserId = userId; return this; }
     public UserInfo setFirstName(String firstName) { this.firstName = firstName; return this; }
     public UserInfo setLastName(String lastName) { this.lastName = lastName; return this; }
     public UserInfo setFullName(String fullName) { this.fullName = fullName; return this; }

@@ -1,7 +1,5 @@
 package egi.eu;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.CheckinConfig;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -11,7 +9,9 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestHeader;
+import org.jboss.resteasy.reactive.RestQuery;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -23,11 +23,10 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import egi.checkin.CheckinConfig;
 import egi.checkin.model.UserInfo;
-import org.jboss.resteasy.reactive.RestQuery;
-
-import java.util.ArrayList;
-import java.util.List;
+import egi.checkin.model.CheckinRoleList;
+import egi.eu.model.UserList;
 
 
 /***
@@ -50,28 +49,6 @@ public class Users extends BaseResource {
 
     @Inject
     IntegratedManagementSystemConfig imsConfig;
-
-
-    /***
-     * List of users
-     */
-    class UserList {
-
-        @Schema(enumeration={ "UserList" })
-        public String kind = "UserList";
-
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        public List<UserInfo> users;
-
-        /***
-         * Copy constructor
-         * @param users List of users to copy
-         */
-        public UserList(List<UserInfo> users) {
-            this.users = new ArrayList<>(users.size());
-            this.users.addAll(users);
-        }
-    }
 
 
     /***
@@ -158,7 +135,7 @@ public class Users extends BaseResource {
     })
     public Uni<Response> listUsers(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                    @RestQuery("onlyGroup") @DefaultValue("false")
-                                   @Parameter(description = "Filter out users not members of the configured group")
+                                   @Parameter(description = "Filter to members of the configured group")
                                    boolean onlyGroup) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -184,12 +161,15 @@ public class Users extends BaseResource {
             })
             .chain(unused -> {
                 // List users
-                return checkin.listGroupMembersAsync(onlyGroup);
+                return onlyGroup ?
+                        checkin.listGroupMembersAsync() :
+                        checkin.listVoMembersAsync();
             })
             .chain(users -> {
                 // Got users, success
                 log.info("Got user list");
-                return Uni.createFrom().item(Response.ok(users).build());
+                var list = new UserList(users);
+                return Uni.createFrom().item(Response.ok(list).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list users");
@@ -206,10 +186,10 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @POST
-    @Path("/user")
+    @Path("/users/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
-    @Operation(operationId = "addUserToGroup",  summary = "Included a user in the configured group")
+    @Operation(operationId = "addUserToGroup",  summary = "Include a user in the configured group")
     @APIResponses(value = {
             @APIResponse(responseCode = "204", description = "Added"),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -223,9 +203,9 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> addUserToGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                   @RestQuery("checkinUserId")
-                                   @Parameter(description = "Id of user to add to the configured group")
-                                   int checkinUserId) {
+                                        @RestQuery("checkinUserId")
+                                        @Parameter(description = "Id of user to add to the configured group")
+                                        int checkinUserId) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
@@ -240,28 +220,27 @@ public class Users extends BaseResource {
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
-                .chain(unused -> {
-                    // Get REST client for Check-in
-                    if (!checkin.init(this.checkinConfig, this.imsConfig))
-                        // Could not get REST client
-                        return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+            .chain(unused -> {
+                // Get REST client for Check-in
+                if (!checkin.init(this.checkinConfig, this.imsConfig))
+                    // Could not get REST client
+                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
 
-                    return Uni.createFrom().item(unused);
-                })
-                .chain(unused -> {
-                    // Add user
-                    return checkin.listGroupMembersAsync(false);
-                })
-                .chain(users -> {
-                    // Got users, success
-                    log.info("Got user list");
-                    var list = new UserList(users);
-                    return Uni.createFrom().item(Response.ok(list).build());
-                })
-                .onFailure().recoverWithItem(e -> {
-                    log.error("Failed to list users");
-                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
-                });
+                return Uni.createFrom().item(unused);
+            })
+            .chain(unused -> {
+                // Add user
+                return checkin.addUserToGroupAsync(checkinUserId);
+            })
+            .chain(unused -> {
+                // Added user, success
+                log.info("Added user to group");
+                return Uni.createFrom().item(Response.ok().status(Response.Status.NO_CONTENT).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to add user to group");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
 
         return result;
     }

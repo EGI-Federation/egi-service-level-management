@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -14,12 +15,34 @@ import java.util.List;
 public class CheckinRoleList {
 
     @JsonProperty("ResponseType")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String kind; // CoPersonRoles
 
+    @JsonProperty("RequestType")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String requestType; // CoPersonRoles
+
     @JsonProperty("Version")
-    public String version;
+    public String version = "1.0";
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("CoPersonRoles")
     public List<CheckinRole> records;
+
+
+    /***
+     * Constructor
+     */
+    public CheckinRoleList() {}
+
+    /***
+     * Construct as request to add/update membership record
+     */
+    public CheckinRoleList(long checkinUserId, String groupName, String coId, String affiliation, String status) {
+        this.requestType = "CoPersonRoles";
+        this.records = new ArrayList<>();
+
+        var record = new CheckinRole(checkinUserId, groupName, coId, affiliation, status);
+        this.records.add(record);
+    }
 }

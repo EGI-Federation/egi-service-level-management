@@ -36,5 +36,10 @@ public interface CheckinService {
                                                @RestPath("coId") String coId,
                                                @RestPath("groupName") String groupName);
 
-
+    @POST
+    @Path("/api/v2/VoMembers.json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Uni<CheckinNewObject> addUserToGroupAsync(@RestHeader("Authorization") String auth,
+                                              CheckinRoleList addRoles);
 }

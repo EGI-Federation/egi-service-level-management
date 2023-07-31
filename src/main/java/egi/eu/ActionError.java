@@ -195,38 +195,18 @@ public class ActionError {
                     this.description = Optional.of(reason);
             }
         }
-        else if(type.equals(ProcessingException.class)) {
-            // Build from processing exception
-            var pe = (ProcessingException)t;
-            this.id = "processingError";
+        else if (type.equals(ActionException.class)) {
+            ActionException ae = (ActionException)t;
+            this.id = ae.getId();
 
-            var cause = pe.getCause();
-            if(null != cause) {
-                msg = cause.getMessage();
-                if(null != msg && !msg.isEmpty())
-                    this.description = Optional.of(msg);
+            // Collect the details from the exception (if any)
+            var aeDetails = ae.getDetails();
+            if(null != aeDetails && !aeDetails.isEmpty()) {
+                HashMap<String, String> details = new HashMap<>();
+                details.putAll(aeDetails);
+                this.details = Optional.of(details);
             }
         }
-
-//        if (type.equals(TransferServiceException.class)) {
-//            TransferServiceException tse = (TransferServiceException)t;
-//            this.id = tse.getId();
-//            if(this.id.equals("fieldNotSupported") ||
-//               this.id.equals("doiNotSupported") ||
-//               this.id.equals("doiInvalid") ||
-//               this.id.equals("urlInvalid") ||
-//               this.id.equals("noFilesLink"))
-//                // Return BAD_REQUEST instead of INTERNAL_ERROR
-//                this.status = Status.BAD_REQUEST;
-//
-//            // Collect the details from the exception (if any)
-//            var tseDetails = tse.getDetails();
-//            if(null != tseDetails && !tseDetails.isEmpty()) {
-//                HashMap<String, String> details = new HashMap<>();
-//                details.putAll(tseDetails);
-//                this.details = Optional.of(details);
-//            }
-//        }
     }
 
     /**
