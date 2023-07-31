@@ -408,7 +408,9 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "removeService",  summary = "Remove service from existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Removed"),
+            @APIResponse(responseCode = "204", description = "Removed",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -439,7 +441,7 @@ public class Catalogs extends BaseResource {
                 .chain(updated -> {
                     // Removal complete, success
                     log.info("Removed service from catalog");
-                    return Uni.createFrom().item(Response.ok(updated).build());
+                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Removed")).status(Response.Status.NO_CONTENT).build());
                 })
                 .onFailure().recoverWithItem(e -> {
                     log.error("Failed to remove service from catalog");
@@ -462,7 +464,9 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "reviewCatalog",  summary = "Review existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed"),
+            @APIResponse(responseCode = "204", description = "Reviewed",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -490,7 +494,7 @@ public class Catalogs extends BaseResource {
             .chain(signed -> {
                 // Review complete, success
                 log.info("Reviewed catalog");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to review catalog");
@@ -512,7 +516,9 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "retireCatalog",  summary = "Retire existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Retired"),
+            @APIResponse(responseCode = "204", description = "Retired",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -539,7 +545,7 @@ public class Catalogs extends BaseResource {
             .chain(revoked -> {
                 // Retire complete, success
                 log.info("Retired catalog");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Retired")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to retire catalog");

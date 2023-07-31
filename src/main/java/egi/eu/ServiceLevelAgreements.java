@@ -297,7 +297,9 @@ public class ServiceLevelAgreements extends BaseResource {
                              "on an agreement, the next update will create a new version of the agreement, "+
                              "which can be modified until signed.")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed"),
+            @APIResponse(responseCode = "204", description = "Signed",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -324,7 +326,7 @@ public class ServiceLevelAgreements extends BaseResource {
             .chain(signed -> {
                 // Sign complete, success
                 log.info("Signed SLA");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to sign SLA");
@@ -346,7 +348,9 @@ public class ServiceLevelAgreements extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.SLA_OWNER })
     @Operation(operationId = "revokeSLA",  summary = "Revoke existing Service Level Agreement")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Revoked"),
+            @APIResponse(responseCode = "204", description = "Revoked",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -373,7 +377,7 @@ public class ServiceLevelAgreements extends BaseResource {
             .chain(revoked -> {
                 // Revoke complete, success
                 log.info("Revoked SLA");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to revoke SLA");

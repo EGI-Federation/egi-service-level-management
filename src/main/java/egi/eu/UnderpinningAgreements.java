@@ -306,7 +306,9 @@ public class UnderpinningAgreements extends BaseResource {
                              "on an agreement, the next update will create a new version of the agreement, "+
                              "which can be modified until signed.")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed"),
+            @APIResponse(responseCode = "204", description = "Signed",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -333,7 +335,7 @@ public class UnderpinningAgreements extends BaseResource {
             .chain(signed -> {
                 // Sign complete, success
                 log.info("Signed UA");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to sign UA");
@@ -355,7 +357,9 @@ public class UnderpinningAgreements extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.UA_OWNER })
     @Operation(operationId = "revokeUA",  summary = "Revoke existing Underpinning Agreement")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Revoked"),
+            @APIResponse(responseCode = "204", description = "Revoked",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -382,7 +386,7 @@ public class UnderpinningAgreements extends BaseResource {
             .chain(revoked -> {
                 // Revoke complete, success
                 log.info("Revoked UA");
-                return Uni.createFrom().item(Response.ok().status(Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).status(Response.Status.NO_CONTENT).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to revoke UA");
