@@ -8,7 +8,6 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 
-import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -51,21 +50,21 @@ public class ActionError {
     public ActionError(ActionError error) {
 
         this.id = error.id;
+        this.status = error.status();
         this.description = error.description;
         this.details = Optional.empty();
 
         if(error.details.isPresent()) {
             var ed = error.details.get();
             if(!ed.isEmpty()) {
-                HashMap<String, String> details = new HashMap<>();
-                details.putAll(ed);
+                HashMap<String, String> details = new HashMap<>(ed);
                 this.details = Optional.of(details);
             }
         }
     }
 
     /**
-     * Copy but change id
+     * Copy but change id. Status code stays the same.
      * @param error Error to copy
      * @param newId New error id
      */
@@ -82,6 +81,8 @@ public class ActionError {
         this.id = id;
         this.description = Optional.empty();
         this.details = Optional.empty();
+
+        updateStatusFromId();
     }
 
     /**
@@ -93,6 +94,8 @@ public class ActionError {
         this.id = id;
         this.description = Optional.of(description);
         this.details = Optional.empty();
+
+        updateStatusFromId();
     }
 
     /**
@@ -101,7 +104,7 @@ public class ActionError {
      * @param detail Key-value pair to add to the details of the error
      */
     public ActionError(String id, Tuple2<String, String> detail) {
-        this(id, Arrays.asList(detail));
+        this(id, null, Arrays.asList(detail));
     }
 
     /**
@@ -110,15 +113,7 @@ public class ActionError {
      * @param details Key-value pairs to add to the details of the error
      */
     public ActionError(String id, List<Tuple2<String, String>> details) {
-        this.id = id;
-        this.description = Optional.empty();
-        this.details = Optional.of(new HashMap<>() {
-            {
-                for(Tuple2<String, String> detail : details)
-                    if(null != detail.getItem2() && !detail.getItem2().isEmpty())
-                        put(detail.getItem1(), detail.getItem2());
-            }
-        });
+        this(id, null, details);
     }
 
     /**
@@ -139,7 +134,7 @@ public class ActionError {
      */
     public ActionError(String id, String description, List<Tuple2<String, String>> details) {
         this.id = id;
-        this.description = Optional.of(description);
+        this.description = null != description ? Optional.of(description) : Optional.empty();
         this.details = Optional.of(new HashMap<>() {
             {
                 for(Tuple2<String, String> detail : details)
@@ -147,6 +142,8 @@ public class ActionError {
                         put(detail.getItem1(), detail.getItem2());
             }
         });
+
+        updateStatusFromId();
     }
 
     /**
@@ -164,30 +161,15 @@ public class ActionError {
             this.description = Optional.empty();
 
         var type = t.getClass();
-        if (type.equals(ServiceException.class) ||
-            type.equals(CheckinServiceException.class) ||
+        if (type.equals(CheckinServiceException.class) ||
             type.equals(ClientWebApplicationException.class) ||
             type.equals(WebApplicationException.class) ) {
             // Build from web exception
             var we = (WebApplicationException)t;
             this.status = Status.fromStatusCode(we.getResponse().getStatus());
 
-            if(this.id.equals("exception")) {
-                switch (this.status) {
-                    case UNAUTHORIZED:
-                        this.id = "notAuthorized";
-                        break;
-                    case FORBIDDEN:
-                        this.id = "noAccess";
-                        break;
-                    case BAD_REQUEST:
-                        this.id = "badRequest";
-                        break;
-                    case NOT_FOUND:
-                        this.id = "notFound";
-                        break;
-                }
-            }
+            if(this.id.equals("exception"))
+                updateIdFromStatus();
 
             if(this.description.isEmpty()) {
                 String reason = we.getResponse().getStatusInfo().getReasonPhrase();
@@ -197,10 +179,11 @@ public class ActionError {
         }
         else if (type.equals(ActionException.class)) {
             ActionException ae = (ActionException)t;
-            this.id = ae.getId();
+            this.id = ae.id();
+            this.status = ae.status();
 
             // Collect the details from the exception (if any)
-            var aeDetails = ae.getDetails();
+            var aeDetails = ae.details();
             if(null != aeDetails && !aeDetails.isEmpty()) {
                 HashMap<String, String> details = new HashMap<>();
                 details.putAll(aeDetails);
@@ -241,31 +224,67 @@ public class ActionError {
         this.details = Optional.of(combinedDetails);
 
         // Adjust id for some statuses
-        var type = t.getClass();
-        if (type.equals(ClientWebApplicationException.class) ||
-            type.equals(WebApplicationException.class) ) {
-            // Refine the id for NOT_FOUND errors
-            switch(this.status) {
-                case NOT_FOUND:
-                    if(this.details.isPresent() && !this.details.get().isEmpty())
-                    {
-                        var keys = this.details.get().keySet();
-                        if(keys.contains("fieldName"))
-                            this.id = "fieldNotFound";
-                        else if(keys.contains("jobId"))
-                            this.id = "transferNotFound";
-                        else if(keys.contains("seUrl"))
-                            this.id = "storageElementNotFound";
-                    } break;
+//        var type = t.getClass();
+//        if (type.equals(ClientWebApplicationException.class) ||
+//            type.equals(WebApplicationException.class) ) {
+//            // Refine the id for NOT_FOUND errors
+//            switch(this.status) {
+//                case NOT_FOUND:
+//                    if(this.details.isPresent() && !this.details.get().isEmpty())
+//                    {
+//                        var keys = this.details.get().keySet();
+//                        if(keys.contains("fieldName"))
+//                            this.id = "fieldNotFound";
+//                        else if(keys.contains("jobId"))
+//                            this.id = "transferNotFound";
+//                        else if(keys.contains("seUrl"))
+//                            this.id = "storageElementNotFound";
+//                    } break;
+//            }
+//        }
+    }
+
+    /***
+     * Determine id from status code
+     * @return True if id was updated
+     */
+    private boolean updateIdFromStatus() {
+        switch (this.status) {
+            case UNAUTHORIZED -> this.id = "notAuthorized";
+            case FORBIDDEN -> this.id = "noAccess";
+            case BAD_REQUEST -> this.id = "badRequest";
+            case NOT_FOUND -> this.id = "notFound";
+            default -> {
+                return false;
             }
         }
+
+        return true;
+    }
+
+    /***
+     * Determine status code from id
+     * @return True if status code was updated
+     */
+    private boolean updateStatusFromId() {
+        switch (this.id) {
+            case "notAuthorized" -> this.status = Status.UNAUTHORIZED;
+            case "noAccess" -> this.status = Status.FORBIDDEN;
+            case "badRequest" -> this.status = Status.BAD_REQUEST;
+            case "notFound" -> this.status = Status.NOT_FOUND;
+            default -> {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
      * Retrieve the HTTP status code
      * @return HTTP status code
      */
-    public Status getStatus() {
+    public Status status() {
         return this.status;
     }
 
@@ -274,7 +293,7 @@ public class ActionError {
      * @param status New HTTP status
      * @return Instance to allow for fluent calls (with .)
      */
-    public ActionError setStatus(Status status) {
+    public ActionError status(Status status) {
         this.status = status;
         return this;
     }

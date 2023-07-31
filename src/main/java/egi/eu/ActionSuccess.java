@@ -6,7 +6,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-import java.util.Optional;
 
 
 /**
@@ -17,7 +16,7 @@ public class ActionSuccess {
 
     @Schema(description="Confirmation message")
     @JsonInclude(Include.NON_EMPTY)
-    public Optional<String> message;
+    public String message;
 
 
     /**
@@ -28,7 +27,7 @@ public class ActionSuccess {
     /**
      * Construct from message
      */
-    public ActionSuccess(String message) { this.message = Optional.of(message); }
+    public ActionSuccess(String message) { this.message = message; }
 
     /**
      * Convert to Response that can be returned by a REST endpoint

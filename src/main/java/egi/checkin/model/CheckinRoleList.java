@@ -14,13 +14,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CheckinRoleList {
 
-    @JsonProperty("ResponseType")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String kind; // CoPersonRoles
-
     @JsonProperty("RequestType")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String requestType; // CoPersonRoles
+
+    @JsonProperty("ResponseType")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String kind; // CoPersonRoles
 
     @JsonProperty("Version")
     public String version = "1.0";

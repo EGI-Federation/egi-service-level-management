@@ -23,4 +23,7 @@ public interface CheckinConfig {
 
     @WithName("cache-vo-members")
     int cacheMembers();
+
+    @WithName("trace-roles")
+    boolean traceRoles();
 }

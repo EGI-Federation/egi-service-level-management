@@ -9,8 +9,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestHeader;
+import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -25,7 +25,6 @@ import jakarta.ws.rs.core.Response;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.UserInfo;
-import egi.checkin.model.CheckinRoleList;
 import egi.eu.model.UserList;
 
 
@@ -146,7 +145,7 @@ public class Users extends BaseResource {
 
         if(null == auth || auth.trim().isEmpty()) {
             var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.setStatus(Response.Status.BAD_REQUEST).toResponse());
+            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
         }
 
         Uni<Response> result = Uni.createFrom().nullItem()
@@ -162,8 +161,8 @@ public class Users extends BaseResource {
             .chain(unused -> {
                 // List users
                 return onlyGroup ?
-                        checkin.listGroupMembersAsync() :
-                        checkin.listVoMembersAsync();
+                        checkin.listGroupMembersAsync(this.imsConfig.group()) :
+                        checkin.listVoMembersAsync(this.imsConfig.vo());
             })
             .chain(users -> {
                 // Got users, success
@@ -180,18 +179,20 @@ public class Users extends BaseResource {
     }
 
     /**
-     * Add a user to the configured group.
+     * Add user to the configured group.
      * @param auth The access token needed to call the service.
      * @param checkinUserId The Check-in Id of the user to add to the group.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @POST
-    @Path("/users/{checkinUserId}")
+    @Path("/group/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.ISM_USER)
-    @Operation(operationId = "addUserToGroup",  summary = "Include a user in the configured group")
+    @Operation(operationId = "addUserToGroup",  summary = "Add user in the configured group")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Added"),
+            @APIResponse(responseCode = "200", description = "Added",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -203,7 +204,7 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> addUserToGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                        @RestQuery("checkinUserId")
+                                        @RestPath("checkinUserId")
                                         @Parameter(description = "Id of user to add to the configured group")
                                         int checkinUserId) {
 
@@ -215,7 +216,7 @@ public class Users extends BaseResource {
 
         if(null == auth || auth.trim().isEmpty()) {
             var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.setStatus(Response.Status.BAD_REQUEST).toResponse());
+            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
         }
 
         Uni<Response> result = Uni.createFrom().nullItem()
@@ -230,15 +231,83 @@ public class Users extends BaseResource {
             })
             .chain(unused -> {
                 // Add user
-                return checkin.addUserToGroupAsync(checkinUserId);
+                return checkin.addUserToGroupAsync(checkinUserId, this.imsConfig.group());
             })
             .chain(unused -> {
                 // Added user, success
                 log.info("Added user to group");
-                return Uni.createFrom().item(Response.ok().status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Added")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to add user to group");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * Remove user to the configured group.
+     * @param auth The access token needed to call the service.
+     * @param checkinUserId The Check-in Id of the user to remove from the group.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @DELETE
+    @Path("/group/{checkinUserId}")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed(Role.ISM_USER)
+    @Operation(operationId = "removeUserFromGroup",  summary = "Remove user from the configured group")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Removed",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="User not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> removeUserFromGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                             @RestPath("checkinUserId")
+                                             @Parameter(description = "Id of user to remove from the configured group")
+                                             int checkinUserId) {
+
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("checkinUserId", checkinUserId);
+
+        log.info("Removing user from group");
+
+        if(null == auth || auth.trim().isEmpty()) {
+            var ae = new ActionError("badRequest", "Access token missing");
+            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
+        }
+
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // Get REST client for Check-in
+                if (!checkin.init(this.checkinConfig, this.imsConfig))
+                    // Could not get REST client
+                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+
+                return Uni.createFrom().item(unused);
+            })
+            .chain(unused -> {
+                // Remove user
+                return checkin.removeUserFromGroupAsync(checkinUserId, this.imsConfig.group());
+            })
+            .chain(unused -> {
+                // Removed user, success
+                log.info("Removed user from group");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Removed")).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to remove user from group");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
 

@@ -79,7 +79,7 @@ public class ActionException extends RuntimeException {
         if (ActionException.class.isAssignableFrom(type)) {
             // Build from action exception
             var ae = (ActionException)e;
-            this.status = ae.getStatus();
+            this.status = ae.status();
         }
         else if (WebApplicationException.class.isAssignableFrom(type)) {
             // Build from web exception
@@ -113,12 +113,12 @@ public class ActionException extends RuntimeException {
      * Construct with exception
      */
     public ActionException(Throwable e) {
-        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).getId() : "exception");
+        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).id() : "exception");
 
         // Don't forget to copy details
         if(ActionException.class.isAssignableFrom(e.getClass())) {
             this.details = new HashMap<>();
-            this.details.putAll(((ActionException)e).getDetails());
+            this.details.putAll(((ActionException)e).details());
         }
     }
 
@@ -126,25 +126,25 @@ public class ActionException extends RuntimeException {
      * Construct with exception and details
      */
     public ActionException(Throwable e, List<Tuple2<String, String>> details) {
-        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).getId() : "exception", details);
+        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).id() : "exception", details);
     }
 
     /**
      * Construct with exception and detail
      */
     public ActionException(Throwable e, Tuple2<String, String> detail) {
-        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).getId() : "exception", detail);
+        this(e, ActionException.class.isAssignableFrom(e.getClass()) ? ((ActionException)e).id() : "exception", detail);
     }
 
     /***
      * Retrieve the error id
      */
-    public String getId() { return this.id; }
+    public String id() { return this.id; }
 
     /***
      * Retrieve the details
      */
-    public Map<String, String> getDetails() { return this.details; }
+    public Map<String, String> details() { return this.details; }
 
     /***
      * Add detail
@@ -170,7 +170,7 @@ public class ActionException extends RuntimeException {
     /**
      * Retrieve the HTTP status code
      */
-    public Response.Status getStatus() {
+    public Response.Status status() {
         return this.status;
     }
 

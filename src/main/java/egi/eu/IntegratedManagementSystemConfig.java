@@ -23,7 +23,4 @@ public interface IntegratedManagementSystemConfig {
     // Role names (in entitlements)
     // e.g. urn:mace:egi.eu:group:vo.tools.egi.eu:slm:role=process-manager#aai.egi.eu"
     Map<String, String> roles();
-
-    @WithName("trace-roles")
-    boolean traceRoles();
 }

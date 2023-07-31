@@ -14,13 +14,13 @@ egi:
       ola-owner: ola-owner
       ua-owner: ua-owner
       report-owner: report-owner
-    trace-roles: true
   checkin:
     server: https://aai-demo.egi.eu
     username: co_2.toolsegi
     password: password
     co-id: 2
     cache-vo-members: 600000 # milliseconds
+    trace-roles: true
   qos:
     quantiles: [0.95]
     slos: [500] # SLOs in milliseconds
@@ -99,7 +99,6 @@ quarkus:
     fail-on-unknown-properties: false
   http:
     port: 8081
-    test-port: 8082
     auth:
       basic: false
     cors:
