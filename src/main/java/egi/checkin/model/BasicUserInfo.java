@@ -16,7 +16,7 @@ public class BasicUserInfo {
     public String userId;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public int checkinUserId;
+    public long checkinUserId;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("preferred_user_name")
@@ -54,7 +54,7 @@ public class BasicUserInfo {
 
         // Get first voperson_id
         for(var id : role.person.ids) {
-            if(null != id.type && "epuid" == id.type) {
+            if(null != id.type && id.type.equals("epuid")) {
                 this.userId = id.identifier;
                 break;
             }

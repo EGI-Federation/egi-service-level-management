@@ -5,7 +5,7 @@ import jakarta.ws.rs.core.Response;
 
 
 /**
- * Exception class for FileTransferService API calls
+ * Exception class for Check-in API calls
  */
 public class CheckinServiceException extends WebApplicationException {
 

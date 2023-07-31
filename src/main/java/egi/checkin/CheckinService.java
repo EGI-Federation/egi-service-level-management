@@ -40,6 +40,13 @@ public interface CheckinService {
     @Path("/api/v2/VoMembers.json")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<CheckinNewObject> addUserToGroupAsync(@RestHeader("Authorization") String auth,
-                                              CheckinRoleList addRoles);
+    Uni<CheckinObject> addUserRoleAsync(@RestHeader("Authorization") String auth,
+                                        CheckinRoleList addRoles);
+
+    @PUT
+    @Path("/api/v2/VoMembers/{roleId}.json")
+    @Consumes(MediaType.APPLICATION_JSON)
+    Uni<String> updateUserRoleAsync(@RestHeader("Authorization") String auth,
+                                    @RestPath("roleId") long roleId,
+                                    CheckinRoleList updateRoles);
 }

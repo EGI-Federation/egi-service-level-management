@@ -1,14 +1,20 @@
 package egi.checkin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;
 
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.time.Instant;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -19,7 +25,6 @@ import java.util.stream.Collectors;
 import egi.checkin.model.*;
 import egi.eu.IntegratedManagementSystemConfig;
 import egi.eu.ServiceException;
-import egi.eu.ActionError;
 import egi.eu.ActionException;
 
 
@@ -125,25 +130,23 @@ public class Checkin {
     }
 
     /***
-     * List all members of a group or virtual organization (VO).
+     * List all members of a virtual organization (VO).
      * Although multiple membership records can exist for a user, e.g. with different
      * start/until dates and different statuses, this function returns just one
-     * {@link BasicUserInfo} per user.
-     * @param onlyGroup Whether to return only users included in the configured group
-     *                  or all members of the configured VO.
-     * @return List of all active members
+     * {@link UserInfo} per user.
+     * @return List of all active VO members
      */
-    public Uni<List<UserInfo>> listGroupMembersAsync(boolean onlyGroup) {
+    public Uni<List<UserInfo>> listVoMembersAsync() {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ServiceException("notReady"));
         }
 
-        MDC.put("coId", checkinConfig.coId());
-        MDC.put("onlyGroup", onlyGroup);
+        MDC.put("vo", this.imsConfig.vo());
+        MDC.put("coId", this.checkinConfig.coId());
 
-        // If we were asked for VO members, first check if we have them cached
-        if(!onlyGroup && voMembersCached()) {
+        // First check if we have them cached
+        if(voMembersCached()) {
             // We have a cache, and it's not stale
             log.info("Returning cached VO members");
             List<UserInfo> userList = new ArrayList<>(voMembers.values());
@@ -153,86 +156,94 @@ public class Checkin {
         Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
-                // Therefore, we must check ourselves and only return group members that are also
-                // members of the VO. This means we need the list of VO members, even if we are being
-                // called just to list members of the configured group.
-                if(!voMembersCached()) {
-                    log.info("Getting VO members");
-                    return getGroupMembersAsync(this.imsConfig.vo());
-                }
-
-                return Uni.createFrom().nullItem();
+                log.info("Getting VO members");
+                return getGroupMembersAsync(this.imsConfig.vo());
             })
             .chain(voRoles -> {
-                if(null != voRoles) {
-                    // Got VO role records, keep just the membership ones
-                    Map<Long, UserInfo> users = new HashMap<>();
+                // Got VO role records, keep just the membership ones
+                var members = filterList(voRoles.records, role -> role.role.equals("member"));
 
-                    var traceRoles = this.imsConfig.traceRoles();
-                    var members = filterList(voRoles.records, role -> role.role.equals("member"));
+                Map<Long, UserInfo> users = new HashMap<>();
+                for(var role : members) {
+                    if(role.deleted || !role.status.equalsIgnoreCase("Active"))
+                        // Inactive membership record, skip
+                        continue;
 
-                    for(var role : members) {
-                        // Check if an active membership record
-                        final boolean isActive = !role.deleted && role.status.equalsIgnoreCase("Active");
-
-                        if(isActive || traceRoles) {
-                            var user = new UserInfo(role);
-                            if (!users.containsKey(user.checkinUserId)) {
-                                // This is a membership record, not a role record
-                                users.put(user.checkinUserId, user);
-                            }
-                        }
-                    }
-
-                    // Cache VO member list
-                    voMembers = users;
-                    voMembersUpdatedAt = Instant.now().toEpochMilli();
-
-                    if(traceRoles)
-                        logGroupMemberships(members, users, false);
-
-                    if(!onlyGroup)
-                        return Uni.createFrom().nullItem();
+                    var user = new UserInfo(role);
+                    if (!users.containsKey(user.checkinUserId))
+                        users.put(user.checkinUserId, user);
                 }
 
-                // Get membership records
-                log.info("Getting members of group " + imsConfig.group());
-                return getGroupMembersAsync(imsConfig.group());
-            })
-            .chain(groupRoles -> {
-                if(null != groupRoles) {
-                    // Got group role records, keep just the membership ones
-                    Map<Long, UserInfo> users = new HashMap<>();
+                // Cache VO member list
+                voMembers = users;
+                voMembersUpdatedAt = Instant.now().toEpochMilli();
 
-                    var members = filterList(groupRoles.records, role -> role.role.equals("member"));
+                if(this.imsConfig.traceRoles())
+                    logGroupMemberships(members, users, false);
 
-                    for (var role : members) {
-                        if (role.deleted || !role.status.equalsIgnoreCase("Active"))
-                            // Not an active membership record, skip
-                            continue;
-
-                        var user = new UserInfo(role);
-                        if (voMembers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId)) {
-                            // This is a membership record, not a role record
-                            users.put(user.checkinUserId, user);
-                        }
-                    }
-
-                    if(this.imsConfig.traceRoles())
-                        logGroupMemberships(members, users, true);
-
-                    List<UserInfo> userList = new ArrayList<>(users.values());
-                    return Uni.createFrom().item(userList);
-                }
-
-                // If we get here, then we need to return the VO members
-                // And those were loaded in the previous step
+                // Return VO members
                 List<UserInfo> userList = new ArrayList<>(voMembers.values());
                 return Uni.createFrom().item(userList);
             })
             .onFailure().invoke(e -> {
-                log.errorf("Failed to get %s members", onlyGroup ? "group" : "VO");
+                log.error("Failed to get VO members");
+            });
+
+        return result;
+    }
+
+    /***
+     * List all members of a group or virtual organization (VO).
+     * Although multiple membership records can exist for a user, e.g. with different
+     * start/until dates and different statuses, this function returns just one
+     * {@link UserInfo} per user.
+     * @return List of all active group members
+     */
+    public Uni<List<UserInfo>> listGroupMembersAsync() {
+        if(null == checkin) {
+            log.error("Check-in not ready, call init() first");
+            return Uni.createFrom().failure(new ServiceException("notReady"));
+        }
+
+        Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
+                // Therefore, we must check ourselves and only return group members that are also
+                // members of the VO. This means we need the list of VO members, even if we are being
+                // called just to list members of the configured group.
+                return listVoMembersAsync();
+            })
+            .chain(voMembers -> {
+                // VO members are now cached, get group role records
+                log.info("Getting members of group " + this.imsConfig.group());
+                return getGroupMembersAsync(this.imsConfig.group());
+            })
+            .chain(groupRoles -> {
+                // Got group role records, keep just the membership ones
+                var members = filterList(groupRoles.records, role -> role.role.equals("member"));
+
+                Map<Long, UserInfo> users = new HashMap<>();
+                for (var role : members) {
+                    if (role.deleted || !role.status.equalsIgnoreCase("Active"))
+                        // Not an active membership record, skip
+                        continue;
+
+                    var user = new UserInfo(role);
+                    if (voMembers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
+                        // This is a membership record, not a role record
+                        users.put(user.checkinUserId, user);
+                }
+
+                if(this.imsConfig.traceRoles())
+                    logGroupMemberships(members, users, true);
+
+                // Return group members
+                List<UserInfo> userList = new ArrayList<>(users.values());
+                return Uni.createFrom().item(userList);
+            })
+            .onFailure().invoke(e -> {
+                log.error("Failed to get group members");
             });
 
         return result;
@@ -249,6 +260,7 @@ public class Checkin {
         final var coId = checkinConfig.coId();
 
         MDC.put("groupName", groupName);
+        MDC.put("coId", coId);
 
         log.info("Getting membership records");
 
@@ -260,9 +272,7 @@ public class Checkin {
                 return checkin.listGroupMembersAsync(header, coId, groupName);
             })
             .chain(roles -> {
-                // Got membership records, success
-                log.info("Got membership records");
-
+                // Got membership records
                 if(null != roles.records) {
                     // A membership record can represent membership in a group or VO
                     // (when title is not set) or a role (when title is set to the role name
@@ -289,6 +299,10 @@ public class Checkin {
                     MDC.remove("roleStatus");
                 }
 
+                // Success
+                if(!this.imsConfig.traceRoles())
+                    log.info("Got membership records");
+
                 return Uni.createFrom().item(roles);
             })
             .onFailure().invoke(e -> {
@@ -296,6 +310,148 @@ public class Checkin {
             });
 
         return result;
+    }
+
+    /***
+     * Add a user to a group or virtual organization (VO).
+     * @return Details of membership record
+     */
+    public Uni<CheckinObject> addUserToGroupAsync(long checkinUserId) {
+        if(null == checkin) {
+            log.error("Check-in not ready, call init() first");
+            return Uni.createFrom().failure(new ServiceException("notReady"));
+        }
+
+        final var coId = checkinConfig.coId();
+
+        MDC.put("coId", coId);
+        MDC.put("checkinUserId", checkinUserId);
+
+        final var header = getBasicAuthHeader();
+        final var deletedRoles = new ArrayList<CheckinRole>();
+
+        Uni<CheckinObject> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // Check-in allows multiple role membership records for the same role.
+                // However, once there are multiple records, with (at least) one being marked deleted,
+                // attempts to remove the role from the user (by marking it deleted) will fail,
+                // as there is already a record marked deleted for the role. Therefore, before we
+                // add a new record for the role, we must check whether there is a record for this role
+                // that is marked deleted, and if so restore that instead of adding a new one.
+                // This means we need the list of group members first.
+                return getGroupMembersAsync(this.imsConfig.group());
+            })
+            .chain(roles -> {
+                // Got group membership records
+                var deleted = filterList(roles.records,
+                                         role -> checkinUserId == role.person.Id &&
+                                                 role.role.equals("member") &&
+                                                 (role.deleted || role.status.equalsIgnoreCase("Deleted")) &&
+                                                 null == role.from && null == role.until);
+
+                if(!deleted.isEmpty()) {
+                    // Deleted membership record found, restore it
+                    var deletedRole = deleted.get(0);
+                    MDC.put("roleId", deletedRole.roleId);
+
+                    log.info("Restore membership record");
+
+                    // Unlike CheckinService::addUserRoleAsync, CheckinService::updateUserRoleAsync will not
+                    // return a CheckinObject. Save the details of the deleted role, so we can construct one.
+                    deletedRoles.add(deletedRole);
+
+                    // Restore group membership
+                    var restoreRoles = new CheckinRoleList(checkinUserId, imsConfig.group(), coId, "member", "Active");
+                    return checkin.updateUserRoleAsync(header, deletedRole.roleId, restoreRoles);
+                }
+
+                // Signal that we need to add a new membership record
+                return Uni.createFrom().nullItem();
+            })
+            .chain(updated -> {
+                // Got the empty response from the role update or null,
+                // which means we need to add a new membership record
+                if(null == updated) {
+                    // No deleted membership record found, add a new one
+                    log.info("Add membership record");
+
+                    var addRoles = new CheckinRoleList(checkinUserId, imsConfig.group(), coId, "member", "Active");
+                    return checkin.addUserRoleAsync(header, addRoles);
+                }
+
+                // Fake an updated object to uniformize the response of the add and update Check-in endpoints
+                var deletedRole = deletedRoles.get(0);
+                var updatedObject = new CheckinObject();
+                updatedObject.kind = "UpdatedObject";
+                updatedObject.type = "CoPersonRole";
+                updatedObject.Id = Long.toString(deletedRole.roleId);
+
+                return Uni.createFrom().item(updatedObject);
+            })
+            .onFailure().recoverWithUni(e -> {
+                // Check if this is a 400 error, if so pass the messages
+                // detailing what is wrong with which field to the caller
+                var fieldErrors = getBadRequestFieldErrors(e);
+                if(null != fieldErrors) {
+                    // Use the first field error as the description
+                    String description = null;
+                    String field = null;
+                    for (var entry : fieldErrors.entrySet()) {
+                        field = entry.getKey();
+                        description = entry.getValue();
+                        break;
+                    }
+
+                    if(null != field && null != description)
+                        return Uni.createFrom().failure(new ActionException("badRequest", description,
+                                                                Tuple2.of("field", field)));
+                }
+
+                return Uni.createFrom().failure(e);
+            });
+
+        return result;
+    }
+
+    /***
+     * Check if exception is a bad request
+     * @param e The exception
+     * @return Error messages for the fields that had errors
+     */
+    private HashMap<String, String> getBadRequestFieldErrors(Throwable e) {
+
+        final var cause = e.getCause();
+        if(cause instanceof CheckinServiceException) {
+            final var ce = (CheckinServiceException)cause;
+            final var response = ce.getResponse();
+            final var status = Status.fromStatusCode(response.getStatus());
+
+            if(Status.BAD_REQUEST == status) {
+                // Extract field errors
+                CheckinObject badRequest = null;
+                try {
+                    badRequest = new ObjectMapper().readValue(ce.responseBody(), CheckinObject.class);
+                } catch (JsonProcessingException ex) {
+                    return null;
+                }
+
+                var errorDetails = new HashMap<String, String>();
+                if(null != badRequest.fieldErrors && !badRequest.fieldErrors.isEmpty()) {
+                    for(var field : badRequest.fieldErrors.keySet()) {
+                        for(var error : badRequest.fieldErrors.get(field)) {
+                            // Keep only one error per field
+                            errorDetails.put(field, error);
+                            break;
+                        }
+                    }
+
+                    return errorDetails;
+                }
+            }
+        }
+
+        return null;
     }
 
     /***
@@ -314,15 +470,17 @@ public class Checkin {
         Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         for(var role : roleRecords) {
-            var user = users.getOrDefault(role.person.Id, null);
-            var trace = String.format("userId:%d recordId:%d", role.person.Id, role.roleId);
+            var trace = "userId:" + role.person.Id;
+            var user = users.get(role.person.Id);
+            if(null == user && onlyGroup && voMembersCached())
+                user = voMembers.get(role.person.Id);
 
             MDC.put("roleId", role.roleId);
             MDC.put("roleStatus", role.status);
             MDC.put("checkinUserId", role.person.Id);
 
             if(null != user) {
-                trace = user.fullName + " " + trace;
+                trace = user.fullName + ", " + trace;
 
                 MDC.put("userFullName", user.fullName);
                 if(null != user.userId)
@@ -337,7 +495,7 @@ public class Checkin {
                         formatter.format(role.until));
             }
 
-            log.info(role.status + ": " + trace);
+            log.infof("recordId:%d %s -> %s", role.roleId, role.status, trace);
         }
 
         MDC.remove("roleId");
@@ -347,118 +505,6 @@ public class Checkin {
         MDC.remove("userFullName");
         MDC.remove("roleFrom");
         MDC.remove("roleUntil");
-    }
-
-    /***
-     * Log all membership records of a user
-     * @param roleRecords The Check-in membership records of the user
-     * @param user The user details
-     */
-    private void logUserMemberships(List<CheckinRole> roleRecords, UserInfo user) {
-
-        var active = filterList(roleRecords, role -> checkinUserId == role.person.Id && role.role.equals("member"));
-
-        log.infof("Found %d active members in %s %s", users.size(),
-                onlyGroup ? "group" : "VO",
-                onlyGroup ? this.imsConfig.group() : "");
-
-        Format formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        for(var role : roleRecords) {
-            var user = users.getOrDefault(role.person.Id, null);
-            var trace = String.format("userId:%d recordId:%d", role.person.Id, role.roleId);
-
-            MDC.put("roleId", role.roleId);
-            MDC.put("roleStatus", role.status);
-            MDC.put("checkinUserId", role.person.Id);
-
-            if(null != user) {
-                trace = user.fullName + " " + trace;
-
-                MDC.put("userFullName", user.fullName);
-                if(null != user.userId)
-                    MDC.put("userId", user.userId);
-            }
-
-            if(null != role.from) {
-                MDC.put("roleFrom", role.from);
-                MDC.put("roleUntil", role.until);
-                trace += String.format(" from:%s until:%s",
-                        formatter.format(role.from),
-                        formatter.format(role.until));
-            }
-
-            log.info(role.status + ": " + trace);
-        }
-
-        MDC.remove("roleId");
-        MDC.remove("roleStatus");
-        MDC.remove("checkinUserId");
-        MDC.remove("userId");
-        MDC.remove("userFullName");
-        MDC.remove("roleFrom");
-        MDC.remove("roleUntil");
-    }
-
-    /***
-     * Add a user to a group or virtual organization (VO).
-     * @return Details of membership record
-     */
-    public Uni<CheckinNewObject> addUserToGroupAsync(long checkinUserId) {
-        if(null == checkin) {
-            log.error("Check-in not ready, call init() first");
-            return Uni.createFrom().failure(new ServiceException("notReady"));
-        }
-
-        final var coId = checkinConfig.coId();
-
-        MDC.put("coId", coId);
-        MDC.put("checkinUserId", checkinUserId);
-
-        final var header = getBasicAuthHeader();
-
-        Uni<CheckinNewObject> result = Uni.createFrom().nullItem()
-            .chain(unused -> {
-                // Check-in allows multiple role membership records for the same role. However,
-                // once there are multiple records, with (at least) one being marked deleted,
-                // attempts to remove the role from the user (by marking it deleted) will fail,
-                // as there is already a record marked deleted for the role.
-                // Therefore, before we add a new record for the role, we must check whether
-                // there is a record for this role that is marked deleted, and if so restore that
-                // instead of adding a new one.
-                // This means we need the list of group members first.
-                return getGroupMembersAsync(this.imsConfig.group());
-            })
-            .chain(roles -> {
-                // Got member list
-                var members = filterList(roles.records, role -> checkinUserId == role.person.Id && role.role.equals("member"));
-
-                if(this.imsConfig.traceRoles())
-                    logGroupMemberships(members, voMembers, false);
-
-                // Add user to group
-                var addRoles = new CheckinRoleList(checkinUserId, imsConfig.group(), coId, "member", "Active");
-                return checkin.addUserToGroupAsync(header, addRoles);
-            })
-            .onFailure().recoverWithUni(e -> {
-                log.error("Failed to ...");
-                return Uni.createFrom().failure(new ActionException("addUserToGroup", Tuple2.of("catalogId", "fjshfskl") ));
-            });
-//                    var type = e.getClass();
-//                    if(type.equals(ClientWebApplicationException.class) ||
-//                            type.equals(WebApplicationException.class) ) {
-//                        // Build from web exception
-//                        var we = (WebApplicationException)e;
-//                        var status = Response.Status.fromStatusCode(we.getResponse().getStatus());
-//
-//                        if(Response.Status.NOT_FOUND == status) {
-//                            //
-//                        }
-//                    }
-
-        return result;
-
-        //return checkin.addUserToGroupAsync(header, addRoles);
     }
 
     /***

@@ -13,10 +13,10 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CheckinGroup {
 
-    public int Id;
+    public long Id;
 
     @JsonProperty("ParentId")
-    public int parentId;
+    public long parentId;
 
     @JsonProperty("CoId")
     public String coId;
