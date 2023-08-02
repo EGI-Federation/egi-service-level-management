@@ -21,7 +21,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 import egi.checkin.model.UserInfo;
 import egi.eu.model.*;
@@ -41,6 +40,11 @@ public class OperationalLevelAgreements extends BaseResource {
 
     @Inject
     SecurityIdentity identity;
+
+    // Parameter(s) to add to all endpoints
+    @RestHeader(TEST_STUB) @DefaultValue("default") @Parameter(hidden = true)
+    String stub;
+
 
     /***
      * Page of OLAs

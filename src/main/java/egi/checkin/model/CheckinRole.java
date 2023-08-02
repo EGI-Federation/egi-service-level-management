@@ -116,6 +116,13 @@ public class CheckinRole {
         this.deleted = false;
     }
 
+    /***
+     * Check if this is a membership record or a role record
+     */
+    public boolean isRole() {
+        return !this.title.isBlank() && this.title.equalsIgnoreCase(this.role);
+    }
+
 
     /***
      * Details of the user

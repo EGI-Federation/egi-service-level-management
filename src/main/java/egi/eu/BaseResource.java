@@ -15,6 +15,8 @@ import egi.checkin.Checkin;
  */
 public class BaseResource {
 
+    public static final String TEST_STUB = "x-test-stub";
+
     private Logger log;
 
     protected Checkin checkin;

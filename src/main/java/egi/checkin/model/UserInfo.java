@@ -36,6 +36,9 @@ public class UserInfo extends BasicUserInfo {
     @JsonProperty("eduperson_entitlement")
     public List<String> entitlements;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public List<String> roles;
+
 
     /***
      * Constructor
@@ -84,6 +87,20 @@ public class UserInfo extends BasicUserInfo {
             this.entitlements = new ArrayList<>();
 
         this.entitlements.add(entitlement);
+
+        return this;
+    }
+
+    /***
+     * Store another role
+     * @param role The role
+     * @return Ourselves, to allow chaining calls with .
+     */
+    public UserInfo addRole(String role) {
+        if(null == this.roles)
+            this.roles = new ArrayList<>();
+
+        this.roles.add(role);
 
         return this;
     }
