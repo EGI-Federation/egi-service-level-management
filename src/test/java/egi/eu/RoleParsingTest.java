@@ -2,15 +2,14 @@ package egi.eu;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.smallrye.mutiny.Uni;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import egi.eu.model.Role;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
@@ -18,7 +17,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import egi.checkin.model.UserInfo;
 
@@ -40,7 +38,7 @@ public class RoleParsingTest {
 
 
     @BeforeEach
-    public void setupEach() {
+    public void setup() {
         prefix = "urn:mace:egi.eu:group:" + imsConfig.vo() + ":";
         if(roleNames.isEmpty()) {
             roleNames.putAll(imsConfig.roles());

@@ -1,0 +1,118 @@
+{
+    "ResponseType": "CoPersonRoles",
+    "Version": "1.0",
+    "CoPersonRoles": [
+        {
+            "Version": "1.0",
+            "Id": 10763,
+            "Person": {
+                "Type": "CO",
+                "Id": 616,
+                "EmailAddress": [
+                    {
+                        "type": "official",
+                        "mail": "gergely@egi.eu",
+                        "verified": true
+                    }
+                ],
+                "Identifier": [
+                    {
+                        "type": "epuid",
+                        "identifier": "123123@egi.eu"
+                    }
+                ],
+                "Name": [
+                    {
+                        "type": "official",
+                        "given": "Gergely",
+                        "family": "S",
+                        "middle": null
+                    }
+                ]
+            },
+            "CouId": 100,
+            "Affiliation": "member",
+            "Status": "Active",
+            "Created": "2023-07-24 22:54:03",
+            "Modified": "2023-07-24 22:54:03",
+            "Revision": 0,
+            "Deleted": false
+        },
+        {
+            "Version": "1.0",
+            "Id": 10762,
+            "Person": {
+                "Type": "CO",
+                "Id": 6166,
+                "EmailAddress": [
+                    {
+                        "type": "official",
+                        "mail": "levente@egi.eu",
+                        "verified": true
+                    }
+                ],
+                "Identifier": [
+                    {
+                        "type": "uid",
+                        "identifier": "lfarkas"
+                    },
+                    {
+                        "type": "epuid",
+                        "identifier": "112233@egi.eu"
+                    }
+                ],
+                "Name": [
+                    {
+                        "type": "official",
+                        "given": "Levente",
+                        "family": "F",
+                        "middle": null
+                    }
+                ]
+            },
+            "CouId": 100,
+            "Affiliation": "member",
+            "Status": "Active",
+            "Created": "2023-07-24 22:46:50",
+            "Modified": "2023-07-24 22:46:50",
+            "Revision": 0,
+            "Deleted": false
+        },
+        {
+            "Version": "1.0",
+            "Id": 10758,
+            "Person": {
+                "Type": "CO",
+                "Id": 171,
+                "EmailAddress": [
+                    {
+                        "type": "official",
+                        "mail": "giuseppe@egi.eu",
+                        "verified": true
+                    }
+                ],
+                "Identifier": [
+                    {
+                        "type": "epuid",
+                        "identifier": "334455@egi.eu"
+                    }
+                ],
+                "Name": [
+                    {
+                        "type": "official",
+                        "given": "Giuseppe",
+                        "family": "R",
+                        "middle": null
+                    }
+                ]
+            },
+            "CouId": 100,
+            "Affiliation": "member",
+            "Status": "Active",
+            "Created": "2023-07-24 22:36:35",
+            "Modified": "2023-07-24 22:36:35",
+            "Revision": 0,
+            "Deleted": false
+        }
+    ]
+}

@@ -1,17 +1,10 @@
-package egi.eu;
+package egi.checkin;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.Request;
-
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -22,14 +15,13 @@ import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.Map;
 
-import egi.checkin.MockCheckin;
 import egi.checkin.model.UserInfo;
 
 
-public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
+public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
 
-    private static final Logger log = Logger.getLogger(UsersTestProxy.class);
-    private static boolean logBody = true;
+    private static final Logger log = Logger.getLogger(MockCheckinProxy.class);
+    private static boolean logRequestBody = false;
 
     private MockCheckin mockCheckin;
     private static String urlCheckin;
@@ -41,7 +33,7 @@ public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
     /***
      * Construct and load configuration
      */
-    public UsersTestProxy() {
+    public MockCheckinProxy() {
         final var config = ConfigProvider.getConfig();
         final var coId = config.getValue("egi.checkin.co-id", String.class);
         final var vo = config.getValue("egi.ims.vo", String.class);;
@@ -65,13 +57,15 @@ public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
     @Override
     public Map<String, String> start() {
 
-        //logBody = false;
-        mockCheckin = new MockCheckin(options().port(9092));
+        //logRequestBody = true;
+        mockCheckin = new MockCheckin(options()
+                            .port(9091)
+                            .usingFilesUnderDirectory("src/test/resources/checkin"));
         mockCheckin.start();
         configureFor(mockCheckin.getClient());
 
         // Get user info
-        mockCheckin.stubFor(get(urlPathEqualTo(pathGetUserInfo))
+        stubFor(get(urlPathEqualTo(pathGetUserInfo))
             .willReturn(aResponse()
                 .withStatus(Status.OK.getStatusCode())
                 .withHeader("Content-Type", "application/json")
@@ -83,28 +77,28 @@ public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
                                 .toJsonString())));
 
         // List users of VO
-        mockCheckin.stubFor(get(urlPathEqualTo(pathGetVoMembership))
+        stubFor(get(urlPathEqualTo(pathGetVoMembership))
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(Status.OK.getStatusCode())
-                .withBodyFile("checkin.voMembers.json")));
+                .withBodyFile("listVoMembers.json")));
 
         // List users of group
-        mockCheckin.stubFor(get(urlPathEqualTo(pathGetGroupMembership)).inScenario("Users")
+        stubFor(get(urlPathEqualTo(pathGetGroupMembership)).inScenario("Members")
             .whenScenarioStateIs(STARTED)
             .willReturn(aResponse()
                 .withHeader("Content-Type", "application/json")
                 .withStatus(Status.OK.getStatusCode())
-                .withBodyFile("checkin.groupMembers.json")));
+                .withBodyFile("listGroupMembers.json")));
 
         // Let everything else flow to Check-in
-        mockCheckin.stubFor(get(urlMatching(".*"))
+        stubFor(get(urlMatching(".*"))
             .atPriority(10)
             .willReturn(aResponse()
                 .proxiedFrom(urlCheckin)));
 
         // Add logging of mocked requests
-        mockCheckin.addMockServiceRequestListener(UsersTestProxy::requestReceived);
+        mockCheckin.addMockServiceRequestListener(MockCheckinProxy::requestReceived);
 
         return Collections.singletonMap("egi.checkin.server", mockCheckin.baseUrl());
     }
@@ -123,7 +117,7 @@ public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
      */
     @Override
     public void inject(TestInjector testInjector) {
-        testInjector.injectIntoFields(mockCheckin, new TestInjector.AnnotatedAndMatchesType(InjectWireMockUsers.class, WireMockServer.class));
+        testInjector.injectIntoFields(mockCheckin, new TestInjector.AnnotatedAndMatchesType(InjectMockCheckin.class, MockCheckin.class));
     }
 
     /**
@@ -135,7 +129,7 @@ public class UsersTestProxy implements QuarkusTestResourceLifecycleManager {
     protected static void requestReceived(Request inRequest, com.github.tomakehurst.wiremock.http.Response inResponse) {
         log.info("Check-in request: " + inRequest.getAbsoluteUrl());
         log.info("Check-in request headers:\n" + inRequest.getHeaders());
-        if(logBody)
+        if(logRequestBody)
             log.info("Check-in response body:\n" + inResponse.getBodyAsString());
         log.info("Check-in response headers:\n" + inResponse.getHeaders());
     }
