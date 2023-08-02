@@ -31,11 +31,11 @@ public class ActionError {
 
     @Schema(description="Error message")
     @JsonInclude(Include.NON_EMPTY)
-    public Optional<String> description;
+    public String description;
 
     @Schema(description="Additional details about the error")
     @JsonInclude(Include.NON_EMPTY)
-    public Optional<Map<String, String>> details;
+    public Map<String, String> details;
 
     @JsonIgnore
     private Status status = defaultStatus();
@@ -52,14 +52,11 @@ public class ActionError {
         this.id = error.id;
         this.status = error.status();
         this.description = error.description;
-        this.details = Optional.empty();
 
-        if(error.details.isPresent()) {
-            var ed = error.details.get();
-            if(!ed.isEmpty()) {
-                HashMap<String, String> details = new HashMap<>(ed);
-                this.details = Optional.of(details);
-            }
+        if(null != error.details) {
+            var ed = error.details;
+            if(!ed.isEmpty())
+                this.details = new HashMap<>(ed);
         }
     }
 
@@ -79,8 +76,6 @@ public class ActionError {
      */
     public ActionError(String id) {
         this.id = id;
-        this.description = Optional.empty();
-        this.details = Optional.empty();
 
         updateStatusFromId();
     }
@@ -92,8 +87,6 @@ public class ActionError {
      */
     public ActionError(String id, String description) {
         this.id = id;
-        this.description = Optional.of(description);
-        this.details = Optional.empty();
 
         updateStatusFromId();
     }
@@ -134,14 +127,14 @@ public class ActionError {
      */
     public ActionError(String id, String description, List<Tuple2<String, String>> details) {
         this.id = id;
-        this.description = null != description ? Optional.of(description) : Optional.empty();
-        this.details = Optional.of(new HashMap<>() {
+        this.description = description;
+        this.details = new HashMap<>() {
             {
                 for(Tuple2<String, String> detail : details)
                     if(null != detail.getItem2() && !detail.getItem2().isEmpty())
                         put(detail.getItem1(), detail.getItem2());
             }
-        });
+        };
 
         updateStatusFromId();
     }
@@ -152,13 +145,10 @@ public class ActionError {
      */
     public ActionError(Throwable t) {
         this.id = "exception";
-        this.details = Optional.empty();
 
         String msg = t.getMessage();
         if(null != msg && !msg.isEmpty())
-            this.description = Optional.of(msg);
-        else
-            this.description = Optional.empty();
+            this.description = msg;
 
         var type = t.getClass();
         if (type.equals(CheckinServiceException.class) ||
@@ -174,7 +164,7 @@ public class ActionError {
             if(this.description.isEmpty()) {
                 String reason = we.getResponse().getStatusInfo().getReasonPhrase();
                 if (null != reason && !reason.isEmpty())
-                    this.description = Optional.of(reason);
+                    this.description = reason;
             }
         }
         else if (type.equals(ActionException.class)) {
@@ -184,11 +174,8 @@ public class ActionError {
 
             // Collect the details from the exception (if any)
             var aeDetails = ae.details();
-            if(null != aeDetails && !aeDetails.isEmpty()) {
-                HashMap<String, String> details = new HashMap<>();
-                details.putAll(aeDetails);
-                this.details = Optional.of(details);
-            }
+            if(null != aeDetails && !aeDetails.isEmpty())
+                this.details = new HashMap<>(aeDetails);
         }
     }
 
@@ -215,33 +202,10 @@ public class ActionError {
             if(null != detail.getItem2() && !detail.getItem2().isEmpty())
                 combinedDetails.put(detail.getItem1(), detail.getItem2());
 
-        if(this.details.isPresent()) {
-            var ed = this.details.get();
-            if(!ed.isEmpty())
-                combinedDetails.putAll(ed);
-        }
+        if(null != this.details && !this.details.isEmpty())
+            combinedDetails.putAll(this.details);
 
-        this.details = Optional.of(combinedDetails);
-
-        // Adjust id for some statuses
-//        var type = t.getClass();
-//        if (type.equals(ClientWebApplicationException.class) ||
-//            type.equals(WebApplicationException.class) ) {
-//            // Refine the id for NOT_FOUND errors
-//            switch(this.status) {
-//                case NOT_FOUND:
-//                    if(this.details.isPresent() && !this.details.get().isEmpty())
-//                    {
-//                        var keys = this.details.get().keySet();
-//                        if(keys.contains("fieldName"))
-//                            this.id = "fieldNotFound";
-//                        else if(keys.contains("jobId"))
-//                            this.id = "transferNotFound";
-//                        else if(keys.contains("seUrl"))
-//                            this.id = "storageElementNotFound";
-//                    } break;
-//            }
-//        }
+        this.details = combinedDetails;
     }
 
     /***

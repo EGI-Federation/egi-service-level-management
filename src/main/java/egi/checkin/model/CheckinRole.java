@@ -120,7 +120,7 @@ public class CheckinRole {
      * Check if this is a membership record or a role record
      */
     public boolean isRole() {
-        return !this.title.isBlank() && this.title.equalsIgnoreCase(this.role);
+        return null != this.title && !this.title.isBlank() && this.title.equalsIgnoreCase(this.role);
     }
 
 

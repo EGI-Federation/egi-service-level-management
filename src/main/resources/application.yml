@@ -20,6 +20,7 @@ egi:
     password: password
     co-id: 2
     cache-vo-members: 600000 # milliseconds
+    cache-roles: 60000 # milliseconds
     trace-roles: true
   qos:
     quantiles: [0.95]

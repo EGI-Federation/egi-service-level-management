@@ -39,10 +39,19 @@ public class CheckinRoleList {
      * Construct as request to add/update membership record
      */
     public CheckinRoleList(long checkinUserId, String groupName, String coId, String affiliation, String status) {
+        this(checkinUserId, groupName, coId, null, affiliation, status);
+    }
+
+    /***
+     * Construct as request to add/update role record
+     */
+    public CheckinRoleList(long checkinUserId, String groupName, String coId, String title, String affiliation, String status) {
         this.requestType = "CoPersonRoles";
         this.records = new ArrayList<>();
 
         var record = new CheckinRole(checkinUserId, groupName, coId, affiliation, status);
+        if(null != title)
+            record.title = title;
         this.records.add(record);
     }
 }

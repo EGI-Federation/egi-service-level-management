@@ -14,6 +14,7 @@ import egi.checkin.model.UserInfo;
  * in section Service Level Management
  */
 public class Role {
+
     public final static String ISM_USER = "ism";
     public final static String ISM_ADMIN = "admin";
     public final static String PROCESS_MEMBER = "slm";
