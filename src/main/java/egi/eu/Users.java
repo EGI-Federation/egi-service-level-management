@@ -164,14 +164,17 @@ public class Users extends BaseResource {
     public Uni<Response> listUsers(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                    @Context UriInfo uriInfo,
                                    @Context HttpHeaders httpHeaders,
+
                                    @RestQuery("onlyProcess")
                                    @Parameter(description = "Return only members of the SLM process")
                                    @Schema(defaultValue = "false")
                                    boolean onlyProcess,
+
                                    @RestQuery("offset")
                                    @Parameter(description = "Skip the first given number of results")
                                    @Schema(defaultValue = "0")
                                    long offset,
+
                                    @RestQuery("limit")
                                    @Parameter(description = "Restrict the number of results returned")
                                    @Schema(defaultValue = "100")
@@ -212,7 +215,7 @@ public class Users extends BaseResource {
                 var uri = uriInfo.getRequestUri();
                 var path = httpHeaders.getRequestHeader("X-Real-Path");
                 if(null != path && !path.isEmpty())
-                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0)).build();
+                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0).translateEscapes()).build();
 
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
@@ -251,6 +254,7 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> addUserToGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                         @RestPath("checkinUserId")
                                         @Parameter(description = "Id of user to include in the process")
                                         int checkinUserId) {
@@ -319,6 +323,7 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> removeUserFromGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                              @RestPath("checkinUserId")
                                              @Parameter(description = "Id of user to exclude from the process")
                                              int checkinUserId) {
@@ -392,13 +397,16 @@ public class Users extends BaseResource {
     public Uni<Response> listUsersWithRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                             @Context UriInfo uriInfo,
                                             @Context HttpHeaders httpHeaders,
+
                                             @RestQuery("role")
                                             @Parameter(description = "Return only users holding this role")
                                             String roleNameFragment,
+
                                             @RestQuery("offset")
                                             @Parameter(description = "Skip the first given number of results")
                                             @Schema(defaultValue = "0")
                                             long offset,
+
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
@@ -437,7 +445,7 @@ public class Users extends BaseResource {
                 var uri = uriInfo.getRequestUri();
                 var path = httpHeaders.getRequestHeader("X-Real-Path");
                 if(null != path && !path.isEmpty())
-                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0)).build();
+                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0).translateEscapes()).build();
 
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
@@ -477,9 +485,11 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> addRoleToUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                        @RestPath("checkinUserId")
                                        @Parameter(description = "Id of user to assign the role to")
                                        int checkinUserId,
+
                                        @RestQuery("role")
                                        @Parameter(description = "The role to assign to the user")
                                        @Schema(enumeration = {
@@ -564,9 +574,11 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> revokeRoleFromUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                             @RestPath("checkinUserId")
                                             @Schema(title = "Id of user to revoke the role from")
                                             int checkinUserId,
+
                                             @RestQuery("role")
                                             @Parameter(description = "The role to revoke from the user")
                                             @Schema(enumeration = {
