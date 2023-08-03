@@ -218,6 +218,9 @@ public class Users extends BaseResource {
                     uri = UriBuilder.fromUri(uri).replacePath(path.get(0).translateEscapes()).build();
 
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
+                page.path = path.get(0);
+                page.pathEscaped = page.path.translateEscapes();
+
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
