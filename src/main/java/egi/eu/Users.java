@@ -163,6 +163,7 @@ public class Users extends BaseResource {
     })
     public Uni<Response> listUsers(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                    @Context UriInfo uriInfo,
+                                   @Context HttpHeaders httpHeaders,
                                    @RestQuery("onlyProcess")
                                    @Parameter(description = "Return only members of the SLM process")
                                    @Schema(defaultValue = "false")
@@ -209,6 +210,10 @@ public class Users extends BaseResource {
                 // Got users, success
                 log.info("Got user list");
                 var uri = uriInfo.getRequestUri();
+                var path = httpHeaders.getRequestHeader("X-Real-Path");
+                if(null != path && !path.isEmpty())
+                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0)).build();
+
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
@@ -386,6 +391,7 @@ public class Users extends BaseResource {
     })
     public Uni<Response> listUsersWithRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                             @Context UriInfo uriInfo,
+                                            @Context HttpHeaders httpHeaders,
                                             @RestQuery("role")
                                             @Parameter(description = "Return only users holding this role")
                                             String roleNameFragment,
@@ -429,6 +435,10 @@ public class Users extends BaseResource {
                 // Got users holding roles, success
                 log.info("Got users with roles");
                 var uri = uriInfo.getRequestUri();
+                var path = httpHeaders.getRequestHeader("X-Real-Path");
+                if(null != path && !path.isEmpty())
+                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0)).build();
+
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
