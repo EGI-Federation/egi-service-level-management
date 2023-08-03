@@ -18,9 +18,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
+import java.util.List;
 
 import egi.checkin.model.UserInfo;
 import egi.eu.model.*;
@@ -42,7 +41,9 @@ public class UnderpinningAgreements extends BaseResource {
     SecurityIdentity identity;
 
     // Parameter(s) to add to all endpoints
-    @RestHeader(TEST_STUB) @DefaultValue("default") @Parameter(hidden = true)
+    @RestHeader(TEST_STUB)
+    @Parameter(hidden = true)
+    @Schema(defaultValue = "default")
     String stub;
 
 
@@ -50,8 +51,8 @@ public class UnderpinningAgreements extends BaseResource {
      * Page of UAs
      */
     class PageOfUnderpinningAgreements extends Page<UnderpinningAgreement> {
-        public PageOfUnderpinningAgreements(int first) { super(first); }
-        public PageOfUnderpinningAgreements(int first, int size) { super(first, size); }
+        public PageOfUnderpinningAgreements(String baseUri, long offset, long limit, List<UnderpinningAgreement> uas) {
+            super(baseUri, offset, limit, uas); }
     }
 
 
@@ -63,8 +64,8 @@ public class UnderpinningAgreements extends BaseResource {
     /**
      * List all UAs.
      * @param auth The access token needed to call the service.
-     * @param firstItem The first item to return (0-based).
-     * @param pageSize The maximum number of items to return.
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link UnderpinningAgreement}>) or an ActionError entity
      */
@@ -88,27 +89,29 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> listUAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                 @Context UriInfo uriInfo,
                                  @RestQuery("olaId")
-                                 @Parameter(required = false,
-                                            description = "Filter to the ones supporting specific OLA")
+                                 @Parameter(description = "Filter to the ones supporting specific OLA")
                                  int olaId,
-                                 @RestQuery("from") @DefaultValue("0")
-                                 @Parameter(required = false,
-                                            description = "The first item to return")
-                                 int firstItem,
-                                 @RestQuery("count") @DefaultValue("100")
-                                 @Parameter(required = false,
-                                            description = "The maximum number of items to return")
-                                 int pageSize,
-                                 @RestQuery("allVersions") @DefaultValue("false")
-                                 @Parameter(required = false, description = "Whether to retrieve all versions")
-                                 boolean allVersions) {
+                                 @RestQuery("allVersions")
+                                 @Parameter(description = "Whether to retrieve all versions")
+                                 @Schema(defaultValue = "false")
+                                 boolean allVersions,
+                                 @RestQuery("offset")
+                                 @Parameter(description = "Skip the first given number of results")
+                                 @Schema(defaultValue = "0")
+                                 long offset,
+                                 @RestQuery("limit")
+                                 @Parameter(description = "Restrict the number of results returned")
+                                 @Schema(defaultValue = "100")
+                                 long limit) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("firstItem", firstItem);
-        addToDC("pageSize", pageSize);
+        addToDC("olaId", olaId);
         addToDC("allVersions", allVersions);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
 
         log.info("Listing UAs");
 
@@ -116,9 +119,10 @@ public class UnderpinningAgreements extends BaseResource {
 
             .chain(unused -> {
                 // Got UA list, success
-                log.info("Got UA list");
-                var list = new PageOfUnderpinningAgreements(0);
-                return Uni.createFrom().item(Response.ok(list).build());
+
+                var uri = uriInfo.getRequestUri();
+                var page = new PageOfUnderpinningAgreements(uri.toString(), offset, limit, null);
+                return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list UAs");
@@ -267,8 +271,9 @@ public class UnderpinningAgreements extends BaseResource {
                                  @RestPath("uaId")
                                  @Parameter(required = true, description = "ID of agreement to get")
                                  int uaId,
-                                 @RestQuery("allVersions") @DefaultValue("false")
-                                 @Parameter(required = false, description = "Whether to retrieve all versions")
+                                 @RestQuery("allVersions")
+                                 @Parameter(description = "Whether to retrieve all versions")
+                                 @Schema(defaultValue = "false")
                                  boolean allVersions) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));

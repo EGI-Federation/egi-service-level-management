@@ -3,18 +3,28 @@ package egi.eu;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.lang.reflect.ParameterizedType;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import jakarta.ws.rs.core.UriBuilder;
 
 
 /**
  * Page of elements
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Page<T> {
+public abstract class Page<T> {
+
+    private URI baseUri;
 
     public String kind;
-    public int first;
+    public long offset;
+    public long limit;
     public int count;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -30,52 +40,129 @@ public class Page<T> {
     /**
      * Constructor
      */
-    public Page(int first) {
-        var type = new GenericClass<T>() {};
-        this.kind = "PageOf" + type.getType().getTypeName();
-        this.first = first;
+    public Page() {
+        var type = getTypeParameter();
+        if(null == type)
+            this.kind = "Page";
+        else {
+            var name = type.getTypeName();
+            var index = name.lastIndexOf('.');
+            name = index >= 0 ? name.substring(index + 1) : name;
+            this.kind = String.format("PageOf%ss", name);
+        }
+
+        this.offset = 0;
+        this.limit = 100;
         this.count = 0;
         this.elements = new ArrayList<>();
     }
 
     /**
-     * Constructor with allocation
-     * @param size Initial capacity for storage elements.
+     * Construct from source
+     * @param baseUri The URI of the current page, or null to disable links to prev/next pages
+     * @param offset The number of elements to skip from the source
+     * @param limit The maximum number of elements on the page
+     * @param source The source of the elements to populate the page with
      */
-    public Page(int first, int size) {
-        var type = new GenericClass<T>() {};
-        this.kind = "PageOf" + type.getType().getTypeName();
-        this.first = first;
-        this.count = 0;
-        this.elements = new ArrayList<>(size);
+    public Page(String baseUri, long offset, long limit, List<T> source) {
+        this();
+        populate(baseUri, offset, limit, source);
+    }
+
+    /**
+     * Populate with elements and setup pagination links.
+     * @param baseUri The URI of the current page, or null to disable links to prev/next pages
+     * @param offset The number of elements to skip from the source
+     * @param limit The maximum number of elements on the page
+     * @param source The source of the elements to populate the page with
+     */
+    public Page<T> populate(String baseUri, long offset, long limit, List<T> source) {
+        // Populate page with elements
+        this.offset = offset;
+        this.limit = limit;
+        this.elements = source.stream().skip(offset).limit(limit).toList();
+        this.count = this.elements.size();
+
+        // Setup links to prev/next pages
+        try {
+            this.baseUri = null != baseUri ? new URI(baseUri) : null;
+        } catch (URISyntaxException e) {
+            // If the URI we got is invalid, we won't have links to prev/next pages
+        }
+
+        if(null != this.baseUri) {
+            long prevPageOffset = offset - limit;
+            if(prevPageOffset < 0)
+                prevPageOffset = 0;
+
+            if(prevPageOffset < offset) {
+                var prevUri = UriBuilder.fromUri(baseUri).replaceQueryParam("offset", prevPageOffset).build();
+                this.prevPage = prevUri.toString();
+            }
+            else
+                this.prevPage = null;
+
+            long nextPageOffset = offset + limit;
+            if(nextPageOffset < source.size()) {
+                var nextUri = UriBuilder.fromUri(baseUri).replaceQueryParam("offset", nextPageOffset).build();
+                this.nextPage = nextUri.toString();
+            }
+            else
+                this.nextPage = null;
+        }
+
+        return this;
     }
 
     /***
-     * Add a new element
-     * @param element The element to add.
+     * Add a new element to the page.
+     * @param element The element to add
      */
     public void add(T element) {
-        if(null != element) {
-            this.elements.add(element);
-            this.count++;
+        if(null == element) {
+            this.elements = new ArrayList<>();
+            this.count = 0;
         }
+
+        this.elements.add(element);
+        this.count++;
     }
 
     /***
-     * Add all elements from another page
-     * @param page Page to add all elements from.
+     * Add all elements from another page.
+     * @param page Page to clone
      */
     public void clone(Page<T> page) {
         if(null != page) {
             this.elements = new ArrayList<>(page.count);
             this.elements.addAll(page.elements);
-            this.first = page.first;
+            this.offset = page.offset;
+            this.limit = page.limit;
             this.count = this.elements.size();
+            this.prevPage = page.prevPage;
+            this.nextPage =page.nextPage;
         }
         else {
             this.elements = new ArrayList<>();
-            this.first = first;
+            this.offset = 0;
+            this.limit = 100;
             this.count = 0;
+            this.prevPage = null;
+            this.nextPage =null;
+        }
+    }
+
+    /***
+     * Helper to get the name of the type parameter.
+     * @return Class of the type parameter, null on error
+     */
+    private Class<T> getTypeParameter() {
+        try {
+            ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
+            return (Class<T>) superclass.getActualTypeArguments()[0];
+        }
+        catch(Exception e) {
+            return null;
         }
     }
 }

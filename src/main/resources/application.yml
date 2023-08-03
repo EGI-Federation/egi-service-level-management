@@ -90,7 +90,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.9
+    info-version: 1.0.16
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt
@@ -112,7 +112,7 @@ quarkus:
       enabled: true
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
-      base-file-name: slm-api-http
+      base-file-name: slm-api-
       log-directory: logs
   tls:
     trust-all: false

@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import egi.checkin.MockCheckin;
 import egi.checkin.MockCheckinProxy;
 import egi.checkin.model.UserInfo;
-import egi.eu.model.UserList;
 
 
 @QuarkusTest
@@ -87,7 +86,7 @@ public class UsersTest {
     @TestSecurity(user = "test", roles = { Role.ISM_USER })
     @DisplayName("List all users")
     public void testListUsersInVo() {
-        UserList ulAll =
+        Users.PageOfUserInfos pu =
         given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer: " + BEARER_TOKEN)
             .queryParam("onlyGroup", "false")
@@ -97,14 +96,14 @@ public class UsersTest {
             .statusCode(Status.OK.getStatusCode())
             .body("kind", equalTo("UserList"))
             .body("users", not(emptyArray()))
-            .extract().body().as(UserList.class);
+            .extract().body().as(Users.PageOfUserInfos.class);
     }
 
     @Test
     @TestSecurity(user = "test", roles = { Role.ISM_USER })
     @DisplayName("List group members")
     public void testListUsersInGroup() {
-        UserList ulGroup =
+        Users.PageOfUserInfos ul =
         given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer: " + BEARER_TOKEN)
             .queryParam("onlyGroup", "true")
@@ -114,7 +113,7 @@ public class UsersTest {
             .statusCode(Status.OK.getStatusCode())
             .body("kind", equalTo("UserList"))
             .body("users", not(emptyArray()))
-            .extract().body().as(UserList.class);
+            .extract().body().as(Users.PageOfUserInfos.class);
     }
 
     /***

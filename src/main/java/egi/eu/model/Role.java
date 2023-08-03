@@ -15,9 +15,6 @@ import egi.checkin.model.UserInfo;
  */
 public class Role {
 
-    public final static String ISM_USER = "ism";
-    public final static String ISM_ADMIN = "admin";
-    public final static String PROCESS_MEMBER = "slm";
     public final static String PROCESS_OWNER = "process-owner";
     public final static String PROCESS_MANAGER = "process-manager";
     public final static String CATALOG_MANAGER = "catalog-manager";
@@ -25,6 +22,12 @@ public class Role {
     public final static String UA_OWNER = "ua-owner";
     public final static String OLA_OWNER = "ola-owner";
     public final static String SLA_OWNER = "sla-owner";
+
+    // Pseudo-roles that can be used to authorize access to the API endpoints,
+    // but are not considered/returned by the user-related endpoints
+    public final static String ISM_USER = "ism";        // Marks membership in the VO
+    public final static String ISM_ADMIN = "admin";     // Marks being a VO manager
+    public final static String PROCESS_MEMBER = "slm";  // Marks membership in the group
 
 
     @Schema(enumeration={ "Role" })

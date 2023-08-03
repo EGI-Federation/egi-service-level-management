@@ -16,18 +16,15 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 
+import java.util.List;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.UserInfo;
 import egi.eu.model.Role;
-import egi.eu.model.UserList;
-import egi.eu.model.UserRoles;
 
 
 /***
@@ -56,6 +53,23 @@ public class Users extends BaseResource {
     @Parameter(hidden = true)
     @Schema(defaultValue = "default")
     String stub;
+
+
+    /***
+     * Page of users
+     */
+    class PageOfUserInfos extends Page<UserInfo> {
+        public PageOfUserInfos(String baseUri, long offset, long limit, List<UserInfo> users) {
+            super(baseUri, offset, limit, users); }
+    }
+
+    /***
+     * Page of roles
+     */
+    class PageOfRoles extends Page<Role> {
+        public PageOfRoles(String baseUri, long offset, long limit, List<Role> roles) {
+            super(baseUri, offset, limit, roles); }
+    }
 
 
     /***
@@ -126,8 +140,10 @@ public class Users extends BaseResource {
     /**
      * List users that are members of the configured VO.
      * @param auth The access token needed to call the service.
-     * @param onlyProcess Filter out users that are not included in the configured Check-in group.
-     * @return API Response, wraps an ActionSuccess({@link UserList}) or an ActionError entity
+     * @param onlyProcess Filter out users that are not included in the configured Check-in group
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
      */
     @GET
     @Path("/users")
@@ -137,7 +153,7 @@ public class Users extends BaseResource {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = UserList.class))),
+                    schema = @Schema(implementation = PageOfUserInfos.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -146,14 +162,25 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> listUsers(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                   @Context UriInfo uriInfo,
                                    @RestQuery("onlyProcess")
                                    @Parameter(description = "Return only members of the SLM process")
                                    @Schema(defaultValue = "false")
-                                   boolean onlyProcess) {
+                                   boolean onlyProcess,
+                                   @RestQuery("offset")
+                                   @Parameter(description = "Skip the first given number of results")
+                                   @Schema(defaultValue = "0")
+                                   long offset,
+                                   @RestQuery("limit")
+                                   @Parameter(description = "Restrict the number of results returned")
+                                   @Schema(defaultValue = "100")
+                                   long limit) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("onlyProcess", onlyProcess);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
 
         log.info("Listing users");
 
@@ -181,8 +208,9 @@ public class Users extends BaseResource {
             .chain(users -> {
                 // Got users, success
                 log.info("Got user list");
-                var list = new UserList(users);
-                return Uni.createFrom().item(Response.ok(list).build());
+                var uri = uriInfo.getRequestUri();
+                var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
+                return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list users");
@@ -329,19 +357,26 @@ public class Users extends BaseResource {
     }
 
     /**
-     * List assigned roles in the configured group.
+     * List users that hold roles in the configured group.
+     * Note: Membership in the group is not considered a role, but a prerequisite to holding a role.
      * @param auth The access token needed to call the service.
-     * @return API Response, wraps an ActionSuccess({@link UserRoles}) or an ActionError entity
+     * @param roleNameFragment Only return users holding this role. If empty or null,
+     *                         all users holding roles are returned.
+     *                         Note: Using this parameter means the returned users will not have
+     *      *                        all their roles reported, just the ones matching this expression.
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
      */
     @GET
-    @Path("/roles")
+    @Path("/users/roles")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_MEMBER })
-    @Operation(operationId = "listRoles",  summary = "List users with roles in the SLM process")
+    @Operation(operationId = "listUsersWithRoles",  summary = "List users with roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = UserRoles.class))),
+                    schema = @Schema(implementation = PageOfUserInfos.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -349,10 +384,25 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+    public Uni<Response> listUsersWithRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                            @Context UriInfo uriInfo,
+                                            @RestQuery("role")
+                                            @Parameter(description = "Return only users holding this role")
+                                            String roleNameFragment,
+                                            @RestQuery("offset")
+                                            @Parameter(description = "Skip the first given number of results")
+                                            @Schema(defaultValue = "0")
+                                            long offset,
+                                            @RestQuery("limit")
+                                            @Parameter(description = "Restrict the number of results returned")
+                                            @Schema(defaultValue = "100")
+                                            long limit) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("roleNameFragment", roleNameFragment);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
 
         log.info("Listing users with roles");
 
@@ -373,12 +423,14 @@ public class Users extends BaseResource {
             })
             .chain(unused -> {
                 // List users holding roles
-                return checkin.listGroupRolesAsync(this.imsConfig.group());
+                return checkin.listUsersWithGroupRolesAsync(this.imsConfig.group(), roleNameFragment);
             })
             .chain(users -> {
                 // Got users holding roles, success
                 log.info("Got users with roles");
-                return Uni.createFrom().item(Response.ok(users).build());
+                var uri = uriInfo.getRequestUri();
+                var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
+                return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list users with roles");
