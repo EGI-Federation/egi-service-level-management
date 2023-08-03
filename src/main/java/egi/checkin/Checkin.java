@@ -36,7 +36,7 @@ public class Checkin {
     private static Map<Long, UserInfo> voMembers; // Does not cache assigned roles
     private static long voMembersUpdatedAt = 0;   // Milliseconds since epoch
     private static CheckinRoleList roleRecords;
-    private static long rolesUpdatedAt = 0;   // Milliseconds since epoch
+    private static long rolesUpdatedAt = 0;       // Milliseconds since epoch
 
     private CheckinConfig checkinConfig;
     private IntegratedManagementSystemConfig imsConfig;
@@ -484,13 +484,13 @@ public class Checkin {
     /***
      * List all users with assigned roles in a group.
      * @param groupName The group under which assigned roles are considered
-     * @param roleNameFragment Only return users holding roles that begin with this string fragment.
-     *                         If empty or null, all users holding roles are returned.
-     *                         Note: Using this parameter means the returned users will not have
-     *                         all their roles reported, just the ones matching this expression.
+     * @param roleName Only return users holding roles that match this expression.
+     *                 If empty or null, all users holding roles are returned.
+     *                 Note: Using this parameter means the returned users will not have
+     *                 all their roles reported, just the ones matching this expression.
      * @return List of all users holding effective roles in the group, see also {@link UserInfo}
      */
-    public Uni<List<UserInfo>> listUsersWithGroupRolesAsync(String groupName, String roleNameFragment) {
+    public Uni<List<UserInfo>> listUsersWithGroupRolesAsync(String groupName, String roleName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -507,12 +507,12 @@ public class Checkin {
             })
             .chain(voMembers -> {
                 // VO members are now cached, get group role records
-                log.info("Getting roles in group " + groupName);
+                log.info("Getting users with roles in group " + groupName);
                 return getGroupMembersAndRolesAsync(groupName);
             })
             .chain(groupRoles -> {
                 // Got group role records, keep just the role ones
-                var usersWithRoles = filterToUsersWithGroupRoles(groupRoles, roleNameFragment, this.checkinConfig.traceRoles());
+                var usersWithRoles = filterToUsersWithGroupRoles(groupRoles, roleName, this.checkinConfig.traceRoles());
                 if(null == usersWithRoles)
                     return Uni.createFrom().failure(new ActionException("notReady"));
 
@@ -521,7 +521,7 @@ public class Checkin {
                 return Uni.createFrom().item(users);
             })
             .onFailure().invoke(e -> {
-                log.error("Failed to get roles in group");
+                log.error("Failed to get users with roles");
             });
 
         return result;
@@ -530,16 +530,16 @@ public class Checkin {
     /***
      * Filter records to the ones that indicate assigned roles in the group.
      * @param groupRoles List of Check-in role records
-     * @param roleNameFragment Only return users holding roles that match this expression.
-     *                         If empty or null, all users holding roles are returned.
-     *                         Note: Using this parameter means the returned users will not have
-     *                         all their roles reported, just the ones matching this expression.
+     * @param roleName Only return users holding roles that match this expression.
+     *                 If empty or null, all users holding roles are returned.
+     *                 Note: Using this parameter means the returned users will not have
+     *                 all their roles reported, just the ones matching this expression.
      * @param logRecords Whether to dump the records in the log
      * @return List of users holding roles in the group, null on error.
      *         Unlike the cached list of VO members, the users in the returned list
      *         will have their <b>roles</b> field filled.
      */
-    private Map<Long, UserInfo> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleNameFragment, boolean logRecords) {
+    private Map<Long, UserInfo> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
         if(!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group roles, VO members not loaded");
@@ -552,10 +552,10 @@ public class Checkin {
 
         // Keep just the records that mean assigned role in the group
         // If an expression is specified, consider just matching roles
-        final String rexRole = null != roleNameFragment ? roleNameFragment.replace("-", "\\-") + ".*" : null;
+        final String rexRole = null != roleName ? roleName.replace("-", "\\-") + ".*" : null;
         var records = filterList(groupRoles.records, role -> {
             if(role.isRole()) {
-                return null == roleNameFragment || roleNameFragment.isBlank() || role.role.matches(rexRole);
+                return null == roleName || roleName.isBlank() || role.role.matches(rexRole);
             }
 
             return false;
@@ -563,7 +563,6 @@ public class Checkin {
 
         var voUsers = voMembers;
         Map<Long, UserInfo> users = new HashMap<>();    // Users with assigned roles
-        Map<String, Set<Long>> roles = new HashMap<>(); // Tracks which role is assigned to which users
         for (var role : records) {
             if (role.deleted || !role.status.equalsIgnoreCase("Active"))
                 // Not an active role record, skip
@@ -573,15 +572,6 @@ public class Checkin {
             var user = new UserInfo(role);
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
-                Set<Long> usersWithRole = null;
-                if(roles.containsKey(role.role))
-                    usersWithRole = roles.get(role.role);
-                else {
-                    // This is a role we see for the firs time
-                    usersWithRole = new HashSet<>();
-                    roles.put(role.role, usersWithRole);
-                }
-
                 if(users.containsKey(user.checkinUserId)) {
                     // This user already holds some role, add this role too
                     var existingUser = users.get(user.checkinUserId);
@@ -590,7 +580,7 @@ public class Checkin {
                         continue;
                     }
 
-                    usersWithRole.add(existingUser.checkinUserId);
+                    // Store role name in the user
                     existingUser.addRole(role.role);
                     continue;
                 }
@@ -598,7 +588,6 @@ public class Checkin {
                 // This user does not yet hold any role, add it
                 user.addRole(role.role);
                 users.put(user.checkinUserId, user);
-                usersWithRole.add(user.checkinUserId);
             }
         }
 
@@ -609,14 +598,60 @@ public class Checkin {
     }
 
     /***
+     * List all roles currently assigned in a group.
+     * @param groupName The group under which assigned roles are considered
+     * @param roleName Only return roles that begin with this string fragment.
+     *                 If empty or null, all users holding roles are returned.
+     *                 Note: Using this parameter means the returned users will not have
+     *                 all their roles reported, just the ones matching this expression.
+     * @return List of all users holding effective roles in the group, see also {@link UserInfo}
+     */
+    public Uni<List<Role>> listGroupRolesAsync(String groupName, String roleName) {
+        if(null == checkin) {
+            log.error("Check-in not ready, call init() first");
+            return Uni.createFrom().failure(new ActionException("notReady"));
+        }
+
+        Uni<List<Role>> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
+                // Therefore, we must check ourselves and only return group members that are also
+                // members of the VO. This means we need the list of VO members, even if we are being
+                // called just to list members of the configured group.
+                return listVoMembersAsync(this.imsConfig.vo());
+            })
+            .chain(voMembers -> {
+                // VO members are now cached, get group role records
+                log.info("Getting assigned roles in group " + groupName);
+                return getGroupMembersAndRolesAsync(groupName);
+            })
+            .chain(groupRoles -> {
+                // Got group role records, keep just the role ones
+                var rolesWithUsers = filterToGroupRoles(groupRoles, roleName, this.checkinConfig.traceRoles());
+                if(null == rolesWithUsers)
+                    return Uni.createFrom().failure(new ActionException("notReady"));
+
+                // Return roles
+                List<Role> roles = rolesWithUsers.values().stream().toList();
+                return Uni.createFrom().item(roles);
+            })
+            .onFailure().invoke(e -> {
+                log.error("Failed to get assigned roles");
+            });
+
+        return result;
+    }
+
+    /***
      * Filter records to the ones that indicate assigned roles in the group.
      * @param groupRoles List of Check-in role records
      * @param logRecords Whether to dump the records in the log
-     * @return List of users holding roles in the group, null on error.
-     *         Unlike the cached list of VO members, the users in the returned list
+     * @return List of roles currently assigned in the group, null on error.
+     *         Unlike the cached list of VO members, the users in the returned roles
      *         will have their <b>roles</b> field filled.
      */
-    private Map<String, Role> filterToGroupRoles(CheckinRoleList groupRoles, String roleNameFragment, boolean logRecords) {
+    private Map<String, Role> filterToGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
         if (!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group roles, VO members not loaded");
@@ -628,27 +663,42 @@ public class Checkin {
         var members = filterToGroupMembers(groupRoles, false);
 
         // Keep just the records that mean assigned role in the group
-        var records = filterList(groupRoles.records, role -> !role.role.isEmpty() && !role.role.equals("member"));
+        // If an expression is specified, consider just matching roles
+        final String rexRole = null != roleName ? roleName.replace("-", "\\-") + ".*" : null;
+        var records = filterList(groupRoles.records, role -> {
+            if(role.isRole()) {
+                return null == roleName || roleName.isBlank() || role.role.matches(rexRole);
+            }
+
+            return false;
+        });
 
         var voUsers = voMembers;
-        Map<Long, UserInfo> users = new HashMap<>();    // Users with assigned roles
-        Map<String, Set<Long>> roles = new HashMap<>(); // Tracks which role is assigned to which users
-        for (var role : records) {
-            if (role.deleted || !role.status.equalsIgnoreCase("Active"))
+        Map<Long, UserInfo> users = new HashMap<>(); // Users with assigned roles
+        Map<String, Role> roles = new HashMap<>();   // Roles assigned in the group
+        Map<String, Set<Long>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
+        for (var roleRecord : records) {
+            if (roleRecord.deleted || !roleRecord.status.equalsIgnoreCase("Active"))
                 // Not an active role record, skip
                 continue;
 
             // Only include users that are members of both the VO and the group
-            var user = new UserInfo(role);
+            var user = new UserInfo(roleRecord);
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
+                Role role = null;
                 Set<Long> usersWithRole = null;
-                if(roles.containsKey(role.role))
-                    usersWithRole = roles.get(role.role);
+                if(roles.containsKey(roleRecord.role)) {
+                    role = roles.get(roleRecord.role);
+                    usersWithRole = roleUsers.get(roleRecord.role);
+                }
                 else {
-                    // This is a role we see for the firs time
+                    // This is a role we see for the first time
+                    role = new Role(roleRecord.role);
+                    roles.put(roleRecord.role, role);
+
                     usersWithRole = new HashSet<>();
-                    roles.put(role.role, usersWithRole);
+                    roleUsers.put(roleRecord.role, usersWithRole);
                 }
 
                 if(users.containsKey(user.checkinUserId)) {
@@ -659,14 +709,29 @@ public class Checkin {
                         continue;
                     }
 
-                    usersWithRole.add(existingUser.checkinUserId);
+                    // Store role name in the user
                     existingUser.addRole(role.role);
+
+                    if(!usersWithRole.contains(existingUser.checkinUserId))
+                        // Store the user in the role
+                        role.addUser(existingUser);
+
+                    // Remember that we added this user to this role, as the role's user collection allows duplicates
+                    usersWithRole.add(existingUser.checkinUserId);
                     continue;
                 }
 
-                // This user does not yet hold any role, add it
-                user.addRole(role.role);
+                // This user does not hold any role yet, add it
                 users.put(user.checkinUserId, user);
+
+                // Store role name in the user
+                user.addRole(roleRecord.role);
+
+                if(!usersWithRole.contains(user.checkinUserId))
+                    // Store the user in the role
+                    role.addUser(user);
+
+                // Remember that we added this user to this role, as the role's user collection allows duplicates
                 usersWithRole.add(user.checkinUserId);
             }
         }
@@ -674,7 +739,7 @@ public class Checkin {
         if(logRecords)
             logGroupRoles(records, users);
 
-        return null;
+        return roles;
     }
 
     /***

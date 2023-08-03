@@ -45,6 +45,11 @@ public class Role {
     public Role() {}
 
     /***
+     * Construct with a role
+     */
+    public Role(String role) { this.role = role; }
+
+    /***
      * Record that a user has this role assigned
      * @param user The user the role is assigned to
      */

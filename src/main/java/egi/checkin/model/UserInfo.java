@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -37,7 +39,7 @@ public class UserInfo extends BasicUserInfo {
     public List<String> entitlements;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<String> roles;
+    public Set<String> roles;
 
 
     /***
@@ -98,7 +100,7 @@ public class UserInfo extends BasicUserInfo {
      */
     public UserInfo addRole(String role) {
         if(null == this.roles)
-            this.roles = new ArrayList<>();
+            this.roles = new HashSet<>();
 
         this.roles.add(role);
 

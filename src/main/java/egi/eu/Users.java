@@ -16,7 +16,10 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -125,7 +128,7 @@ public class Users extends BaseResource {
 
                 var roles = identity.getRoles();
                 if(null != roles && !roles.isEmpty())
-                    userinfo.roles = roles.stream().toList();
+                    userinfo.roles = new HashSet<>(roles);
 
                 return Uni.createFrom().item(Response.ok(userinfo).build());
             })
@@ -395,7 +398,7 @@ public class Users extends BaseResource {
                                             @Context HttpHeaders httpHeaders,
 
                                             @RestQuery("role")
-                                            @Parameter(description = "Return only users holding this role")
+                                            @Parameter(description = "Return only users holding roles matching this expression")
                                             String roleNameFragment,
 
                                             @RestQuery("offset")
@@ -629,5 +632,88 @@ public class Users extends BaseResource {
         return result;
     }
 
+    /**
+     * List assigned roles in the configured group.
+     * Note: Membership in the group is not considered a role, but a prerequisite to holding a role.
+     * @param auth The access token needed to call the service.
+     * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
+     */
+    @GET
+    @Path("/roles")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_MEMBER })
+    @Operation(operationId = "listRoles",  summary = "List assigned roles in the SLM process")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = PageOfRoles.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> listRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                            @Context UriInfo uriInfo,
+                                            @Context HttpHeaders httpHeaders,
 
+                                            @RestQuery("role")
+                                            @Parameter(description = "Return only roles matching this expression")
+                                            String roleName,
+
+                                            @RestQuery("offset")
+                                            @Parameter(description = "Skip the first given number of results")
+                                            @Schema(defaultValue = "0")
+                                            long offset,
+
+                                            @RestQuery("limit")
+                                            @Parameter(description = "Restrict the number of results returned")
+                                            @Schema(defaultValue = "100")
+                                            long limit) {
+
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("roleName", roleName);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
+
+        log.info("Listing roles");
+
+        if(null == auth || auth.trim().isEmpty()) {
+            var ae = new ActionError("badRequest", "Access token missing");
+            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
+        }
+
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // Get REST client for Check-in
+                if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
+                    // Could not get REST client
+                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+
+                return Uni.createFrom().item(unused);
+            })
+            .chain(unused -> {
+                // List roles
+                return checkin.listGroupRolesAsync(this.imsConfig.group(), roleName);
+            })
+            .chain(roles -> {
+                // Got roles, success
+                log.info("Got roles");
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
+                var page = new PageOfRoles(uri.toString(), offset, limit, roles);
+                return Uni.createFrom().item(Response.ok(page).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to list roles");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
+
+        return result;
+    }
 }

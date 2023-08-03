@@ -7,11 +7,10 @@ import java.lang.reflect.ParameterizedType;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.ws.rs.core.UriBuilder;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 
 /**
@@ -20,6 +19,7 @@ import jakarta.ws.rs.core.UriBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Page<T> {
 
+    @Schema(hidden = true)
     private URI baseUri;
 
     public String kind;
@@ -156,6 +156,7 @@ public abstract class Page<T> {
      * Helper to get the name of the type parameter.
      * @return Class of the type parameter, null on error
      */
+    @SuppressWarnings("unchecked")
     private Class<T> getTypeParameter() {
         try {
             ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
