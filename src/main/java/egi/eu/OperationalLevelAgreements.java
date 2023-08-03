@@ -90,17 +90,22 @@ public class OperationalLevelAgreements extends BaseResource {
     })
     public Uni<Response> listOLAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                   @Context UriInfo uriInfo,
+                                  @Context HttpHeaders httpHeaders,
+
                                   @RestQuery("slaId")
                                   @Parameter(description = "Filter to the ones supporting specific SLA")
                                   int slaId,
+
                                   @RestQuery("allVersions")
                                   @Parameter(description = "Whether to retrieve all versions")
                                   @Schema(defaultValue = "false")
                                   boolean allVersions,
+
                                   @RestQuery("offset")
                                   @Parameter(description = "Skip the first given number of results")
                                   @Schema(defaultValue = "0")
                                   long offset,
+
                                   @RestQuery("limit")
                                   @Parameter(description = "Restrict the number of results returned")
                                   @Schema(defaultValue = "100")
@@ -119,7 +124,7 @@ public class OperationalLevelAgreements extends BaseResource {
             .chain(unused -> {
                 // Got OLA list, success
                 log.info("Got OLA list");
-                var uri = uriInfo.getRequestUri();
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfOperationalLevelAgreements(uri.toString(), offset, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })

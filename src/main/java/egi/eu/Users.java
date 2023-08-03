@@ -7,10 +7,10 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
-import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestHeader;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
+import org.jboss.logging.Logger;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -212,18 +212,7 @@ public class Users extends BaseResource {
             .chain(users -> {
                 // Got users, success
                 log.info("Got user list");
-                var uri = uriInfo.getRequestUri();
-                var header = httpHeaders.getRequestHeader("X-Real-Path");
-                if(null != header && !header.isEmpty()) {
-                    var path = header.get(0);
-                    var query = uri.getQuery();
-                    var queryIndex = path.indexOf('?');
-                    if(queryIndex > 0)
-                        path = path.substring(0, queryIndex);
-
-                    uri = UriBuilder.fromUri(uri).replacePath("").path(path).replaceQuery(query).build();
-                }
-
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
@@ -449,11 +438,7 @@ public class Users extends BaseResource {
             .chain(users -> {
                 // Got users holding roles, success
                 log.info("Got users with roles");
-                var uri = uriInfo.getRequestUri();
-                var path = httpHeaders.getRequestHeader("X-Real-Path");
-                if(null != path && !path.isEmpty())
-                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0).translateEscapes()).build();
-
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })

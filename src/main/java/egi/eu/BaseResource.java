@@ -1,10 +1,12 @@
 package egi.eu;
 
-import egi.checkin.CheckinConfig;
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;
 
-import jakarta.inject.Inject;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 import egi.checkin.Checkin;
 
@@ -42,6 +44,29 @@ public class BaseResource {
             MDC.put(key, null != value ? value : "null");
 
         return value;
+    }
+
+    /***
+     * Helper to obtain the original request URI, even when running behind a reverse proxy.
+     * Note that the proxy must forward the original request path in the HTTP header X-Real-Path.
+     * @param uriInfo Details of the request URI
+     * @param httpHeaders Request HTTP headers
+     * @return
+     */
+    protected URI getRealRequestUri(UriInfo uriInfo, HttpHeaders httpHeaders) {
+        var uri = uriInfo.getRequestUri();
+        var header = httpHeaders.getRequestHeader("X-Real-Path");
+        if(null != header && !header.isEmpty()) {
+            var path = header.get(0);
+            var query = uri.getQuery();
+            var queryIndex = path.indexOf('?');
+            if(queryIndex > 0)
+                path = path.substring(0, queryIndex);
+
+            uri = UriBuilder.fromUri(uri).replacePath("").path(path).replaceQuery(query).build();
+        }
+
+        return uri;
     }
 
 }

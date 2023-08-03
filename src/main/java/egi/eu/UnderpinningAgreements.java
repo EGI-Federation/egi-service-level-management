@@ -90,17 +90,22 @@ public class UnderpinningAgreements extends BaseResource {
     })
     public Uni<Response> listUAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                  @Context UriInfo uriInfo,
+                                 @Context HttpHeaders httpHeaders,
+
                                  @RestQuery("olaId")
                                  @Parameter(description = "Filter to the ones supporting specific OLA")
                                  int olaId,
+
                                  @RestQuery("allVersions")
                                  @Parameter(description = "Whether to retrieve all versions")
                                  @Schema(defaultValue = "false")
                                  boolean allVersions,
+
                                  @RestQuery("offset")
                                  @Parameter(description = "Skip the first given number of results")
                                  @Schema(defaultValue = "0")
                                  long offset,
+
                                  @RestQuery("limit")
                                  @Parameter(description = "Restrict the number of results returned")
                                  @Schema(defaultValue = "100")
@@ -119,8 +124,8 @@ public class UnderpinningAgreements extends BaseResource {
 
             .chain(unused -> {
                 // Got UA list, success
-
-                var uri = uriInfo.getRequestUri();
+                log.info("Got UA list");
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfUnderpinningAgreements(uri.toString(), offset, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })

@@ -90,14 +90,18 @@ public class Catalogs extends BaseResource {
     })
     public Uni<Response> listCatalogs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                       @Context UriInfo uriInfo,
+                                      @Context HttpHeaders httpHeaders,
+
                                       @RestQuery("allVersions")
                                       @Parameter(description = "Whether to retrieve all versions")
                                       @Schema(defaultValue = "false")
                                       boolean allVersions,
+
                                       @RestQuery("offset")
                                       @Parameter(description = "Skip the first given number of results")
                                       @Schema(defaultValue = "0")
                                       long offset,
+
                                       @RestQuery("limit")
                                       @Parameter(description = "Restrict the number of results returned")
                                       @Schema(defaultValue = "100")
@@ -116,7 +120,7 @@ public class Catalogs extends BaseResource {
             .chain(unused -> {
                 // Got UA list, success
                 log.info("Got catalog list");
-                var uri = uriInfo.getRequestUri();
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfCatalogs(uri.toString(), offset, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
