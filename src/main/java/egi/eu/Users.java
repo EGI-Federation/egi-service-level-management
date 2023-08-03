@@ -213,14 +213,18 @@ public class Users extends BaseResource {
                 // Got users, success
                 log.info("Got user list");
                 var uri = uriInfo.getRequestUri();
-                var path = httpHeaders.getRequestHeader("X-Real-Path");
-                if(null != path && !path.isEmpty())
-                    uri = UriBuilder.fromUri(uri).replacePath(path.get(0).translateEscapes()).build();
+                var header = httpHeaders.getRequestHeader("X-Real-Path");
+                if(null != header && !header.isEmpty()) {
+                    var path = header.get(0);
+                    var query = uri.getQuery();
+                    var queryIndex = path.indexOf('?');
+                    if(queryIndex > 0)
+                        path = path.substring(0, queryIndex);
+
+                    uri = UriBuilder.fromUri(uri).replacePath("").path(path).replaceQuery(query).build();
+                }
 
                 var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
-                page.path = path.get(0);
-                page.pathEscaped = page.path.translateEscapes();
-
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {

@@ -27,9 +27,6 @@ public abstract class Page<T> {
     public long limit;
     public int count;
 
-    public String path;
-    public String pathEscaped;
-
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<T> elements;
 
