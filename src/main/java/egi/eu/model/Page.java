@@ -1,4 +1,4 @@
-package egi.eu;
+package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -17,7 +17,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
  * Page of elements
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Page<T> {
+public abstract class Page<T> extends GenericEntity<T> {
 
     @Schema(hidden = true)
     private URI baseUri;
@@ -41,15 +41,7 @@ public abstract class Page<T> {
      * Constructor
      */
     public Page() {
-        var type = getTypeParameter();
-        if(null == type)
-            this.kind = "Page";
-        else {
-            var name = type.getTypeName();
-            var index = name.lastIndexOf('.');
-            name = index >= 0 ? name.substring(index + 1) : name;
-            this.kind = String.format("PageOf%ss", name);
-        }
+        super("Page", true);
 
         this.offset = 0;
         this.limit = 100;
@@ -119,7 +111,7 @@ public abstract class Page<T> {
      * @param element The element to add
      */
     public void add(T element) {
-        if(null == element) {
+        if(null == this.elements) {
             this.elements = new ArrayList<>();
             this.count = 0;
         }
@@ -149,21 +141,6 @@ public abstract class Page<T> {
             this.count = 0;
             this.prevPage = null;
             this.nextPage =null;
-        }
-    }
-
-    /***
-     * Helper to get the name of the type parameter.
-     * @return Class of the type parameter, null on error
-     */
-    @SuppressWarnings("unchecked")
-    private Class<T> getTypeParameter() {
-        try {
-            ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
-            return (Class<T>) superclass.getActualTypeArguments()[0];
-        }
-        catch(Exception e) {
-            return null;
         }
     }
 }

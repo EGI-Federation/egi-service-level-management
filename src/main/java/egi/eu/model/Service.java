@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import egi.eu.History;
-
 import java.util.List;
 
 
@@ -19,15 +17,15 @@ public class Service extends Version {
     public String kind = "Service";
 
     @Schema(description="ID of the service, assigned on creation")
-    int id;
+    long id;
 
     String name;
     String description;
 
     // The fields below are linking this service to a portfolio entry
     // See process Service Portfolio Management (SPM)
-    int portfolioId;
-    int portfolioEntryId;
+    long spmPortfolioId;
+    long spmPortfolioEntryId;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -37,11 +35,11 @@ public class Service extends Version {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     HistoryOfService history = null;
 
+
     /***
      * History of a service
      */
     public class HistoryOfService extends History<Service> {
         public HistoryOfService() { super(); }
-        public HistoryOfService(int size) { super(size); }
     }
 }

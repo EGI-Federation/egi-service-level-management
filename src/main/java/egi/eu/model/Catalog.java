@@ -6,8 +6,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
-import egi.eu.History;
-
 
 /**
  * Details of a catalog (of services)
@@ -21,7 +19,7 @@ public class Catalog extends Version {
     public String kind = "Catalog";
 
     @Schema(description="ID of the catalog, assigned on creation")
-    int id;
+    long id;
 
     String name;
 
@@ -32,8 +30,8 @@ public class Catalog extends Version {
 
     // The fields below are linking this catalog to a service portfolio
     // See process Service Portfolio Management (SPM)
-    int portfolioId;
-    String portfolioName;
+    long spmPortfolioId;
+    String spmPortfolioName;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -43,11 +41,11 @@ public class Catalog extends Version {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     HistoryOfCatalog history = null;
 
+
     /***
      * History of a catalog
      */
     public class HistoryOfCatalog extends History<Catalog> {
         public HistoryOfCatalog() { super(); }
-        public HistoryOfCatalog(int size) { super(size); }
     }
 }

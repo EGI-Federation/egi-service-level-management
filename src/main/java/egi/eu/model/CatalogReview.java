@@ -2,12 +2,9 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
-
-import egi.eu.History;
 
 
 /**
@@ -35,6 +32,5 @@ public class CatalogReview extends Version {
      */
     public class HistoryOfCatalogReview extends History<CatalogReview> {
         public HistoryOfCatalogReview() { super(); }
-        public HistoryOfCatalogReview(int size) { super(size); }
     }
 }

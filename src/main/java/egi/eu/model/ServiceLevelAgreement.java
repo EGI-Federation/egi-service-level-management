@@ -2,12 +2,9 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
-
-import egi.eu.History;
 
 
 /**
@@ -20,7 +17,7 @@ public class ServiceLevelAgreement extends Version {
     public String kind = "ServiceLevelAgreement";
 
     @Schema(description="ID of the agreement, assigned on creation")
-    int id;
+    long id;
 
     int one;
     int two;
@@ -35,10 +32,9 @@ public class ServiceLevelAgreement extends Version {
     HistoryOfServiceLevelAgreement history = null;
 
     /***
-     * History of an SLA
+     * History of the SLA
      */
     public class HistoryOfServiceLevelAgreement extends History<ServiceLevelAgreement> {
         public HistoryOfServiceLevelAgreement() { super(); }
-        public HistoryOfServiceLevelAgreement(int size) { super(size); }
     }
 }

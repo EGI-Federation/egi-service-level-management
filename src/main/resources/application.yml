@@ -21,7 +21,7 @@ egi:
     co-id: 2
     cache-vo-members: 600000 # milliseconds
     cache-roles: 60000 # milliseconds
-    trace-roles: true
+    trace-roles: false
   qos:
     quantiles: [0.95]
     slos: [500] # SLOs in milliseconds
@@ -90,7 +90,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.18
+    info-version: 1.0.19
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt
@@ -109,7 +109,7 @@ quarkus:
       allow-x-forwarded: true
       enable-forwarded-host: true
     access-log:
-      enabled: true
+      enabled: false
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
       base-file-name: slm-api-

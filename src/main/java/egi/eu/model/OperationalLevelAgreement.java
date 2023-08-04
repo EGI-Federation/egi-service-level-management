@@ -2,12 +2,9 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
-
-import egi.eu.History;
 
 
 /**
@@ -35,10 +32,9 @@ public class OperationalLevelAgreement extends Version {
     HistoryOfOperationalLevelAgreement history = null;
 
     /***
-     * History of an OLA
+     * History of the OLA
      */
     public class HistoryOfOperationalLevelAgreement extends History<OperationalLevelAgreement> {
         public HistoryOfOperationalLevelAgreement() { super(); }
-        public HistoryOfOperationalLevelAgreement(int size) { super(size); }
     }
 }

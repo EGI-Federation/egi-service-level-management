@@ -1,5 +1,6 @@
 package egi.eu;
 
+import egi.eu.model.Page;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -18,7 +19,6 @@ import io.quarkus.security.identity.SecurityIdentity;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
