@@ -50,7 +50,7 @@ public class UnderpinningAgreements extends BaseResource {
     /***
      * Page of UAs
      */
-    class PageOfUnderpinningAgreements extends Page<UnderpinningAgreement> {
+    static class PageOfUnderpinningAgreements extends Page<UnderpinningAgreement> {
         public PageOfUnderpinningAgreements(String baseUri, long offset, long limit, List<UnderpinningAgreement> uas) {
             super(baseUri, offset, limit, uas); }
     }
@@ -64,6 +64,7 @@ public class UnderpinningAgreements extends BaseResource {
     /**
      * List all UAs.
      * @param auth The access token needed to call the service.
+     * @param olaId If provided, will only return UAs supporting the OLA with this Id
      * @param offset The number of elements to skip
      * @param limit The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
@@ -161,9 +162,11 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> createUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                   @RestPath("olaId")
                                   @Parameter(required = true, description = "ID of supported Operating Level Agreement")
                                   int olaId,
+
                                   UnderpinningAgreement ua) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -219,9 +222,11 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> updateUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                   @RestPath("uaId")
                                   @Parameter(required = true, description = "ID of agreement to update")
                                   int uaId,
+
                                   UnderpinningAgreement ua) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -273,9 +278,11 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                  @RestPath("uaId")
                                  @Parameter(required = true, description = "ID of agreement to get")
                                  int uaId,
+
                                  @RestQuery("allVersions")
                                  @Parameter(description = "Whether to retrieve all versions")
                                  @Schema(defaultValue = "false")
@@ -320,7 +327,7 @@ public class UnderpinningAgreements extends BaseResource {
                              "on an agreement, the next update will create a new version of the agreement, "+
                              "which can be modified until signed.")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed",
+            @APIResponse(responseCode = "200", description = "Signed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -334,6 +341,7 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> signUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                 @RestPath("uaId")
                                 @Parameter(required = true, description = "ID of agreement to sign")
                                 int uaId) {
@@ -371,7 +379,7 @@ public class UnderpinningAgreements extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.UA_OWNER })
     @Operation(operationId = "revokeUA",  summary = "Revoke existing Underpinning Agreement")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Revoked",
+            @APIResponse(responseCode = "200", description = "Revoked",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -385,6 +393,7 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> revokeUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                   @RestPath("uaId")
                                   @Parameter(required = true, description = "ID of agreement to revoke")
                                   int uaId) {

@@ -3,7 +3,6 @@ package egi.eu.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.lang.reflect.ParameterizedType;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ public abstract class Page<T> extends GenericEntity<T> {
      * Constructor
      */
     public Page() {
-        super("Page", true);
+        super("Page", null, true);
 
         this.offset = 0;
         this.limit = 100;

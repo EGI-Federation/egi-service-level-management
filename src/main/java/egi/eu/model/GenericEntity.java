@@ -19,16 +19,28 @@ public abstract class GenericEntity<T> {
 
     /**
      * Constructor
+     * @param typeNamePrefix A prefix to use as part of the name
+     * @param pluralName Whether to make the prefix plural (append 's')
+     * @param typeNameSuffix A suffix to use as part of the name
      */
-    protected GenericEntity(String typeNamePrefix, boolean pluralName) {
+    protected GenericEntity(String typeNamePrefix, String typeNameSuffix, boolean pluralName) {
         var type = getTypeParameter();
-        if(null == type)
-            this.kind = typeNamePrefix;
-        else {
+        if(null != type) {
             var name = type.getTypeName();
             var index = name.lastIndexOf('.');
             name = index >= 0 ? name.substring(index + 1) : name;
-            this.kind = String.format("%sOf%s%s", typeNamePrefix, name, pluralName ? "s" : "");
+
+            if(null != typeNamePrefix)
+                this.kind = String.format("%sOf%s%s", typeNamePrefix, name, pluralName ? "s" : "");
+            else if(null != typeNameSuffix)
+                this.kind = name + typeNameSuffix;
+        }
+
+        if(null == kind || kind.isBlank()) {
+            if(null != typeNamePrefix)
+                this.kind = typeNamePrefix;
+            else
+                this.kind = typeNameSuffix;
         }
     }
 

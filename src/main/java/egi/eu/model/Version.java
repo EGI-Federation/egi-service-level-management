@@ -32,6 +32,6 @@ public abstract class Version<T> extends GenericEntity<T> {
      * Constructor
      */
     public Version() {
-        super("Version", false);
+        super("Version",  null,false);
     }
 }

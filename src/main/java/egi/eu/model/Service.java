@@ -11,7 +11,7 @@ import java.util.List;
  * Details of a service (portfolio entry)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Service extends Version {
+public class Service extends Version<Service> {
 
     @Schema(enumeration={ "Service" })
     public String kind = "Service";
@@ -20,6 +20,8 @@ public class Service extends Version {
     long id;
 
     String name;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     String description;
 
     // The fields below are linking this service to a portfolio entry
@@ -39,7 +41,7 @@ public class Service extends Version {
     /***
      * History of a service
      */
-    public class HistoryOfService extends History<Service> {
+    public static class HistoryOfService extends History<Service> {
         public HistoryOfService() { super(); }
     }
 }

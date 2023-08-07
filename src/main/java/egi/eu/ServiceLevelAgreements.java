@@ -50,7 +50,7 @@ public class ServiceLevelAgreements extends BaseResource {
     /***
      * Page of SLAs
      */
-    class PageOfServiceLevelAgreements extends Page<ServiceLevelAgreement> {
+    static class PageOfServiceLevelAgreements extends Page<ServiceLevelAgreement> {
         public PageOfServiceLevelAgreements(String baseUri, long offset, long limit, List<ServiceLevelAgreement> slas) {
             super(baseUri, offset, limit, slas); }
     }
@@ -155,6 +155,7 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> createSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    ServiceLevelAgreement sla) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -209,9 +210,11 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> updateSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("slaId")
                                    @Parameter(required = true, description = "ID of agreement to update")
                                    int slaId,
+
                                    ServiceLevelAgreement sla) {
 
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -263,9 +266,11 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                   @RestPath("slaId")
                                   @Parameter(required = true, description = "ID of agreement to get")
                                   int slaId,
+
                                   @RestQuery("allVersions")
                                   @Parameter(description = "Whether to retrieve all versions")
                                   @Schema(defaultValue = "false")
@@ -310,7 +315,7 @@ public class ServiceLevelAgreements extends BaseResource {
                              "on an agreement, the next update will create a new version of the agreement, "+
                              "which can be modified until signed.")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed",
+            @APIResponse(responseCode = "200", description = "Signed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -324,6 +329,7 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> signSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                  @RestPath("slaId")
                                  @Parameter(required = true, description = "ID of agreement to sign")
                                  int slaId) {
@@ -361,7 +367,7 @@ public class ServiceLevelAgreements extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.SLA_OWNER })
     @Operation(operationId = "revokeSLA",  summary = "Revoke existing Service Level Agreement")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Revoked",
+            @APIResponse(responseCode = "200", description = "Revoked",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -375,6 +381,7 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> revokeSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("slaId")
                                    @Parameter(required = true, description = "ID of agreement to revoke")
                                    int slaId) {

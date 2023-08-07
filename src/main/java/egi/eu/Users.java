@@ -595,12 +595,12 @@ public class Users extends BaseResource {
 
         if(null == role || !(
                 role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
-                        role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
-                        role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
-                        role.equalsIgnoreCase(Role.REPORT_OWNER) ||
-                        role.equalsIgnoreCase(Role.UA_OWNER) ||
-                        role.equalsIgnoreCase(Role.OLA_OWNER) ||
-                        role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
+                role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
+                role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
+                role.equalsIgnoreCase(Role.REPORT_OWNER) ||
+                role.equalsIgnoreCase(Role.UA_OWNER) ||
+                role.equalsIgnoreCase(Role.OLA_OWNER) ||
+                role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
             var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", role));
             return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
         }

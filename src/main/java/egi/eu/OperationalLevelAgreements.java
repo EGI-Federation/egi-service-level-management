@@ -50,7 +50,7 @@ public class OperationalLevelAgreements extends BaseResource {
     /***
      * Page of OLAs
      */
-    class PageOfOperationalLevelAgreements extends Page<OperationalLevelAgreement> {
+    static class PageOfOperationalLevelAgreements extends Page<OperationalLevelAgreement> {
         public PageOfOperationalLevelAgreements(String baseUri, long offset, long limit, List<OperationalLevelAgreement> olas) {
             super(baseUri, offset, limit, olas); }
     }
@@ -64,6 +64,7 @@ public class OperationalLevelAgreements extends BaseResource {
     /**
      * List all OLAs.
      * @param auth The access token needed to call the service.
+     * @param slaId If provided, will only return OLAs supporting the SLA with this Id
      * @param offset The number of elements to skip
      * @param limit The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
@@ -319,7 +320,7 @@ public class OperationalLevelAgreements extends BaseResource {
                              "on an agreement, the next update will create a new version of the agreement, "+
                              "which can be modified until signed.")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Signed",
+            @APIResponse(responseCode = "200", description = "Signed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -370,7 +371,7 @@ public class OperationalLevelAgreements extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.OLA_OWNER })
     @Operation(operationId = "revokeOLA",  summary = "Revoke existing Operational Level Agreement")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Revoked",
+            @APIResponse(responseCode = "200", description = "Revoked",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",

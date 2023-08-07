@@ -23,7 +23,7 @@ public class Role {
     public final static String OLA_OWNER = "ola-owner";
     public final static String SLA_OWNER = "sla-owner";
 
-    // Pseudo-roles that can be used to authorize access to the API endpoints,
+    // Pseudo-roles that can be used in API endpoint annotations to define access,
     // but are not considered/returned by the user-related endpoints
     public final static String ISM_USER = "ism";        // Marks membership in the VO
     public final static String ISM_ADMIN = "admin";     // Marks being a VO manager
@@ -33,10 +33,39 @@ public class Role {
     @Schema(enumeration={ "Role" })
     public String kind = "Role";
 
+    @Schema(description="ID of the role, assigned on creation")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    long id;
+
     public String role;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String tasks;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<UserInfo> users;
+
+    // The fields below are linking this role to a global IMS role
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    long globalRoleId;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    String globalRoleName;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    String globalRoleTasks;
+
+    // Change history
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    HistoryOfRole history = null;
+
+
+    /***
+     * History of a role
+     */
+    public static class HistoryOfRole extends History<Role> {
+        public HistoryOfRole() { super(); }
+    }
 
 
     /***

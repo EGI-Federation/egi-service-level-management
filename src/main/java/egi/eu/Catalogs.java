@@ -50,9 +50,24 @@ public class Catalogs extends BaseResource {
     /***
      * Page of catalogs
      */
-    class PageOfCatalogs extends Page<Catalog> {
+    public static class PageOfCatalogs extends Page<Catalog> {
         public PageOfCatalogs(String baseUri, long offset, long limit, List<Catalog> catalogs) {
             super(baseUri, offset, limit, catalogs); }
+    }
+
+    /***
+     * Review of a catalog
+     */
+    public static class CatalogReview extends Review<Catalog> {
+        public CatalogReview() { super(); }
+    }
+
+    /***
+     * Page of catalog reviews
+     */
+    public static class PageOfCatalogReviews extends Page<CatalogReview> {
+        public PageOfCatalogReviews(String baseUri, long offset, long limit, List<CatalogReview> reviews) {
+            super(baseUri, offset, limit, reviews); }
     }
 
 
@@ -67,7 +82,7 @@ public class Catalogs extends BaseResource {
      * @param offset The number of elements to skip
      * @param limit The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
-     * @return API Response, wraps an ActionSuccess(Page<{@link Catalog>) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess(Page<{@link PageOfCatalogs>) or an ActionError entity
      */
     @GET
     @Path("/catalogs")
@@ -420,7 +435,7 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "removeService",  summary = "Remove service from existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Removed",
+            @APIResponse(responseCode = "200", description = "Removed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -476,7 +491,7 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "reviewCatalog",  summary = "Review existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Reviewed",
+            @APIResponse(responseCode = "200", description = "Reviewed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -528,7 +543,7 @@ public class Catalogs extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
     @Operation(operationId = "retireCatalog",  summary = "Retire existing catalog")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Retired",
+            @APIResponse(responseCode = "200", description = "Retired",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -563,6 +578,76 @@ public class Catalogs extends BaseResource {
                 log.error("Failed to retire catalog");
                 return new ActionError(e).toResponse();
             });
+
+        return result;
+    }
+
+    /**
+     * Review existing catalog.
+     * @param auth The access token needed to call the service.
+     * @param catalogId The ID of the catalog to review.
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess(Page<{@link PageOfCatalogReviews>) or an ActionError entity
+     */
+    @GET
+    @Path("/catalog/{catalogId}/reviews")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed( Role.ISM_USER )
+    @Operation(operationId = "listCatalogReviews",  summary = "List reviews of a catalog")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = PageOfCatalogReviews.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> listCatalogReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                            @Context UriInfo uriInfo,
+                                            @Context HttpHeaders httpHeaders,
+
+                                            @RestPath("catalogId")
+                                            @Parameter(required = true, description = "ID of catalog to lists review of")
+                                            int catalogId,
+
+                                            @RestQuery("offset")
+                                            @Parameter(description = "Skip the first given number of results")
+                                            @Schema(defaultValue = "0")
+                                            long offset,
+
+                                            @RestQuery("limit")
+                                            @Parameter(description = "Restrict the number of results returned")
+                                            @Schema(defaultValue = "100")
+                                            long limit)
+    {
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("catalogID", catalogId);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
+
+        log.info("Listing catalog reviews");
+
+        Uni<Response> result = Uni.createFrom().item(new Catalog())
+
+                .chain(signed -> {
+                    // Got reviews, success
+                    log.info("Got review list");
+                    var uri = getRealRequestUri(uriInfo, httpHeaders);
+                    var page = new PageOfCatalogReviews(uri.toString(), offset, limit, null);
+                    return Uni.createFrom().item(Response.ok(page).build());
+                })
+                .onFailure().recoverWithItem(e -> {
+                    log.error("Failed to list catalog reviews");
+                    return new ActionError(e).toResponse();
+                });
 
         return result;
     }

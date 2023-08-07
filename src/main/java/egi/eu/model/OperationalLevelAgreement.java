@@ -11,13 +11,13 @@ import java.util.List;
  * Details of an Operational Level Agreement (OLA)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OperationalLevelAgreement extends Version {
+public class OperationalLevelAgreement extends Version<OperationalLevelAgreement> {
 
     @Schema(enumeration={ "OperationalLevelAgreement" })
     public String kind = "OperationalLevelAgreement";
 
     @Schema(description="ID of the agreement, assigned on creation")
-    int id;
+    long id;
 
     int one;
     int two;
@@ -34,7 +34,7 @@ public class OperationalLevelAgreement extends Version {
     /***
      * History of the OLA
      */
-    public class HistoryOfOperationalLevelAgreement extends History<OperationalLevelAgreement> {
+    public static class HistoryOfOperationalLevelAgreement extends History<OperationalLevelAgreement> {
         public HistoryOfOperationalLevelAgreement() { super(); }
     }
 }
