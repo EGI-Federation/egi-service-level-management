@@ -112,9 +112,11 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                     // Only continue checking the roles for members of the configured VO
                     if(userInfo.entitlements.contains(voPrefix + "role=member" + suffix)) {
                         // This user is member of the VO, access to ISM tools is allowed
-                        builder.addRole(Role.ISM_USER);
+                        builder.addRole(Role.IMS_USER);
 
-                        final String voManager = voPrefix + "admins:role=member" + suffix;
+                        final String imsOwner = voPrefix + "ims:role=ims-owner" + suffix;
+                        final String imsManager = voPrefix + "ims:role=ims-manager" + suffix;
+                        final String imsCoordinator = voPrefix + "ims:role=ims-coordinator" + suffix;
                         final String rolePrefix = voPrefix + config.group() + ":role=";
 
                         boolean processMember = false;
@@ -148,8 +150,8 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
 
                         for (var e : userInfo.entitlements) {
 
-                            if (e.equals(voManager))
-                                builder.addRole(Role.ISM_ADMIN);
+                            if (e.equals(imsOwner) || e.equals(imsManager) || e.equals(imsCoordinator))
+                                builder.addRole(Role.IMS_ADMIN);
                             else if (processMember && e.equals(po))
                                 builder.addRole(Role.PROCESS_OWNER);
                             else if (processMember && e.equals(pm))
