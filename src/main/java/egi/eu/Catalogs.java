@@ -26,7 +26,7 @@ import egi.eu.model.*;
 
 
 /***
- * Resource for Underpinning Agreement (UA) queries and operations.
+ * Resource for catalog queries and operations.
  */
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -87,7 +87,7 @@ public class Catalogs extends BaseResource {
     @GET
     @Path("/catalogs")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "listCatalogs",  summary = "List all catalogs")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -203,7 +203,7 @@ public class Catalogs extends BaseResource {
     @GET
     @Path("/catalog/{catalogId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getCatalog",  summary = "Get existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",
@@ -314,7 +314,7 @@ public class Catalogs extends BaseResource {
     @GET
     @Path("/catalog/{catalogId}/service/{serviceId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getService",  summary = "Get service in existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",
@@ -593,7 +593,7 @@ public class Catalogs extends BaseResource {
     @GET
     @Path("/catalog/{catalogId}/reviews")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed( Role.ISM_USER )
+    @RolesAllowed( Role.IMS_USER)
     @Operation(operationId = "listCatalogReviews",  summary = "List reviews of a catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",

@@ -50,7 +50,7 @@ public class UsersTest {
     }
 
     @Test
-    @TestSecurity(user = "test", roles = { Role.ISM_USER })
+    @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("Get user info by VO member")
     public void testGetUserInfo() {
         UserInfo ui =
@@ -83,7 +83,7 @@ public class UsersTest {
     }
 
     @Test
-    @TestSecurity(user = "test", roles = { Role.ISM_USER })
+    @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("List all users")
     public void testListUsersInVo() {
         Users.PageOfUserInfos pu =
@@ -100,7 +100,7 @@ public class UsersTest {
     }
 
     @Test
-    @TestSecurity(user = "test", roles = { Role.ISM_USER })
+    @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("List group members")
     public void testListUsersInGroup() {
         Users.PageOfUserInfos ul =

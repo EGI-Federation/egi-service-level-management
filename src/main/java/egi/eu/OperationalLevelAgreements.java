@@ -73,7 +73,7 @@ public class OperationalLevelAgreements extends BaseResource {
     @GET
     @Path("/olas")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "listOLAs",  summary = "List all Operational Level Agreements")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -256,7 +256,7 @@ public class OperationalLevelAgreements extends BaseResource {
     @GET
     @Path("/ola/{olaId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getOLA",  summary = "Get existing Operational Level Agreement")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",

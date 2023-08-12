@@ -73,7 +73,7 @@ public class UnderpinningAgreements extends BaseResource {
     @GET
     @Path("/uas")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "listUAs",  summary = "List all Underpinning Agreements")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -261,7 +261,7 @@ public class UnderpinningAgreements extends BaseResource {
     @GET
     @Path("/ua/{uaId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getUA",  summary = "Get existing Underpinning Agreement")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",

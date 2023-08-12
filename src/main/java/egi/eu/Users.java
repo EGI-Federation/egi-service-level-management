@@ -88,7 +88,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/user/info")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getUserInfo",  summary = "Retrieve information about authenticated user")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -151,7 +151,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/users")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_USER })
+    @RolesAllowed({ Role.IMS_USER})
     @Operation(operationId = "listUsers",  summary = "List ISM users")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -236,7 +236,7 @@ public class Users extends BaseResource {
     @POST
     @Path("/process/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "addUserToGroup",  summary = "Include user in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Included",
@@ -305,7 +305,7 @@ public class Users extends BaseResource {
     @DELETE
     @Path("/process/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "removeUserFromGroup",  summary = "Exclude user from the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Excluded",
@@ -380,7 +380,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/users/roles")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_MEMBER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_MEMBER })
     @Operation(operationId = "listUsersWithRoles",  summary = "List users with roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -462,7 +462,7 @@ public class Users extends BaseResource {
     @POST
     @Path("/role/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "addRoleToUser",  summary = "Assign a role to a user",
                description ="To assign roles to a user, the user must be included in the SLM process.")
     @APIResponses(value = {
@@ -552,7 +552,7 @@ public class Users extends BaseResource {
     @DELETE
     @Path("/role/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "revokeRoleFromUser",  summary = "Revoke a role from a user")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Revoked",
@@ -644,7 +644,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/roles")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.ISM_ADMIN, Role.PROCESS_MEMBER })
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_MEMBER })
     @Operation(operationId = "listRoles",  summary = "List assigned roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",

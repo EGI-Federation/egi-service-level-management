@@ -25,8 +25,8 @@ public class Role {
 
     // Pseudo-roles that can be used in API endpoint annotations to define access,
     // but are not considered/returned by the user-related endpoints
-    public final static String ISM_USER = "ism";        // Marks membership in the VO
-    public final static String ISM_ADMIN = "admin";     // Marks being a VO manager
+    public final static String IMS_USER = "ims";        // Marks membership in the VO
+    public final static String IMS_ADMIN = "admin";     // Marks being an IMS admin (owner/manager/coordinator)
     public final static String PROCESS_MEMBER = "slm";  // Marks membership in the group
 
 

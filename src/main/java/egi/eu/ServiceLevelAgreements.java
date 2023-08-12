@@ -72,7 +72,7 @@ public class ServiceLevelAgreements extends BaseResource {
     @GET
     @Path("/slas")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "listSLAs",  summary = "List all Service Level Agreements")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -249,7 +249,7 @@ public class ServiceLevelAgreements extends BaseResource {
     @GET
     @Path("/sla/{slaId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.ISM_USER)
+    @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "getSLA",  summary = "Get existing Service Level Agreement")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",
