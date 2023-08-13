@@ -1,5 +1,6 @@
 package egi.eu;
 
+import egi.eu.model.Catalog;
 import egi.eu.model.Page;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -17,6 +18,7 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -642,10 +644,10 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
      */
     @GET
-    @Path("/roles")
+    @Path("/roles/assigned")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_MEMBER })
-    @Operation(operationId = "listRoles",  summary = "List assigned roles in the SLM process")
+    @Operation(operationId = "listAssignedRoles",  summary = "List assigned roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -657,7 +659,7 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> listAssignedRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                             @Context UriInfo uriInfo,
                                             @Context HttpHeaders httpHeaders,
 
@@ -681,7 +683,7 @@ public class Users extends BaseResource {
         addToDC("offset", offset);
         addToDC("limit", limit);
 
-        log.info("Listing roles");
+        log.info("Listing assigned roles");
 
         if(null == auth || auth.trim().isEmpty()) {
             var ae = new ActionError("badRequest", "Access token missing");
@@ -704,6 +706,82 @@ public class Users extends BaseResource {
             })
             .chain(roles -> {
                 // Got roles, success
+                log.info("Got assigned roles");
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
+                var page = new PageOfRoles(uri.toString(), offset, limit, roles);
+                return Uni.createFrom().item(Response.ok(page).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to list assigned roles");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * List defined roles in the process.
+     * @param auth The access token needed to call the service.
+     * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
+     * @param offset The number of elements to skip
+     * @param limit The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
+     */
+    @GET
+    @Path("/roles")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed(Role.IMS_USER)
+    @Operation(operationId = "listRoles",  summary = "List role definitions")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = PageOfRoles.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> listRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                   @Context UriInfo uriInfo,
+                                   @Context HttpHeaders httpHeaders,
+
+                                   @RestQuery("role")
+                                   @Parameter(description = "Return only roles matching this expression")
+                                   String roleName,
+
+                                   @RestQuery("offset")
+                                   @Parameter(description = "Skip the first given number of results")
+                                   @Schema(defaultValue = "0")
+                                   long offset,
+
+                                   @RestQuery("limit")
+                                   @Parameter(description = "Restrict the number of results returned")
+                                   @Schema(defaultValue = "100")
+                                   long limit) {
+
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("roleName", roleName);
+        addToDC("offset", offset);
+        addToDC("limit", limit);
+
+        log.info("Listing roles");
+
+        if(null == auth || auth.trim().isEmpty()) {
+            var ae = new ActionError("badRequest", "Access token missing");
+            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
+        }
+
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                // List roles
+                return Uni.createFrom().item(new ArrayList<Role>());
+            })
+            .chain(roles -> {
+                // Got roles, success
                 log.info("Got roles");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfRoles(uri.toString(), offset, limit, roles);
@@ -712,6 +790,55 @@ public class Users extends BaseResource {
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list roles");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * Update role definition.
+     * @param auth The access token needed to call the service.
+     * @return API Response, wraps an ActionSuccess({@link Role}) or an ActionError entity
+     */
+    @PUT
+    @Path("/role/definition")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @Operation(operationId = "updateRole",  summary = "Update role definition")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Updated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = Role.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> updateRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
+                                    Role role)
+    {
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("roleName", role.role);
+
+        log.info("Updating role definition");
+
+        Uni<Response> result = Uni.createFrom().item(new Role())
+
+            .chain(updated -> {
+                // Update complete, success
+                log.info("Updated role definition");
+                return Uni.createFrom().item(Response.ok(updated).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to update role definition");
+                return new ActionError(e).toResponse();
             });
 
         return result;

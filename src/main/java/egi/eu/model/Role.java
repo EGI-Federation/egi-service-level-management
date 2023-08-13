@@ -24,7 +24,7 @@ public class Role {
     public final static String SLA_OWNER = "sla-owner";
 
     // Pseudo-roles that can be used in API endpoint annotations to define access,
-    // but are not considered/returned by the user-related endpoints
+    // but are not considered/returned by the API endpoints
     public final static String IMS_USER = "ims";        // Marks membership in the VO
     public final static String IMS_ADMIN = "admin";     // Marks being an IMS admin (owner/manager/coordinator)
     public final static String PROCESS_MEMBER = "slm";  // Marks membership in the group
@@ -35,29 +35,36 @@ public class Role {
 
     @Schema(description="ID of the role, assigned on creation")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    long id;
+    public long id;
 
-    public String role;
+    public String role; // One of the constants from above
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String name; // Human-readable version of the role field
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String tasks;
 
+    @Schema(description="Users that hold this role")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<UserInfo> users;
 
     // The fields below are linking this role to a global IMS role
+    @Schema(description="ID of a role to inherit tasks from")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    long globalRoleId;
+    public long globalRoleId;
 
+    @Schema(description="Name of a role to inherit tasks from")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String globalRoleName;
+    public String globalRoleName;
 
+    @Schema(description="Inherited tasks")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String globalRoleTasks;
+    public String globalRoleTasks;
 
     // Change history
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    HistoryOfRole history = null;
+    public HistoryOfRole history = null;
 
 
     /***
