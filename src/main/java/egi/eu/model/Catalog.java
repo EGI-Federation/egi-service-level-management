@@ -23,15 +23,15 @@ public class Catalog extends Version<Catalog> {
     @Schema(description="ID of the catalog, assigned on creation")
     public long id;
 
-    String name;
+    public String name;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String description;
+    public String description;
 
     @Schema(description="The services that are included in the catalog. " +
             "All services must be from the same portfolio as the catalog.")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    List<Service> services;
+    public List<Service> services;
 
     // The fields below are linking this catalog to a service portfolio
     // See process Service Portfolio Management (SPM)
@@ -39,7 +39,7 @@ public class Catalog extends Version<Catalog> {
     public String spmPortfolioName;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    UserInfo owner;
+    public UserInfo owner;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int reviewFrequency;
@@ -53,11 +53,11 @@ public class Catalog extends Version<Catalog> {
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    List<String> links  = null;
+    public List<String> links  = null;
 
     // Change history
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    HistoryOfCatalog history = null;
+    public HistoryOfCatalog history = null;
 
 
     /***

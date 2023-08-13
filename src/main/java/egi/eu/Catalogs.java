@@ -220,9 +220,11 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                       @RestPath("catalogId")
                                       @Parameter(required = true, description = "ID of catalog to get")
                                       int catalogId,
+
                                       @RestQuery("allVersions") @DefaultValue("false")
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
@@ -245,6 +247,60 @@ public class Catalogs extends BaseResource {
                 log.error("Failed to get catalog");
                 return new ActionError(e).toResponse();
             });
+
+        return result;
+    }
+
+    /**
+     * Update existing catalog.
+     * @param auth The access token needed to call the service.
+     * @param catalogId The ID of the catalog to update.
+     * @return API Response, wraps an ActionSuccess({@link Catalog}) or an ActionError entity
+     */
+    @PUT
+    @Path("/catalog/{catalogId}")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @Operation(operationId = "updateCatalog",  summary = "Update existing catalog")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Updated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = Catalog.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> updateCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
+                                       @RestPath("catalogId")
+                                       @Parameter(required = true, description = "ID of catalog to update")
+                                       int catalogId,
+
+                                       Catalog catalog)
+    {
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("catalogId", catalogId);
+
+        log.info("Updating catalog");
+
+        Uni<Response> result = Uni.createFrom().item(new Catalog())
+
+                .chain(updated -> {
+                    // Update complete, success
+                    log.info("Updated catalog");
+                    return Uni.createFrom().item(Response.ok(updated).build());
+                })
+                .onFailure().recoverWithItem(e -> {
+                    log.error("Failed to update catalog");
+                    return new ActionError(e).toResponse();
+                });
 
         return result;
     }
@@ -276,9 +332,11 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> addService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("catalogId")
                                    @Parameter(required = true, description = "ID of catalog where to add the service")
                                    int catalogId,
+
                                    Service service)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -331,12 +389,15 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                       @RestPath("catalogId")
                                       @Parameter(required = true, description = "ID of catalog that contains the service")
                                       int catalogId,
+
                                       @RestPath("serviceId")
                                       @Parameter(required = true, description = "ID of service to get")
                                       int serviceId,
+
                                       @RestQuery("allVersions") @DefaultValue("false")
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
@@ -391,12 +452,15 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> updateService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                        @RestPath("catalogId")
                                        @Parameter(required = true, description = "ID of catalog that contains the service")
                                        int catalogId,
+
                                        @RestPath("serviceId")
                                        @Parameter(required = true, description = "ID of service to update")
                                        int serviceId,
+
                                        Service service)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -449,9 +513,11 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> removeService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                        @RestPath("catalogId")
                                        @Parameter(required = true, description = "ID of catalog that contains the service")
                                        int catalogId,
+
                                        @RestPath("serviceId")
                                        @Parameter(required = true, description = "ID of service to remove")
                                        int serviceId)
@@ -505,9 +571,11 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> reviewCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                        @RestPath("catalogId")
                                        @Parameter(required = true, description = "ID of catalog to review")
                                        int catalogId,
+
                                        CatalogReview review)
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
@@ -532,58 +600,7 @@ public class Catalogs extends BaseResource {
     }
 
     /**
-     * Retire existing catalog.
-     * @param auth The access token needed to call the service.
-     * @param catalogId The ID of the catalog to retire.
-     * @return API Response, wraps an ActionSuccess or an ActionError entity
-     */
-    @DELETE
-    @Path("/catalog/{catalogId}")
-    @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
-    @Operation(operationId = "retireCatalog",  summary = "Retire existing catalog")
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "Retired",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = ActionSuccess.class))),
-            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = ActionError.class))),
-            @APIResponse(responseCode = "401", description="Authorization required"),
-            @APIResponse(responseCode = "403", description="Permission denied"),
-            @APIResponse(responseCode = "404", description="Not found",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = ActionError.class))),
-            @APIResponse(responseCode = "503", description="Try again later")
-    })
-    public Uni<Response> retireCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                       @RestPath("catalogId")
-                                       @Parameter(required = true, description = "ID of catalog to retire")
-                                       int catalogId)
-    {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("catalogID", catalogId);
-
-        log.info("Retiring catalog");
-
-        Uni<Response> result = Uni.createFrom().item(new Catalog())
-
-            .chain(revoked -> {
-                // Retire complete, success
-                log.info("Retired catalog");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Retired")).status(Response.Status.NO_CONTENT).build());
-            })
-            .onFailure().recoverWithItem(e -> {
-                log.error("Failed to retire catalog");
-                return new ActionError(e).toResponse();
-            });
-
-        return result;
-    }
-
-    /**
-     * Review existing catalog.
+     * List catalog reviews.
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog to review.
      * @param offset The number of elements to skip
@@ -648,6 +665,58 @@ public class Catalogs extends BaseResource {
                     log.error("Failed to list catalog reviews");
                     return new ActionError(e).toResponse();
                 });
+
+        return result;
+    }
+
+    /**
+     * Retire existing catalog.
+     * @param auth The access token needed to call the service.
+     * @param catalogId The ID of the catalog to retire.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @DELETE
+    @Path("/catalog/{catalogId}")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @Operation(operationId = "retireCatalog",  summary = "Retire existing catalog")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Retired",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> retireCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
+                                       @RestPath("catalogId")
+                                       @Parameter(required = true, description = "ID of catalog to retire")
+                                       int catalogId)
+    {
+        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("catalogID", catalogId);
+
+        log.info("Retiring catalog");
+
+        Uni<Response> result = Uni.createFrom().item(new Catalog())
+
+            .chain(revoked -> {
+                // Retire complete, success
+                log.info("Retired catalog");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Retired")).status(Response.Status.NO_CONTENT).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to retire catalog");
+                return new ActionError(e).toResponse();
+            });
 
         return result;
     }
