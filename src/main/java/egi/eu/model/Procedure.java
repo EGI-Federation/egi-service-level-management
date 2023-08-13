@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class Procedure {
 
-    public enum Status {
+    public enum ProcedureStatus {
         DRAFT,
         READY_FOR_APPROVAL,
         APPROVED,
@@ -61,7 +61,7 @@ public class Procedure {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
 
-    public Status status;
+    public ProcedureStatus status;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -1,15 +1,5 @@
 package egi.eu;
 
-import egi.checkin.model.UserInfo;
-import egi.eu.model.*;
-import egi.eu.model.Process;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.quarkus.security.identity.SecurityIdentity;
-import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -19,10 +9,21 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestHeader;
-import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.*;
 
 import java.util.List;
+
+import egi.checkin.model.UserInfo;
+import egi.eu.model.Process;
+import egi.eu.model.*;
 
 
 /***
@@ -101,7 +102,7 @@ public class Configuration extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("process", imsConfig.group());
+        addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
 
         log.info("Getting process");
@@ -148,7 +149,8 @@ public class Configuration extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("process", imsConfig.group());
+        addToDC("processName", imsConfig.group());
+        addToDC("process", process);
 
         log.info("Updating process");
 
@@ -195,7 +197,8 @@ public class Configuration extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("process", imsConfig.group());
+        addToDC("processName", imsConfig.group());
+        addToDC("review", review);
 
         log.info("Reviewing process");
 
@@ -204,7 +207,7 @@ public class Configuration extends BaseResource {
             .chain(signed -> {
                 // Review complete, success
                 log.info("Reviewed process");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to review process");
@@ -215,7 +218,7 @@ public class Configuration extends BaseResource {
     }
 
     /**
-     * Review existing catalog.
+     * List process reviews.
      * @param auth The access token needed to call the service.
      * @param offset The number of elements to skip
      * @param limit The maximum number of elements to return
@@ -253,7 +256,7 @@ public class Configuration extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("process", imsConfig.group());
+        addToDC("processName", imsConfig.group());
         addToDC("offset", offset);
         addToDC("limit", limit);
 
@@ -301,7 +304,7 @@ public class Configuration extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
-        addToDC("process", imsConfig.group());
+        addToDC("processName", imsConfig.group());
 
         log.info("Deprecating process");
 
@@ -310,7 +313,7 @@ public class Configuration extends BaseResource {
             .chain(revoked -> {
                 // Deprecation complete, success
                 log.info("Deprecated process");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to deprecate process");

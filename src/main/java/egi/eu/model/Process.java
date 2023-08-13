@@ -16,7 +16,7 @@ public class Process {
 
     final static String PROCESS_CODE = "SLM";
 
-    public enum Status {
+    public enum ProcessStatus {
         DRAFT,
         READY_FOR_APPROVAL,
         APPROVED,
@@ -66,7 +66,7 @@ public class Process {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
 
-    public Status status;
+    public ProcessStatus status;
 
     @Schema(description="The version of the process API")
     public String apiVersion;

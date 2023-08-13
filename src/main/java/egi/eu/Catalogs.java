@@ -7,13 +7,13 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
-import io.quarkus.security.identity.SecurityIdentity;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestHeader;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
-import org.jboss.resteasy.reactive.RestHeader;
-import io.smallrye.mutiny.Uni;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -133,7 +133,7 @@ public class Catalogs extends BaseResource {
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                // Got UA list, success
+                // Got catalog list, success
                 log.info("Got catalog list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
                 var page = new PageOfCatalogs(uri.toString(), offset, limit, null);
@@ -287,6 +287,7 @@ public class Catalogs extends BaseResource {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("catalogId", catalogId);
+        addToDC("catalog", catalog);
 
         log.info("Updating catalog");
 
@@ -534,7 +535,7 @@ public class Catalogs extends BaseResource {
                 .chain(updated -> {
                     // Removal complete, success
                     log.info("Removed service from catalog");
-                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Removed")).status(Response.Status.NO_CONTENT).build());
+                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Removed")).build());
                 })
                 .onFailure().recoverWithItem(e -> {
                     log.error("Failed to remove service from catalog");
@@ -581,6 +582,7 @@ public class Catalogs extends BaseResource {
         addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
         addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
+        addToDC("review", review);
 
         log.info("Reviewing catalog");
 
@@ -589,7 +591,7 @@ public class Catalogs extends BaseResource {
             .chain(signed -> {
                 // Review complete, success
                 log.info("Reviewed catalog");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to review catalog");
@@ -602,7 +604,7 @@ public class Catalogs extends BaseResource {
     /**
      * List catalog reviews.
      * @param auth The access token needed to call the service.
-     * @param catalogId The ID of the catalog to review.
+     * @param catalogId The ID of the catalog to list reviews of.
      * @param offset The number of elements to skip
      * @param limit The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfCatalogReviews>) or an ActionError entity
@@ -654,7 +656,7 @@ public class Catalogs extends BaseResource {
 
         Uni<Response> result = Uni.createFrom().item(new Catalog())
 
-                .chain(signed -> {
+                .chain(reviews -> {
                     // Got reviews, success
                     log.info("Got review list");
                     var uri = getRealRequestUri(uriInfo, httpHeaders);
@@ -711,7 +713,7 @@ public class Catalogs extends BaseResource {
             .chain(revoked -> {
                 // Retire complete, success
                 log.info("Retired catalog");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Retired")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Retired")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to retire catalog");

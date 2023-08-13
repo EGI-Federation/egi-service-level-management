@@ -349,7 +349,7 @@ public class OperationalLevelAgreements extends BaseResource {
             .chain(signed -> {
                 // Sign complete, success
                 log.info("Signed OLA");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to sign OLA");
@@ -400,7 +400,7 @@ public class OperationalLevelAgreements extends BaseResource {
             .chain(revoked -> {
                 // Revoke complete, success
                 log.info("Revoked OLA");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to revoke OLA");

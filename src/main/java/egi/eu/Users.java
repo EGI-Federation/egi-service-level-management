@@ -154,7 +154,7 @@ public class Users extends BaseResource {
     @Path("/users")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_USER})
-    @Operation(operationId = "listUsers",  summary = "List ISM users")
+    @Operation(operationId = "listUsers",  summary = "List IMS users")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,

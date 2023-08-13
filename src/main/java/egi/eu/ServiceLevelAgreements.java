@@ -345,7 +345,7 @@ public class ServiceLevelAgreements extends BaseResource {
             .chain(signed -> {
                 // Sign complete, success
                 log.info("Signed SLA");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Signed")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to sign SLA");
@@ -397,7 +397,7 @@ public class ServiceLevelAgreements extends BaseResource {
             .chain(revoked -> {
                 // Revoke complete, success
                 log.info("Revoked SLA");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).status(Response.Status.NO_CONTENT).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to revoke SLA");

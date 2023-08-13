@@ -13,14 +13,14 @@ import java.util.List;
  */
 public class KeyPerformanceIndicator {
 
-    public enum Status {
+    public enum KeyPerformanceIndicatorStatus {
         DRAFT,
         READY_FOR_APPROVAL,
         APPROVED,
         DEPRECATED
     }
 
-    public enum Escalation {
+    public enum KeyPerformanceIndicatorEscalation {
         NONE,
         PROCESS_OWNER,
         IMS_MANAGER
@@ -75,9 +75,9 @@ public class KeyPerformanceIndicator {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
 
-    public Status status;
+    public KeyPerformanceIndicatorStatus status;
 
-    public Escalation escalation;
+    public KeyPerformanceIndicatorEscalation escalation;
 
     // Change history
     @JsonInclude(JsonInclude.Include.NON_NULL)
