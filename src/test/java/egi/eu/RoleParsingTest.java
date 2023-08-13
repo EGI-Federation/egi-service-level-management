@@ -75,9 +75,9 @@ public class RoleParsingTest {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "admins:role=member" + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=member", imsConfig.group()) + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imso) + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsm) + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsc) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imso) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
@@ -147,9 +147,9 @@ public class RoleParsingTest {
     public void testNoImsGroupAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imso) + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsm) + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsc) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imso) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
@@ -173,12 +173,12 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member and included in IMS group")
+    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS owner")
     public void testImsOwnerIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
-        userInfo.addEntitlement(prefix + "IMS:role=member" + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imso) + postfix);
+        userInfo.addEntitlement(prefix + "ims:role=member" + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imso) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
@@ -203,12 +203,12 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member and included in IMS group")
+    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS manager")
     public void testImsManagerIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
-        userInfo.addEntitlement(prefix + "IMS:role=member" + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsm) + postfix);
+        userInfo.addEntitlement(prefix + "ims:role=member" + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
@@ -233,12 +233,12 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member and included in IMS group")
+    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS coordinator")
     public void testImsCoordinatorIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
-        userInfo.addEntitlement(prefix + "IMS:role=member" + postfix);
-        userInfo.addEntitlement(prefix + String.format("IMS:role=%s", imsc) + postfix);
+        userInfo.addEntitlement(prefix + "ims:role=member" + postfix);
+        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));

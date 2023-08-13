@@ -114,16 +114,22 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                         // This user is member of the VO, access to ISM tools is allowed
                         builder.addRole(Role.IMS_USER);
 
-                        final String imsOwner = voPrefix + "ims:role=ims-owner" + suffix;
-                        final String imsManager = voPrefix + "ims:role=ims-manager" + suffix;
-                        final String imsCoordinator = voPrefix + "ims:role=ims-coordinator" + suffix;
+                        final String imsPrefix = voPrefix + "ims:role=";
+                        final String imsOwner = imsPrefix + "ims-owner" + suffix;
+                        final String imsManager = imsPrefix + "ims-manager" + suffix;
+                        final String imsCoordinator = imsPrefix + "ims-coordinator" + suffix;
                         final String rolePrefix = voPrefix + config.group() + ":role=";
 
+                        boolean systemMember = false;
                         boolean processMember = false;
                         if(userInfo.entitlements.contains(rolePrefix + "member" + suffix)) {
                             // This user is member of the SLM group, which is a prerequisite to holding SLM roles
                             processMember = true;
                             builder.addRole(Role.PROCESS_MEMBER);
+                        }
+                        if(userInfo.entitlements.contains(imsPrefix + "member" + suffix)) {
+                            // This user is member of the ISM group, which is a prerequisite to holding admin roles
+                            systemMember = true;
                         }
 
                         final String rexPrefix = "^urn\\:mace\\:egi.eu\\:group\\:" +
@@ -150,7 +156,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
 
                         for (var e : userInfo.entitlements) {
 
-                            if (e.equals(imsOwner) || e.equals(imsManager) || e.equals(imsCoordinator))
+                            if (systemMember && (e.equals(imsOwner) || e.equals(imsManager) || e.equals(imsCoordinator)))
                                 builder.addRole(Role.IMS_ADMIN);
                             else if (processMember && e.equals(po))
                                 builder.addRole(Role.PROCESS_OWNER);
@@ -166,7 +172,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                                 builder.addRole(Role.OLA_OWNER);
                             else if (processMember && e.equals(slao))
                                 builder.addRole(Role.SLA_OWNER);
-                            else {
+                            else if (processMember) {
 
                                 Matcher m = pro.matcher(e);
                                 if (m.find()) {
