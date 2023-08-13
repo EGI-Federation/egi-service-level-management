@@ -42,11 +42,6 @@ public class Procedure {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<Step> steps;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    UserInfo owner;
-
-    public Status status;
-
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int reviewFrequency;
 
@@ -56,6 +51,17 @@ public class Procedure {
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date nextReview;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public UserInfo owner;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public UserInfo approver;
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public Date approvedOn;
+
+    public Status status;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -87,6 +93,9 @@ public class Procedure {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String description;
 
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public Role role;
+
         // The fields below are linking this trigger to another procedure
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String procedureProcess;
@@ -102,7 +111,7 @@ public class Procedure {
      * Step in a procedure
      */
     public static class Step {
-        @Schema(enumeration = {"Step"})
+        @Schema(enumeration = { "Step" })
         public String kind = "Step";
 
         public long id;

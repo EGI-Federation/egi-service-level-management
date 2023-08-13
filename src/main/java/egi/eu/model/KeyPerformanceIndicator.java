@@ -20,6 +20,12 @@ public class KeyPerformanceIndicator {
         DEPRECATED
     }
 
+    public enum Escalation {
+        NONE,
+        PROCESS_OWNER,
+        IMS_MANAGER
+    }
+
     @Schema(enumeration={ "KeyPerformanceIndicator" })
     public String kind = "KeyPerformanceIndicator";
 
@@ -57,20 +63,25 @@ public class KeyPerformanceIndicator {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date nextMeasurement;
 
+    @Schema(description="Updated on each measurement")
     public boolean onTrack;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    UserInfo owner;
+    public UserInfo owner;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public UserInfo approver;
+
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public Date approvedOn;
 
     public Status status;
 
-    // Links
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    List<String> links  = null;
+    public Escalation escalation;
 
     // Change history
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    HistoryOfKeyPerformanceIndicator history = null;
+    public HistoryOfKeyPerformanceIndicator history = null;
 
 
     /***
@@ -98,6 +109,10 @@ public class KeyPerformanceIndicator {
         public String escalateIf;
 
         public Date measuredOn;
+
+        // Links to escalation Jira tickets
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public List<String> links  = null;
     }
 
 }
