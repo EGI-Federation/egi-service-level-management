@@ -15,14 +15,15 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.*;
 
 
@@ -126,8 +127,8 @@ public class Procedures extends BaseResource {
                                         @Schema(defaultValue = "100")
                                         long limit)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
@@ -178,8 +179,8 @@ public class Procedures extends BaseResource {
 
                                          Procedure procedure)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedure", procedure);
 
@@ -236,8 +237,8 @@ public class Procedures extends BaseResource {
                                         @Parameter(required = false, description = "Whether to retrieve all versions")
                                         boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("allVersions", allVersions);
@@ -292,8 +293,8 @@ public class Procedures extends BaseResource {
 
                                          Procedure procedure)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("procedure", procedure);
@@ -360,8 +361,8 @@ public class Procedures extends BaseResource {
                                              @Schema(defaultValue = "100")
                                              long limit)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("offset", offset);
@@ -420,8 +421,8 @@ public class Procedures extends BaseResource {
 
                                          ProcedureReview review)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("review", review);
@@ -453,7 +454,7 @@ public class Procedures extends BaseResource {
     @Path("/procedure/{procedureId}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "deprecateProcess",  summary = "Deprecate existing procedure")
+    @Operation(operationId = "deprecateProcedure",  summary = "Deprecate existing procedure")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Deprecated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -474,8 +475,8 @@ public class Procedures extends BaseResource {
                                             @Parameter(required = true, description = "ID of procedure to deprecate")
                                             int procedureId)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
 

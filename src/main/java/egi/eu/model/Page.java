@@ -68,6 +68,9 @@ public abstract class Page<T> extends GenericEntity<T> {
      * @param source The source of the elements to populate the page with
      */
     public Page<T> populate(String baseUri, long offset, long limit, List<T> source) {
+        if(null == source)
+            return this;
+
         // Populate page with elements
         this.offset = offset;
         this.limit = limit;

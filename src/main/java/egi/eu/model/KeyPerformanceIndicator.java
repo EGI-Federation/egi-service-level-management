@@ -1,7 +1,7 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Date;
@@ -30,7 +30,7 @@ public class KeyPerformanceIndicator {
     public String kind = "KeyPerformanceIndicator";
 
     @Schema(description="ID of the KPI, assigned on creation")
-    public long id;
+    public Long id;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String code;
@@ -67,10 +67,10 @@ public class KeyPerformanceIndicator {
     public boolean onTrack;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo owner;
+    public CheckinUser owner;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo approver;
+    public CheckinUser approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
@@ -100,7 +100,7 @@ public class KeyPerformanceIndicator {
         @Schema(enumeration={ "Measurement" })
         public String kind = "Measurement";
 
-        public long id;
+        public Long id;
 
         public String value;
         public String target;

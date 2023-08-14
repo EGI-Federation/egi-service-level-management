@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import egi.checkin.MockCheckin;
 import egi.checkin.MockCheckinProxy;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 
 
 @QuarkusTest
@@ -53,7 +53,7 @@ public class UsersTest {
     @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("Get user info by VO member")
     public void testGetUserInfo() {
-        UserInfo ui =
+        CheckinUser ui =
         given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer: " + BEARER_TOKEN)
         .when()
@@ -65,7 +65,7 @@ public class UsersTest {
             .body("voperson_id", matchesPattern("^\\w+@egi.eu"))
             .body("assurances", not(emptyArray()))
             .body("entitlements", not(emptyArray()))
-            .extract().body().as(UserInfo.class);
+            .extract().body().as(CheckinUser.class);
 
         assertTrue(ui.assurances.contains("Substantial"));
     }

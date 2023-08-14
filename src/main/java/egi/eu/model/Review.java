@@ -2,7 +2,7 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 
 import java.util.Date;
 import java.util.List;
@@ -16,9 +16,9 @@ public class Review<T> extends GenericEntity<T> {
 
     public String kind;
 
-    public long id;
+    public Long id;
 
-    public long reviewedEntityId;
+    public Long reviewedEntityId;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public T reviewedEntity;
@@ -27,12 +27,12 @@ public class Review<T> extends GenericEntity<T> {
     public Date date;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<UserInfo> reviewers;
+    public List<CheckinUser> reviewers;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String reviewNotes;
 
-    public boolean foundInconsistencies;
+    public Boolean foundInconsistencies;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String reviewFollowUpActions;

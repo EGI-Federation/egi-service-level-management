@@ -15,13 +15,15 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.*;
 
 
@@ -122,8 +124,8 @@ public class Catalogs extends BaseResource {
                                       @Schema(defaultValue = "100")
                                       long limit)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -172,8 +174,8 @@ public class Catalogs extends BaseResource {
     public Uni<Response> createCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                        Catalog catalog)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalog", catalog);
 
         log.info("Creating catalog");
@@ -229,8 +231,8 @@ public class Catalogs extends BaseResource {
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
         addToDC("allVersions", allVersions);
 
@@ -284,8 +286,8 @@ public class Catalogs extends BaseResource {
 
                                        Catalog catalog)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogId", catalogId);
         addToDC("catalog", catalog);
 
@@ -340,8 +342,8 @@ public class Catalogs extends BaseResource {
 
                                    Service service)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogId", catalogId);
         addToDC("service", service);
 
@@ -403,8 +405,8 @@ public class Catalogs extends BaseResource {
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
         addToDC("serviceID", serviceId);
         addToDC("allVersions", allVersions);
@@ -464,8 +466,8 @@ public class Catalogs extends BaseResource {
 
                                        Service service)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogId", catalogId);
         addToDC("serviceId", serviceId);
         addToDC("service", service);
@@ -523,8 +525,8 @@ public class Catalogs extends BaseResource {
                                        @Parameter(required = true, description = "ID of service to remove")
                                        int serviceId)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogId", catalogId);
         addToDC("serviceId", serviceId);
 
@@ -579,8 +581,8 @@ public class Catalogs extends BaseResource {
 
                                        CatalogReview review)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
         addToDC("review", review);
 
@@ -646,8 +648,8 @@ public class Catalogs extends BaseResource {
                                             @Schema(defaultValue = "100")
                                             long limit)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -702,8 +704,8 @@ public class Catalogs extends BaseResource {
                                        @Parameter(required = true, description = "ID of catalog to retire")
                                        int catalogId)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("catalogID", catalogId);
 
         log.info("Retiring catalog");

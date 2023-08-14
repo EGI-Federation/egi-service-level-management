@@ -17,7 +17,7 @@ public class ServiceLevelAgreement extends Version<ServiceLevelAgreement> {
     public String kind = "ServiceLevelAgreement";
 
     @Schema(description="ID of the agreement, assigned on creation")
-    long id;
+    public Long id;
 
     int one;
     int two;

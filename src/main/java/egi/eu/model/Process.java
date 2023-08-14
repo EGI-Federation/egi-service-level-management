@@ -1,19 +1,22 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.UserInfo;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import jakarta.persistence.*;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 
 /***
  * Information about this IMS process
  */
-public class Process {
+@Entity
+public class Process extends PanacheEntity {
 
+    @Transient
     final static String PROCESS_CODE = "SLM";
 
     public enum ProcessStatus {
@@ -23,11 +26,9 @@ public class Process {
         DEPRECATED
     }
 
+    @Transient
     @Schema(enumeration={ "Process" })
     public String kind = "Process";
-
-    @Schema(description="ID of the process, assigned on creation")
-    public long id;
 
     public String code = PROCESS_CODE;
 
@@ -41,11 +42,13 @@ public class Process {
     @Schema(format = "url")
     public String urlDiagram;
 
+    @ManyToMany
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<Requirement> requirements;
+    public Set<Requirement> requirements;
 
+    @ManyToMany
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<Interface> interfaces;
+    public Set<Interface> interfaces;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int reviewFrequency;
@@ -57,11 +60,13 @@ public class Process {
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date nextReview;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo owner;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo approver;
+//    @ManyToOne
+//    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+//    public User owner;
+//
+//    @ManyToOne
+//    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+//    public User approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
@@ -72,6 +77,7 @@ public class Process {
     public String apiVersion;
 
     // Change history
+    @Transient
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public HistoryOfProcess history = null;
 
@@ -95,13 +101,13 @@ public class Process {
     /***
      * Some process requirement
      */
-    public static class Requirement {
+    @Entity
+    @Table(name = "requirements")
+    public static class Requirement extends PanacheEntity {
 
+        @Transient
         @Schema(enumeration={ "Requirement" })
         public String kind = "Requirement";
-
-        @Schema(description="ID of the requirement, assigned on creation")
-        public long id;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String code;
@@ -111,20 +117,21 @@ public class Process {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String source;
 
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public List<UserInfo> responsibles;
+//        @OneToMany
+//        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+//        public Set<User> responsibles;
     }
 
     /***
      * Process input or output
      */
-    public static class Interface {
+    @Entity
+    @Table(name = "interfaces")
+    public static class Interface extends PanacheEntity {
 
+        @Transient
         @Schema(enumeration={ "Interface" })
         public String kind = "Interface";
-
-        @Schema(description="ID of the process interface, assigned on creation")
-        long id;
 
         @Schema(enumeration={ "In", "Out" })
         public String direction;

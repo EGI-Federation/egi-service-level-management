@@ -18,10 +18,11 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.Process;
 import egi.eu.model.*;
 
@@ -100,8 +101,8 @@ public class Configuration extends BaseResource {
                                           @Parameter(required = false, description = "Whether to retrieve all versions")
                                           boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
 
@@ -143,19 +144,24 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
+    @Transactional
     public Uni<Response> updateConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
                                              Process process)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("process", process);
 
         log.info("Updating process");
 
-        Uni<Response> result = Uni.createFrom().item(new Process())
+        Uni<Response> result = Uni.createFrom().item(process)
 
+            .chain(proc -> {
+                proc.goals = "Test 1";
+                return proc.persist();
+            })
             .chain(updated -> {
                 // Update complete, success
                 log.info("Updated process");
@@ -195,8 +201,8 @@ public class Configuration extends BaseResource {
 
                                        ProcessReview review)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("review", review);
 
@@ -254,8 +260,8 @@ public class Configuration extends BaseResource {
                                             @Schema(defaultValue = "100")
                                             long limit)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -302,8 +308,8 @@ public class Configuration extends BaseResource {
     })
     public Uni<Response> deprecateProcess(@RestHeader(HttpHeaders.AUTHORIZATION) String auth)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
 
         log.info("Deprecating process");

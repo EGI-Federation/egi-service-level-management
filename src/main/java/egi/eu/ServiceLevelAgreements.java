@@ -15,13 +15,15 @@ import org.jboss.resteasy.reactive.RestHeader;
 import io.smallrye.mutiny.Uni;
 import io.micrometer.core.instrument.MeterRegistry;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.*;
 
 
@@ -107,8 +109,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                   @Schema(defaultValue = "100")
                                   long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -158,8 +160,8 @@ public class ServiceLevelAgreements extends BaseResource {
 
                                    ServiceLevelAgreement sla) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("sla", sla);
 
         log.info("Creating SLA");
@@ -217,8 +219,8 @@ public class ServiceLevelAgreements extends BaseResource {
 
                                    ServiceLevelAgreement sla) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("slaId", slaId);
         addToDC("sla", sla);
 
@@ -276,8 +278,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                   @Schema(defaultValue = "false")
                                   boolean allVersions) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("slaId", slaId);
         addToDC("allVersions", allVersions);
 
@@ -334,8 +336,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                  @Parameter(required = true, description = "ID of agreement to sign")
                                  int slaId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("slaId", slaId);
 
         log.info("Signing SLA");
@@ -386,8 +388,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                    @Parameter(required = true, description = "ID of agreement to revoke")
                                    int slaId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("slaId", slaId);
 
         log.info("Revoking SLA");

@@ -21,8 +21,8 @@ public interface CheckinService {
     @GET
     @Path("/auth/realms/egi/protocol/openid-connect/userinfo")
     @Produces(MediaType.APPLICATION_JSON)
-    Uni<UserInfo> getUserInfoAsync(@RestHeader("Authorization") String auth,
-                                   @RestHeader("x-test-stub") String stub);
+    Uni<CheckinUser> getUserInfoAsync(@RestHeader("Authorization") String auth,
+                                      @RestHeader("x-test-stub") String stub);
 
     @GET
     @Path("/registry/cous.json")

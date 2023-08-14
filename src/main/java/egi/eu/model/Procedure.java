@@ -1,7 +1,7 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Date;
@@ -53,10 +53,10 @@ public class Procedure {
     public Date nextReview;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo owner;
+    public CheckinUser owner;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo approver;
+    public CheckinUser approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
@@ -88,7 +88,7 @@ public class Procedure {
         @Schema(enumeration={ "Trigger" })
         public String kind = "Trigger";
 
-        public long id;
+        public Long id;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String description;
@@ -114,7 +114,7 @@ public class Procedure {
         @Schema(enumeration = { "Step" })
         public String kind = "Step";
 
-        public long id;
+        public Long id;
 
         // The responsible person(s) must have this role
         @JsonInclude(JsonInclude.Include.NON_EMPTY)

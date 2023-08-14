@@ -6,7 +6,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import java.util.List;
 import java.util.ArrayList;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 
 
 /***
@@ -35,7 +35,7 @@ public class Role {
 
     @Schema(description="ID of the role, assigned on creation")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public long id;
+    public Long id;
 
     public String role; // One of the constants from above
 
@@ -47,12 +47,12 @@ public class Role {
 
     @Schema(description="Users that hold this role")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<UserInfo> users;
+    public List<CheckinUser> users;
 
     // The fields below are linking this role to a global IMS role
     @Schema(description="ID of a role to inherit tasks from")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public long globalRoleId;
+    public Long globalRoleId;
 
     @Schema(description="Name of a role to inherit tasks from")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -89,7 +89,7 @@ public class Role {
      * Record that a user has this role assigned
      * @param user The user the role is assigned to
      */
-    public Role addUser(UserInfo user) {
+    public Role addUser(CheckinUser user) {
         if(null == this.users)
             this.users = new ArrayList<>();
 

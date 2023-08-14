@@ -2,7 +2,7 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Date;
@@ -21,7 +21,7 @@ public class Catalog extends Version<Catalog> {
     public String kind = "Catalog";
 
     @Schema(description="ID of the catalog, assigned on creation")
-    public long id;
+    public Long id;
 
     public String name;
 
@@ -35,11 +35,11 @@ public class Catalog extends Version<Catalog> {
 
     // The fields below are linking this catalog to a service portfolio
     // See process Service Portfolio Management (SPM)
-    public long spmPortfolioId;
+    public Long spmPortfolioId;
     public String spmPortfolioName;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public UserInfo owner;
+    public CheckinUser owner;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public int reviewFrequency;

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,10 +13,10 @@ import java.util.Set;
 
 
 /**
- * Details of the current user
+ * Details of a Check-in user
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserInfo extends BasicUserInfo {
+public class CheckinUser {
 
     public final static String ATTR_USERID = "userID";
     public final static String ATTR_USERNAME = "userName";
@@ -27,8 +26,33 @@ public class UserInfo extends BasicUserInfo {
     public final static String ATTR_EMAILCHECKED = "emailVerified";
     public final static String ATTR_ASSURANCE = "assurance";
 
-    @Schema(enumeration={ "UserInfo" })
-    public String kind = "UserInfo";
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public long checkinUserId;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String fullName;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("given_name")
+    public String firstName;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("family_name")
+    public String lastName;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String email;
+
+    @JsonProperty("email_verified")
+    public boolean emailIsVerified;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("voperson_id")
+    public String userId;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("preferred_user_name")
+    public String userName;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("eduperson_assurance")
@@ -45,32 +69,62 @@ public class UserInfo extends BasicUserInfo {
     /***
      * Constructor
      */
-    public UserInfo() {}
+    public CheckinUser() {}
 
     /***
      * Construct with Check-in user ID
      */
-    public UserInfo(int checkinUserId) { this.checkinUserId = checkinUserId; }
+    public CheckinUser(Long checkinUserId) { this.checkinUserId = checkinUserId; }
 
     /***
      * Construct from Check-in membership record
      */
-    public UserInfo(CheckinRole role) { super(role); }
+    public CheckinUser(CheckinRole role) {
+
+        this.checkinUserId = role.person.Id;
+
+        // Get first voperson_id
+        for(var id : role.person.ids) {
+            if(null != id.type && id.type.equals("epuid")) {
+                this.userId = id.identifier;
+                break;
+            }
+        }
+
+        // Get first complete name
+        for(var name : role.person.names) {
+            if(null != name.family && !name.family.isBlank() && null != name.given && !name.given.isBlank()) {
+                this.firstName = name.given;
+                this.lastName = name.family;
+                this.fullName = name.given + " " + name.family;
+                break;
+            }
+        }
+
+        // Get first email address
+        for(var email : role.person.emails) {
+            if(null != email.mail && !email.mail.isBlank()) {
+                this.email = email.mail;
+                this.emailIsVerified = email.verified;
+                break;
+            }
+        }
+    }
 
     public long getCheckinUserId() { return this.checkinUserId; }
-    public UserInfo setUserId(String userId) { this.userId = userId; return this; }
-    public UserInfo setCheckinUserId(long userId) { this.checkinUserId = userId; return this; }
-    public UserInfo setFirstName(String firstName) { this.firstName = firstName; return this; }
-    public UserInfo setLastName(String lastName) { this.lastName = lastName; return this; }
-    public UserInfo setFullName(String fullName) { this.fullName = fullName; return this; }
-    public UserInfo setEmail(String email) { this.email = email; return this; }
+    public CheckinUser setUserId(String userId) { this.userId = userId; return this; }
+    public CheckinUser setCheckinUserId(long userId) { this.checkinUserId = userId; return this; }
+    public CheckinUser setFirstName(String firstName) { this.firstName = firstName; return this; }
+    public CheckinUser setLastName(String lastName) { this.lastName = lastName; return this; }
+    public CheckinUser setFullName(String fullName) { this.fullName = fullName; return this; }
+    public CheckinUser setEmail(String email) { this.email = email; return this; }
 
     /***
      * Store another level of assurance (LoA)
      * @param loa The assurance
      * @return Ourselves, to allow chaining calls with .
      */
-    public UserInfo addAssurance(String loa) {
+    public CheckinUser addAssurance(String loa) {
         if(null == this.assurances)
             this.assurances = new ArrayList<>();
 
@@ -84,7 +138,7 @@ public class UserInfo extends BasicUserInfo {
      * @param entitlement The entitlement
      * @return Ourselves, to allow chaining calls with .
      */
-    public UserInfo addEntitlement(String entitlement) {
+    public CheckinUser addEntitlement(String entitlement) {
         if(null == this.entitlements)
             this.entitlements = new ArrayList<>();
 
@@ -98,7 +152,7 @@ public class UserInfo extends BasicUserInfo {
      * @param role The role
      * @return Ourselves, to allow chaining calls with .
      */
-    public UserInfo addRole(String role) {
+    public CheckinUser addRole(String role) {
         if(null == this.roles)
             this.roles = new HashSet<>();
 

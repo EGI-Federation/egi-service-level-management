@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;
 
@@ -59,29 +59,29 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
             var isAJO = ui instanceof AbstractJsonObjectResponse;
             if(null != ui && (isAJO || ui instanceof String)) {
                 // Construct Check-in UserInfo from the user info fetched by OIDC
-                UserInfo userInfo = null;
+                CheckinUser userInfo = null;
                 String json = null;
                 try {
                     var mapper = new ObjectMapper();
                     json = isAJO ? ((AbstractJsonObjectResponse)ui).getJsonObject().toString() : ui.toString();
-                    userInfo = mapper.readValue(json, UserInfo.class);
+                    userInfo = mapper.readValue(json, CheckinUser.class);
 
                     if(null != userInfo.userId)
-                        builder.addAttribute(UserInfo.ATTR_USERID, userInfo.userId);
+                        builder.addAttribute(CheckinUser.ATTR_USERID, userInfo.userId);
 
                     if(null != userInfo.userName)
-                        builder.addAttribute(UserInfo.ATTR_USERNAME, userInfo.userName);
+                        builder.addAttribute(CheckinUser.ATTR_USERNAME, userInfo.userName);
 
                     if(null != userInfo.firstName)
-                        builder.addAttribute(UserInfo.ATTR_FIRSTNAME, userInfo.firstName);
+                        builder.addAttribute(CheckinUser.ATTR_FIRSTNAME, userInfo.firstName);
 
                     if(null != userInfo.lastName)
-                        builder.addAttribute(UserInfo.ATTR_LASTNAME, userInfo.lastName);
+                        builder.addAttribute(CheckinUser.ATTR_LASTNAME, userInfo.lastName);
 
                     if(null != userInfo.email)
-                        builder.addAttribute(UserInfo.ATTR_EMAIL, userInfo.email);
+                        builder.addAttribute(CheckinUser.ATTR_EMAIL, userInfo.email);
 
-                    builder.addAttribute(UserInfo.ATTR_EMAILCHECKED, userInfo.emailIsVerified);
+                    builder.addAttribute(CheckinUser.ATTR_EMAILCHECKED, userInfo.emailIsVerified);
 
                     if(null != userInfo.assurances) {
                         Pattern assuranceRex = Pattern.compile("^https?\\://(aai[^\\.]*.egi.eu)/LoA#([^\\:#/]+)");
@@ -90,7 +90,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                             if(matcher.matches()) {
                                 // Got an EGI Check-in backed assurance level
                                 var assurance = matcher.group(2);
-                                builder.addAttribute(UserInfo.ATTR_ASSURANCE, assurance.toLowerCase());
+                                builder.addAttribute(CheckinUser.ATTR_ASSURANCE, assurance.toLowerCase());
                                 break;
                             }
                         }

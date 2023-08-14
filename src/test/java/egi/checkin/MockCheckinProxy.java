@@ -15,7 +15,7 @@ import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.Map;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 
 
 public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
@@ -69,7 +69,7 @@ public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
             .willReturn(aResponse()
                 .withStatus(Status.OK.getStatusCode())
                 .withHeader("Content-Type", "application/json")
-                .withBody(new UserInfo(12345)
+                .withBody(new CheckinUser(12345L)
                                 .setUserId("423778s7897sd89789fs@egi.eu")
                                 .setFullName("John Doe")
                                 .addAssurance("https://aai.egi.eu/LoA#Substantial")

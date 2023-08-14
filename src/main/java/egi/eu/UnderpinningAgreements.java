@@ -15,13 +15,15 @@ import org.jboss.resteasy.reactive.RestHeader;
 import io.smallrye.mutiny.Uni;
 import io.micrometer.core.instrument.MeterRegistry;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.*;
 
 
@@ -112,8 +114,8 @@ public class UnderpinningAgreements extends BaseResource {
                                  @Schema(defaultValue = "100")
                                  long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("olaId", olaId);
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
@@ -169,8 +171,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                   UnderpinningAgreement ua) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("olaId", olaId);
         addToDC("ua", ua);
 
@@ -229,8 +231,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                   UnderpinningAgreement ua) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaId", uaId);
         addToDC("ua", ua);
 
@@ -288,8 +290,8 @@ public class UnderpinningAgreements extends BaseResource {
                                  @Schema(defaultValue = "false")
                                  boolean allVersions) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);
         addToDC("allVersions", allVersions);
 
@@ -346,8 +348,8 @@ public class UnderpinningAgreements extends BaseResource {
                                 @Parameter(required = true, description = "ID of agreement to sign")
                                 int uaId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);
 
         log.info("Signing UA");
@@ -398,8 +400,8 @@ public class UnderpinningAgreements extends BaseResource {
                                   @Parameter(required = true, description = "ID of agreement to revoke")
                                   int uaId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);
 
         log.info("Revoking UA");

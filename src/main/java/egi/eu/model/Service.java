@@ -17,17 +17,17 @@ public class Service extends Version<Service> {
     public String kind = "Service";
 
     @Schema(description="ID of the service, assigned on creation")
-    long id;
+    public Long id;
 
-    String name;
+    public String name;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String description;
+    public String description;
 
     // The fields below are linking this service to a portfolio entry
     // See process Service Portfolio Management (SPM)
-    long spmPortfolioId;
-    long spmPortfolioEntryId;
+    public Long spmPortfolioId;
+    public Long spmPortfolioEntryId;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)

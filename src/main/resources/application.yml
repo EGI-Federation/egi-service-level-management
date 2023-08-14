@@ -118,3 +118,29 @@ quarkus:
     trust-all: false
   test:
     continuous-testing: disabled
+  datasource:
+    db-kind: postgresql
+    reactive:
+      url: postgresql://localhost:5432/ims
+    username: ims
+    password: password
+    devservices:
+      enabled: false
+      db-name: ims
+      username: ims
+      password: password
+  hibernate-orm:
+    log:
+      sql: true
+
+"%dev":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: drop-and-create
+
+"%prod":
+  quarkus:
+    hibernate-orm:
+      database:
+        generation: none

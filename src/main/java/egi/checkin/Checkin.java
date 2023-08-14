@@ -33,7 +33,7 @@ public class Checkin {
 
     private static final Logger log = Logger.getLogger(Checkin.class);
     private static CheckinService checkin;
-    private static Map<Long, UserInfo> voMembers; // Does not cache assigned roles
+    private static Map<Long, CheckinUser> voMembers; // Does not cache assigned roles
     private static long voMembersUpdatedAt = 0;   // Milliseconds since epoch
     private static CheckinRoleList roleRecords;
     private static long rolesUpdatedAt = 0;       // Milliseconds since epoch
@@ -123,7 +123,7 @@ public class Checkin {
      * @param token Check-in access token
      * @return User information
      */
-    public Uni<UserInfo> getUserInfoAsync(String token) {
+    public Uni<CheckinUser> getUserInfoAsync(String token) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -152,10 +152,10 @@ public class Checkin {
      * List all members of a virtual organization (VO).
      * Although multiple membership records can exist for a user, e.g. with different
      * start/until dates and different statuses, this function returns just one
-     * {@link UserInfo} per user.
+     * {@link CheckinUser} per user.
      * @return List of all active VO members
      */
-    public Uni<List<UserInfo>> listVoMembersAsync(String voName) {
+    public Uni<List<CheckinUser>> listVoMembersAsync(String voName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -169,11 +169,11 @@ public class Checkin {
             // We have a cache, and it's not stale
             log.info("Using cached VO members");
             var users = voMembers;
-            List<UserInfo> userList = new ArrayList<>(users.values());
+            List<CheckinUser> userList = new ArrayList<>(users.values());
             return Uni.createFrom().item(userList);
         }
 
-        Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
+        Uni<List<CheckinUser>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 log.info("Getting VO members");
@@ -183,13 +183,13 @@ public class Checkin {
                 // Got VO role records, keep just the membership ones
                 var members = filterList(voRoles.records, role -> role.role.equals("member"));
 
-                Map<Long, UserInfo> users = new HashMap<>();
+                Map<Long, CheckinUser> users = new HashMap<>();
                 for(var role : members) {
                     if(role.deleted || !role.status.equalsIgnoreCase("Active"))
                         // Inactive membership record, skip
                         continue;
 
-                    var user = new UserInfo(role);
+                    var user = new CheckinUser(role);
                     if (!users.containsKey(user.checkinUserId))
                         users.put(user.checkinUserId, user);
                 }
@@ -202,7 +202,7 @@ public class Checkin {
                 voMembersUpdatedAt = Instant.now().toEpochMilli();
 
                 // Return VO members
-                List<UserInfo> userList = new ArrayList<>(users.values());
+                List<CheckinUser> userList = new ArrayList<>(users.values());
                 return Uni.createFrom().item(userList);
             })
             .onFailure().invoke(e -> {
@@ -216,15 +216,15 @@ public class Checkin {
      * List all members of a group or virtual organization (VO).
      * Although multiple membership records can exist for a user, e.g. with different
      * start/until dates and different statuses, this function returns just one per user.
-     * @return List of all active group members, see also {@link UserInfo}
+     * @return List of all active group members, see also {@link CheckinUser}
      */
-    public Uni<List<UserInfo>> listGroupMembersAsync(String groupName) {
+    public Uni<List<CheckinUser>> listGroupMembersAsync(String groupName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
         }
 
-        Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
+        Uni<List<CheckinUser>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
@@ -245,7 +245,7 @@ public class Checkin {
                     return Uni.createFrom().failure(new ActionException("notReady"));
 
                 // Return group members
-                List<UserInfo> userList = new ArrayList<>(members.values());
+                List<CheckinUser> userList = new ArrayList<>(members.values());
                 return Uni.createFrom().item(userList);
             })
             .onFailure().invoke(e -> {
@@ -261,7 +261,7 @@ public class Checkin {
      * @param logRecords Whether to dump the membership records in the log
      * @return List of member users, null on error
      */
-    private Map<Long, UserInfo> filterToGroupMembers(CheckinRoleList groupRoles, boolean logRecords) {
+    private Map<Long, CheckinUser> filterToGroupMembers(CheckinRoleList groupRoles, boolean logRecords) {
         if(!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group members, VO members not loaded");
@@ -272,14 +272,14 @@ public class Checkin {
         var members = filterList(groupRoles.records, role -> role.role.equals("member"));
 
         var voUsers = voMembers;
-        Map<Long, UserInfo> users = new HashMap<>();
+        Map<Long, CheckinUser> users = new HashMap<>();
         for (var role : members) {
             if (role.deleted || !role.status.equalsIgnoreCase("Active"))
                 // Not an active membership record, skip
                 continue;
 
             // Only include users that are members of the configured VO
-            var user = new UserInfo(role);
+            var user = new CheckinUser(role);
             if (voUsers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
                 // This is a membership record, not a role record
                 users.put(user.checkinUserId, user);
@@ -488,15 +488,15 @@ public class Checkin {
      *                 If empty or null, all users holding roles are returned.
      *                 Note: Using this parameter means the returned users will not have
      *                 all their roles reported, just the ones matching this expression.
-     * @return List of all users holding effective roles in the group, see also {@link UserInfo}
+     * @return List of all users holding effective roles in the group, see also {@link CheckinUser}
      */
-    public Uni<List<UserInfo>> listUsersWithGroupRolesAsync(String groupName, String roleName) {
+    public Uni<List<CheckinUser>> listUsersWithGroupRolesAsync(String groupName, String roleName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
         }
 
-        Uni<List<UserInfo>> result = Uni.createFrom().nullItem()
+        Uni<List<CheckinUser>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
@@ -517,7 +517,7 @@ public class Checkin {
                     return Uni.createFrom().failure(new ActionException("notReady"));
 
                 // Return users with roles
-                List<UserInfo> users = usersWithRoles.values().stream().toList();
+                List<CheckinUser> users = usersWithRoles.values().stream().toList();
                 return Uni.createFrom().item(users);
             })
             .onFailure().invoke(e -> {
@@ -539,7 +539,7 @@ public class Checkin {
      *         Unlike the cached list of VO members, the users in the returned list
      *         will have their <b>roles</b> field filled.
      */
-    private Map<Long, UserInfo> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
+    private Map<Long, CheckinUser> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
         if(!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group roles, VO members not loaded");
@@ -562,14 +562,14 @@ public class Checkin {
         });
 
         var voUsers = voMembers;
-        Map<Long, UserInfo> users = new HashMap<>();    // Users with assigned roles
+        Map<Long, CheckinUser> users = new HashMap<>();    // Users with assigned roles
         for (var role : records) {
             if (role.deleted || !role.status.equalsIgnoreCase("Active"))
                 // Not an active role record, skip
                 continue;
 
             // Only include users that are members of both the VO and the group
-            var user = new UserInfo(role);
+            var user = new CheckinUser(role);
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 if(users.containsKey(user.checkinUserId)) {
@@ -604,7 +604,7 @@ public class Checkin {
      *                 If empty or null, all users holding roles are returned.
      *                 Note: Using this parameter means the returned users will not have
      *                 all their roles reported, just the ones matching this expression.
-     * @return List of all users holding effective roles in the group, see also {@link UserInfo}
+     * @return List of all users holding effective roles in the group, see also {@link CheckinUser}
      */
     public Uni<List<Role>> listGroupRolesAsync(String groupName, String roleName) {
         if(null == checkin) {
@@ -674,7 +674,7 @@ public class Checkin {
         });
 
         var voUsers = voMembers;
-        Map<Long, UserInfo> users = new HashMap<>(); // Users with assigned roles
+        Map<Long, CheckinUser> users = new HashMap<>(); // Users with assigned roles
         Map<String, Role> roles = new HashMap<>();   // Roles assigned in the group
         Map<String, Set<Long>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
         for (var roleRecord : records) {
@@ -683,7 +683,7 @@ public class Checkin {
                 continue;
 
             // Only include users that are members of both the VO and the group
-            var user = new UserInfo(roleRecord);
+            var user = new CheckinUser(roleRecord);
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 Role role = null;
@@ -1040,7 +1040,7 @@ public class Checkin {
      * @param onlyGroup Whether logging records only for users included in the configured group
      *                  or for all members of the configured VO.
      */
-    private void logGroupMembers(List<CheckinRole> records, Map<Long, UserInfo> users, boolean onlyGroup) {
+    private void logGroupMembers(List<CheckinRole> records, Map<Long, CheckinUser> users, boolean onlyGroup) {
 
         log.infof("Found %d active members in %s %s", users.size(),
                 onlyGroup ? "group" : "VO",
@@ -1093,7 +1093,7 @@ public class Checkin {
      * @param records The Check-in role records for the group
      * @param users The users identified to hold roles in the group
      */
-    private void logGroupRoles(List<CheckinRole> records, Map<Long, UserInfo> users) {
+    private void logGroupRoles(List<CheckinRole> records, Map<Long, CheckinUser> users) {
 
         log.infof("Found %d users with matching role(s) in group %s", users.size(), this.imsConfig.group());
 

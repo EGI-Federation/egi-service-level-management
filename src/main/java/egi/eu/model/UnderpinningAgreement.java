@@ -17,7 +17,7 @@ public class UnderpinningAgreement extends Version<UnderpinningAgreement> {
     public String kind = "UnderpinningAgreement";
 
     @Schema(description="ID of the agreement, assigned on creation")
-    long id;
+    public Long id;
 
     int one;
     int two;
