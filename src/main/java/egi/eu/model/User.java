@@ -3,13 +3,16 @@ package egi.checkin.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import jakarta.persistence.Entity;
 
 
 /**
  * Details of an user
  */
+@Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicUserInfo {
+public class User extends PanacheEntity {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("voperson_id")
@@ -43,12 +46,12 @@ public class BasicUserInfo {
     /***
      * Constructor
      */
-    public BasicUserInfo() {}
+    public User() {}
 
     /***
      * Construct from Check-in membership record
      */
-    public BasicUserInfo(CheckinRole role) {
+    public User(CheckinRole role) {
 
         this.checkinUserId = role.person.Id;
 
