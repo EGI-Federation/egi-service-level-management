@@ -1,7 +1,5 @@
 package egi.eu;
 
-import egi.eu.model.Catalog;
-import egi.eu.model.Page;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -28,8 +26,10 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
-import egi.checkin.model.UserInfo;
+import egi.checkin.model.CheckinUser;
 import egi.eu.model.Role;
+import egi.eu.model.Page;
+import egi.eu.model.UserInfo;
 
 
 /***
@@ -63,15 +63,23 @@ public class Users extends BaseResource {
     /***
      * Page of users
      */
-    class PageOfUserInfos extends Page<UserInfo> {
-        public PageOfUserInfos(String baseUri, long offset, long limit, List<UserInfo> users) {
-            super(baseUri, offset, limit, users); }
+    public static class PageOfUserInfos extends Page<UserInfo> {
+        public PageOfUserInfos(String baseUri, long offset, long limit, List<CheckinUser> users) {
+            super();
+
+            var userInfos = new ArrayList<UserInfo>(users.size());
+            for(var u : users) {
+                userInfos.add(new UserInfo(u));
+            }
+
+            populate(baseUri, offset, limit, userInfos);
+        }
     }
 
     /***
      * Page of roles
      */
-    class PageOfRoles extends Page<Role> {
+    public static class PageOfRoles extends Page<Role> {
         public PageOfRoles(String baseUri, long offset, long limit, List<Role> roles) {
             super(baseUri, offset, limit, roles); }
     }
@@ -105,8 +113,8 @@ public class Users extends BaseResource {
     })
     public Uni<Response> getUserInfo(@RestHeader(HttpHeaders.AUTHORIZATION) String auth) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
 
         log.info("Getting user info");
 
@@ -129,8 +137,14 @@ public class Users extends BaseResource {
                 log.info("Got user info");
 
                 var roles = identity.getRoles();
-                if(null != roles && !roles.isEmpty())
+                if(null != roles && !roles.isEmpty()) {
                     userinfo.roles = new HashSet<>(roles);
+
+                    // Do not return pseudo roles
+                    userinfo.roles.remove(Role.IMS_USER);
+                    userinfo.roles.remove(Role.IMS_ADMIN);
+                    userinfo.roles.remove(Role.PROCESS_MEMBER);
+                }
 
                 return Uni.createFrom().item(Response.ok(userinfo).build());
             })
@@ -185,8 +199,8 @@ public class Users extends BaseResource {
                                    @Schema(defaultValue = "100")
                                    long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("onlyProcess", onlyProcess);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -260,8 +274,8 @@ public class Users extends BaseResource {
                                         @Parameter(description = "Id of user to include in the process")
                                         int checkinUserId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("checkinUserId", checkinUserId);
 
         log.info("Adding user to group");
@@ -329,8 +343,8 @@ public class Users extends BaseResource {
                                              @Parameter(description = "Id of user to exclude from the process")
                                              int checkinUserId) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("checkinUserId", checkinUserId);
 
         log.info("Removing user from group");
@@ -413,8 +427,8 @@ public class Users extends BaseResource {
                                             @Schema(defaultValue = "100")
                                             long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("roleNameFragment", roleNameFragment);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -494,8 +508,8 @@ public class Users extends BaseResource {
                                                Role.REPORT_OWNER, Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
                                        String role) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("checkinUserId", checkinUserId);
         addToDC("roleName", role);
 
@@ -583,8 +597,8 @@ public class Users extends BaseResource {
                                                     Role.REPORT_OWNER, Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
                                             String role) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("checkinUserId", checkinUserId);
         addToDC("roleName", role);
 
@@ -677,8 +691,8 @@ public class Users extends BaseResource {
                                             @Schema(defaultValue = "100")
                                             long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("roleName", roleName);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -761,8 +775,8 @@ public class Users extends BaseResource {
                                    @Schema(defaultValue = "100")
                                    long limit) {
 
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("roleName", roleName);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -823,8 +837,8 @@ public class Users extends BaseResource {
 
                                     Role role)
     {
-        addToDC("userId", identity.getAttribute(UserInfo.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(UserInfo.ATTR_USERNAME));
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("roleName", role.role);
 
         log.info("Updating role definition");
