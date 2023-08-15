@@ -15,10 +15,12 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.vertx.mutiny.core.Vertx;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -67,11 +69,7 @@ public class Users extends BaseResource {
         public PageOfUserInfos(String baseUri, long offset, long limit, List<CheckinUser> users) {
             super();
 
-            var userInfos = new ArrayList<UserInfo>(users.size());
-            for(var u : users) {
-                userInfos.add(new UserInfo(u));
-            }
-
+            var userInfos = users.stream().map(UserInfo::new).collect(Collectors.toList());
             populate(baseUri, offset, limit, userInfos);
         }
     }
@@ -86,7 +84,7 @@ public class Users extends BaseResource {
 
 
     /***
-     * Construct with meter
+     * Constructor
      */
     public Users() { super(log); }
 

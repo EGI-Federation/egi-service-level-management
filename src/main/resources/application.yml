@@ -122,6 +122,8 @@ quarkus:
     db-kind: postgresql
     reactive:
       url: postgresql://localhost:5432/ims
+      additional-properties:
+        search_path: slm
     username: ims
     password: password
     devservices:

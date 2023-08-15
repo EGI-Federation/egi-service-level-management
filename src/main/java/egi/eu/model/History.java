@@ -13,8 +13,6 @@ import java.util.ArrayList;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class History<T> extends GenericEntity<T> {
 
-    public String kind;
-
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<Version<T>> versions;
 
@@ -24,7 +22,25 @@ public class History<T> extends GenericEntity<T> {
      */
     public History() {
         super("History", null, false);
-        this.versions = new ArrayList<>();
+    }
+
+    /**
+     * Construct from older versions
+     */
+    public History(List<Version<T>> versions) {
+        this();
+        populate(versions);
+    }
+
+    /***
+     * Add versions
+     * @param versions The entities to add.
+     */
+    public void populate(List<Version<T>> versions) {
+        if(null == this.versions)
+            this.versions = new ArrayList<>();
+
+        this.versions.addAll(versions);
     }
 
     /***

@@ -3,30 +3,42 @@ package egi.eu.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
-import jakarta.persistence.*;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import egi.eu.entity.ProcessEntity;
 
 
 /***
  * Information about this IMS process
  */
-@Entity
-public class Process extends PanacheEntity {
+public class Process extends VersionInfo {
 
-    @Transient
     final static String PROCESS_CODE = "SLM";
 
     public enum ProcessStatus {
-        DRAFT,
-        READY_FOR_APPROVAL,
-        APPROVED,
-        DEPRECATED
+        DRAFT(0),
+        READY_FOR_APPROVAL(1),
+        APPROVED(2),
+        DEPRECATED(3);
+
+        private final int value;
+        private ProcessStatus(int value) { this.value = value; }
+        public static ProcessStatus of(int value) {
+            return switch(value) {
+                case 0 -> DRAFT;
+                case 1 -> READY_FOR_APPROVAL;
+                case 2 -> APPROVED;
+                case 3 -> DEPRECATED;
+                default -> null;
+            };
+        }
     }
 
-    @Transient
     @Schema(enumeration={ "Process" })
     public String kind = "Process";
 
@@ -42,11 +54,9 @@ public class Process extends PanacheEntity {
     @Schema(format = "url")
     public String urlDiagram;
 
-    @ManyToMany
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public Set<Requirement> requirements;
 
-    @ManyToMany
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public Set<Interface> interfaces;
 
@@ -54,30 +64,28 @@ public class Process extends PanacheEntity {
     public int reviewFrequency;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @Schema(enumeration={ "sec", "min", "hour", "day", "month", "year" })
+    @Schema(enumeration={ "day", "month", "year" })
     public String frequencyUnit;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date nextReview;
 
-//    @ManyToOne
-//    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-//    public User owner;
-//
-//    @ManyToOne
-//    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-//    public User approver;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public User owner;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public User approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date approvedOn;
 
-    public ProcessStatus status;
+    public ProcessStatus status = ProcessStatus.DRAFT;
 
     @Schema(description="The version of the process API")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String apiVersion;
 
     // Change history
-    @Transient
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public HistoryOfProcess history = null;
 
@@ -87,25 +95,88 @@ public class Process extends PanacheEntity {
      */
     public static class HistoryOfProcess extends History<Process> {
         public HistoryOfProcess() { super(); }
+        public HistoryOfProcess(List<Version<Process>> olderVersions) { super(olderVersions); }
     }
 
     /***
      * Constructor
      */
     public Process() {
-        final var config = ConfigProvider.getConfig();
-        this.apiVersion = config.getValue("quarkus.smallrye-openapi.info-version", String.class);
+        this(null, false, false);
+    }
+
+    /***
+     * Copy constructor
+     * @param process The entity to copy
+     */
+    public Process(ProcessEntity process) {
+        this(process, false, false);
+    }
+
+    /***
+     * Copy constructor
+     * @param process The entity to copy
+     */
+    public Process(ProcessEntity process, boolean loadApiVersion, boolean storeVersion) {
+
+        if(loadApiVersion) {
+            final var config = ConfigProvider.getConfig();
+            this.apiVersion = config.getValue("quarkus.smallrye-openapi.info-version", String.class);
+        }
+
+        if(null == process)
+            return;
+
+        this.goals = process.goals;
+        this.scope = process.scope;
+        this.urlDiagram = process.urlDiagram;
+        this.reviewFrequency = process.reviewFrequency;
+        this.frequencyUnit = process.frequencyUnit;
+        this.nextReview = process.nextReview;
+        this.owner = process.owner;
+        this.approver = process.approver;
+        this.approvedOn = process.approvedOn;
+        this.status = ProcessStatus.of(process.status);
+
+        if(null != process.requirements)
+            this.requirements = process.requirements.stream().map(Process.Requirement::new).collect(Collectors.toSet());
+
+        if(null != process.interfaces)
+            this.interfaces = process.interfaces.stream().map(Process.Interface::new).collect(Collectors.toSet());
+
+        if(storeVersion) {
+            this.version = process.version;
+            this.changeAt = process.changeAt;
+            this.changeDescription = process.changeDescription;
+            if(null != process.changeBy)
+                this.changeBy = process.changeBy.fullName;
+        }
+    }
+
+    /***
+     * Construct from history.
+     * @param processVersions The list of versions, should start with the latest version.
+     */
+    public Process(List<ProcessEntity> processVersions) {
+        // Head of the list as the current version
+        this(processVersions.get(0), true, true);
+
+        // The rest of the list as the history of this entity
+        var olderVersions = processVersions.stream().skip(1).map(entity -> {
+                var process = new Process(entity);
+                return new Version<Process>(process, entity.version, entity.changeAt, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
+            }).toList();
+
+        if(!olderVersions.isEmpty())
+            this.history = new HistoryOfProcess(olderVersions);
     }
 
 
     /***
      * Some process requirement
      */
-    @Entity
-    @Table(name = "requirements")
-    public static class Requirement extends PanacheEntity {
+    public static class Requirement {
 
-        @Transient
         @Schema(enumeration={ "Requirement" })
         public String kind = "Requirement";
 
@@ -117,19 +188,35 @@ public class Process extends PanacheEntity {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String source;
 
-//        @OneToMany
-//        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-//        public Set<User> responsibles;
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public Set<User> responsibles;
+
+
+        /***
+         * Constructor
+         */
+        public Requirement() {}
+
+        /***
+         * Copy constructor
+         */
+        public Requirement(ProcessEntity.Requirement requirement) {
+            this.code = requirement.code;
+            this.requirement = requirement.requirement;
+            this.source = requirement.source;
+
+            if(null != requirement.responsibles) {
+                this.responsibles = new HashSet<>(requirement.responsibles.size());
+                this.responsibles.addAll(requirement.responsibles);
+            }
+        }
     }
 
     /***
      * Process input or output
      */
-    @Entity
-    @Table(name = "interfaces")
-    public static class Interface extends PanacheEntity {
+    public static class Interface {
 
-        @Transient
         @Schema(enumeration={ "Interface" })
         public String kind = "Interface";
 
@@ -147,5 +234,20 @@ public class Process extends PanacheEntity {
                 "BA", "BDS", "CAPM", "CHM", "COM", "CONFM", "CSI", "CRM", "CPM", "FA", "HR", "ISM",
                 "ISRM", "PPM", "PM", "PKM", "PPM", "RDM", "RM", "SACM", "SRM", "SLM", "SPM", "SRM" })
         public String interfacesWith;
+
+        /***
+         * Constructor
+         */
+        public Interface() {}
+
+        /***
+         * Copy constructor
+         */
+        public Interface(ProcessEntity.Interface i) {
+            this.direction = i.direction;
+            this.description = i.description;
+            this.relevantMaterial = i.relevantMaterial;
+            this.interfacesWith = i.interfacesWith;
+        }
     }
 }

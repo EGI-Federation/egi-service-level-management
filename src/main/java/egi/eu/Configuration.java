@@ -1,5 +1,6 @@
 package egi.eu;
 
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -12,6 +13,8 @@ import org.jboss.resteasy.reactive.RestHeader;
 import org.jboss.resteasy.reactive.RestQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.hibernate.reactive.mutiny.Mutiny.Session;
 import io.smallrye.mutiny.Uni;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -20,12 +23,16 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.transaction.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+
 
 import egi.checkin.model.CheckinUser;
 import egi.eu.model.Process;
 import egi.eu.model.*;
-
+import egi.eu.entity.ProcessEntity;
 
 /***
  * Resource for process configuration queries and operations.
@@ -44,6 +51,9 @@ public class Configuration extends BaseResource {
 
     @Inject
     IntegratedManagementSystemConfig imsConfig;
+
+    @Inject
+    Mutiny.SessionFactory sf;
 
     // Parameter(s) to add to all endpoints
     @RestHeader(TEST_STUB)
@@ -69,7 +79,7 @@ public class Configuration extends BaseResource {
 
 
     /***
-     * Construct with meter
+     * Constructor
      */
     public Configuration() { super(log); }
 
@@ -95,28 +105,35 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
+    @WithTransaction
     public Uni<Response> getConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
                                           @RestQuery("allVersions") @DefaultValue("false")
                                           @Parameter(required = false, description = "Whether to retrieve all versions")
-                                          boolean allVersions)
-    {
+                                          boolean allVersions) {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
 
-        log.info("Getting process");
+        log.info("Getting process info");
 
-        Uni<Response> result = Uni.createFrom().item(new Process())
+        // If we need just the last version, get it now
+        Uni<Response> result = Uni.createFrom().nullItem()
 
-            .chain(process -> {
-                // Got process, success
-                log.info("Got process");
-                return Uni.createFrom().item(Response.ok(process).build());
+            .chain(unused -> {
+                return allVersions ? ProcessEntity.getAllVersions() : ProcessEntity.getLastVersion();
+            })
+            .chain(versions -> {
+                // Got a list of versions
+                if (!versions.isEmpty())
+                    log.info("Got process versions");
+
+                var proc = new Process(versions);
+                return Uni.createFrom().item(Response.ok(proc).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to get process");
+                log.error("Failed to get process info");
                 return new ActionError(e).toResponse();
             });
 
@@ -156,7 +173,7 @@ public class Configuration extends BaseResource {
 
         log.info("Updating process");
 
-        Uni<Response> result = Uni.createFrom().item(process)
+        Uni<Response> result = Uni.createFrom().item(new ProcessEntity())
 
             .chain(proc -> {
                 proc.goals = "Test 1";

@@ -19,8 +19,7 @@ public class BaseResource {
 
     public static final String TEST_STUB = "x-test-stub";
 
-    private Logger log;
-
+    protected Logger log;
     protected Checkin checkin;
 
 

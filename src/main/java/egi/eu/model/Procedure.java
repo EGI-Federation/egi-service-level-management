@@ -2,6 +2,7 @@ package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import egi.checkin.model.CheckinUser;
+import jakarta.persistence.Column;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Date;
@@ -88,9 +89,8 @@ public class Procedure {
         @Schema(enumeration={ "Trigger" })
         public String kind = "Trigger";
 
-        public Long id;
-
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @Column(length = 2048)
         public String description;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -98,6 +98,7 @@ public class Procedure {
 
         // The fields below are linking this trigger to another procedure
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @Column(length = 10)
         public String procedureProcess;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)

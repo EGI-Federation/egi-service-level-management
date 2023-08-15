@@ -7,13 +7,14 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
-import io.quarkus.security.identity.SecurityIdentity;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestHeader;
-import io.smallrye.mutiny.Uni;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.vertx.mutiny.core.Vertx;
+import io.smallrye.mutiny.Uni;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -59,7 +60,7 @@ public class UnderpinningAgreements extends BaseResource {
 
 
     /***
-     * Construct with meter
+     * Constructor
      */
     public UnderpinningAgreements() { super(log); }
 

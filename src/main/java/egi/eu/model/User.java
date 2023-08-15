@@ -3,8 +3,7 @@ package egi.eu.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import egi.checkin.model.CheckinUser;
 
@@ -18,6 +17,7 @@ import egi.checkin.model.CheckinUser;
 public class User extends PanacheEntity {
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    @Column(unique = true)
     public Long checkinUserId;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -38,8 +38,10 @@ public class User extends PanacheEntity {
     protected User(CheckinUser u) {
         super();
 
-        this.checkinUserId = u.checkinUserId;
-        this.fullName = u.fullName;
-        this.email = u.email;
+        if(null != u) {
+            this.checkinUserId = u.checkinUserId;
+            this.fullName = u.fullName;
+            this.email = u.email;
+        }
     }
 }

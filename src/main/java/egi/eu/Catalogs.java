@@ -13,6 +13,7 @@ import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.vertx.mutiny.core.Vertx;
 import io.smallrye.mutiny.Uni;
 
 import jakarta.inject.Inject;
@@ -74,7 +75,7 @@ public class Catalogs extends BaseResource {
 
 
     /***
-     * Construct with meter
+     * Constructor
      */
     public Catalogs() { super(log); }
 
