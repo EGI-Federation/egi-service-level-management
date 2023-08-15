@@ -1,6 +1,5 @@
 package egi.eu.entity;
 
-import io.quarkus.hibernate.reactive.panache.Panache;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import io.quarkus.panache.common.Sort;
@@ -10,8 +9,6 @@ import jakarta.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import egi.eu.model.User;
 
 
 /***
@@ -51,13 +48,13 @@ public class ProcessEntity extends PanacheEntity {
     @JoinTable(name = "process_owner",
                joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "user_id") })
-    public User owner = null;
+    public UserEntity owner = null;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(name = "process_approver",
                joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "user_id") })
-    public User approver = null;
+    public UserEntity approver = null;
 
     public Date approvedOn;
 
@@ -72,7 +69,7 @@ public class ProcessEntity extends PanacheEntity {
     @JoinTable(name = "process_editor",
             joinColumns = { @JoinColumn(name = "process_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
-    public User changeBy = null;
+    public UserEntity changeBy = null;
 
 
     /***
@@ -123,7 +120,7 @@ public class ProcessEntity extends PanacheEntity {
         @JoinTable(name = "requirement_responsibles",
                    joinColumns = { @JoinColumn(name = "requirement_id") },
                    inverseJoinColumns = { @JoinColumn(name = "user_id") })
-        public Set<User> responsibles = null;
+        public Set<UserEntity> responsibles = null;
     }
 
     /***

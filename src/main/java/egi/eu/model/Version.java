@@ -18,15 +18,15 @@ public class Version<T> extends GenericEntity<T> {
     @Schema(description="Date and time of creation/update", example = "2022-10-15T20:14:22")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    Date changeAt;
+    public Date changeAt;
 
     @Schema(description="User who created/updated this entity")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String changeBy;
+    public String changeBy;
 
     @Schema(description="Description of the change")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String changeDescription;
+    public String changeDescription;
 
     public T entity;
 

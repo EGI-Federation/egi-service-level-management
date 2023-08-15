@@ -1,6 +1,7 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import egi.eu.entity.UserEntity;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
@@ -133,8 +134,10 @@ public class Process extends VersionInfo {
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
-        this.owner = process.owner;
-        this.approver = process.approver;
+        if(null != process.owner)
+            this.owner = new User(process.owner);
+        if(null != process.approver)
+            this.approver = new User(process.approver);
         this.approvedOn = process.approvedOn;
         this.status = ProcessStatus.of(process.status);
 
@@ -149,7 +152,7 @@ public class Process extends VersionInfo {
             this.changeAt = process.changeAt;
             this.changeDescription = process.changeDescription;
             if(null != process.changeBy)
-                this.changeBy = process.changeBy.fullName;
+                this.changeBy = new User(process.changeBy);
         }
     }
 
@@ -164,7 +167,7 @@ public class Process extends VersionInfo {
         // The rest of the list as the history of this entity
         var olderVersions = processVersions.stream().skip(1).map(entity -> {
                 var process = new Process(entity);
-                return new Version<Process>(process, entity.version, entity.changeAt, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
+                return new Version<>(process, entity.version, entity.changeAt, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
             }).toList();
 
         if(!olderVersions.isEmpty())
@@ -205,10 +208,8 @@ public class Process extends VersionInfo {
             this.requirement = requirement.requirement;
             this.source = requirement.source;
 
-            if(null != requirement.responsibles) {
-                this.responsibles = new HashSet<>(requirement.responsibles.size());
-                this.responsibles.addAll(requirement.responsibles);
-            }
+            if(null != requirement.responsibles)
+                this.responsibles = requirement.responsibles.stream().map(User::new).collect(Collectors.toSet());
         }
     }
 

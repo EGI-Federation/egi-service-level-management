@@ -17,13 +17,13 @@ public abstract class VersionInfo {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    Date changeAt;
+    public Date changeAt;
 
     @Schema(description="User who created/updated this entity")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String changeBy;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public User changeBy;
 
     @Schema(description="Description of the change")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    String changeDescription;
+    public String changeDescription;
 }
