@@ -29,11 +29,13 @@ public class ProcessEntity extends PanacheEntity {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "process_requirements",
+               joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "requirement_id") })
     public Set<Requirement> requirements = null;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "process_interfaces",
+               joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "interface_id") })
     public Set<Interface> interfaces = null;
 
@@ -43,12 +45,6 @@ public class ProcessEntity extends PanacheEntity {
     public String frequencyUnit = "year";
 
     public Date nextReview;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinTable(name = "process_owner",
-               joinColumns = { @JoinColumn(name = "process_id") },
-               inverseJoinColumns = { @JoinColumn(name = "user_id") })
-    public UserEntity owner = null;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(name = "process_approver",
@@ -62,7 +58,7 @@ public class ProcessEntity extends PanacheEntity {
 
     // Change tracking
     public int version = 1;
-    public Date changeAt;
+    public Date changedOn;
     public String changeDescription;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -116,7 +112,7 @@ public class ProcessEntity extends PanacheEntity {
 
         public String source;
 
-        @OneToMany(fetch = FetchType.EAGER)
+        @ManyToMany(fetch = FetchType.EAGER)
         @JoinTable(name = "requirement_responsibles",
                    joinColumns = { @JoinColumn(name = "requirement_id") },
                    inverseJoinColumns = { @JoinColumn(name = "user_id") })
