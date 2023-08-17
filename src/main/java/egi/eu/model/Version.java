@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -18,7 +17,7 @@ public class Version<T> extends GenericEntity<T> {
     @Schema(description="Date and time of creation/update", example = "2022-10-15T20:14:22")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date changeAt;
+    public Date changedOn;
 
     @Schema(description="User who created/updated this entity")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -45,7 +44,7 @@ public class Version<T> extends GenericEntity<T> {
         this();
         this.entity = t;
         this.version = version;
-        this.changeAt = changedAt;
+        this.changedOn = changedAt;
         this.changeBy = changedBy;
         this.changeDescription = changeDescription;
 

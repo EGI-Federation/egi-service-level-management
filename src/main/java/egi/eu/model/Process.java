@@ -1,12 +1,10 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.eu.entity.UserEntity;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,6 +54,10 @@ public class Process extends VersionInfo {
     public String urlDiagram;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Schema(format = "email")
+    public String contact;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public Set<Requirement> requirements;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -70,9 +72,6 @@ public class Process extends VersionInfo {
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Date nextReview;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public User owner;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public User approver;
@@ -134,8 +133,6 @@ public class Process extends VersionInfo {
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
-        if(null != process.owner)
-            this.owner = new User(process.owner);
         if(null != process.approver)
             this.approver = new User(process.approver);
         this.approvedOn = process.approvedOn;
@@ -149,10 +146,10 @@ public class Process extends VersionInfo {
 
         if(storeVersion) {
             this.version = process.version;
-            this.changeAt = process.changeAt;
+            this.changedOn = process.changedOn;
             this.changeDescription = process.changeDescription;
             if(null != process.changeBy)
-                this.changeBy = new User(process.changeBy);
+                this.changeBy = process.changeBy.fullName;
         }
     }
 
@@ -167,7 +164,7 @@ public class Process extends VersionInfo {
         // The rest of the list as the history of this entity
         var olderVersions = processVersions.stream().skip(1).map(entity -> {
                 var process = new Process(entity);
-                return new Version<>(process, entity.version, entity.changeAt, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
+                return new Version<>(process, entity.version, entity.changedOn, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
             }).toList();
 
         if(!olderVersions.isEmpty())
