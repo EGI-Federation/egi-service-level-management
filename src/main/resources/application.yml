@@ -104,12 +104,16 @@ quarkus:
       basic: false
     cors:
       ~: true
+      origins: http://localhost:8080
+      headers: Authorization,Accept,Content-Type
+      methods: HEAD,GET,POST,PUT,DELETE,OPTIONS
+
     proxy:
       proxy-address-forwarding: true
       allow-x-forwarded: true
       enable-forwarded-host: true
     access-log:
-      enabled: false
+      enabled: true
       pattern: "%r -> %s\n%{ALL_REQUEST_HEADERS}\n"
       log-to-file: true
       base-file-name: slm-api-
