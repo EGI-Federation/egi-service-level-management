@@ -18,6 +18,7 @@ public class Procedure {
         DRAFT,
         READY_FOR_APPROVAL,
         APPROVED,
+        IMPLEMENTED,
         DEPRECATED
     }
 
