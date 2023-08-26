@@ -159,7 +159,7 @@ public class Users extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param onlyProcess Filter out users that are not included in the configured Check-in group
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
      */
     @GET
@@ -195,7 +195,9 @@ public class Users extends BaseResource {
                                    @RestQuery("limit")
                                    @Parameter(description = "Restrict the number of results returned")
                                    @Schema(defaultValue = "100")
-                                   long limit) {
+                                   long limit_) {
+
+        final long limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -388,7 +390,7 @@ public class Users extends BaseResource {
      *                         Note: Using this parameter means the returned users will not have
      *      *                        all their roles reported, just the ones matching this expression.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
      */
     @GET
@@ -423,7 +425,9 @@ public class Users extends BaseResource {
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit) {
+                                            long limit_) {
+
+        final long limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -652,7 +656,7 @@ public class Users extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
      */
     @GET
@@ -687,7 +691,9 @@ public class Users extends BaseResource {
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit) {
+                                            long limit_) {
+
+        final long limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -736,7 +742,7 @@ public class Users extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
      */
     @GET
@@ -771,7 +777,9 @@ public class Users extends BaseResource {
                                    @RestQuery("limit")
                                    @Parameter(description = "Restrict the number of results returned")
                                    @Schema(defaultValue = "100")
-                                   long limit) {
+                                   long limit_) {
+
+        final long limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
