@@ -90,7 +90,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.21
+    info-version: 1.0.22
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt
@@ -107,7 +107,6 @@ quarkus:
       origins: http://localhost:8080
       headers: Authorization,Accept,Content-Type
       methods: HEAD,GET,POST,PUT,DELETE,OPTIONS
-
     proxy:
       proxy-address-forwarding: true
       allow-x-forwarded: true

@@ -21,7 +21,6 @@ public abstract class Page<T> extends GenericEntity<T> {
     @Schema(hidden = true)
     private URI baseUri;
 
-    public String kind;
     public long offset;
     public long limit;
     public int count;

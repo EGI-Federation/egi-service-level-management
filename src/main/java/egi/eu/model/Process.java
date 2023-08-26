@@ -29,17 +29,18 @@ public class Process extends VersionInfo {
         private ProcessStatus(int value) { this.value = value; }
         public static ProcessStatus of(int value) {
             return switch(value) {
-                case 0 -> DRAFT;
                 case 1 -> READY_FOR_APPROVAL;
                 case 2 -> APPROVED;
                 case 3 -> DEPRECATED;
-                default -> null;
+                default -> DRAFT;
             };
         }
     }
 
     @Schema(enumeration={ "Process" })
     public String kind = "Process";
+
+    public Long id;
 
     public String code = PROCESS_CODE;
 
@@ -127,9 +128,11 @@ public class Process extends VersionInfo {
         if(null == process)
             return;
 
+        this.id = process.id;
         this.goals = process.goals;
         this.scope = process.scope;
         this.urlDiagram = process.urlDiagram;
+        this.contact = process.contact;
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
@@ -180,6 +183,8 @@ public class Process extends VersionInfo {
         @Schema(enumeration={ "Requirement" })
         public String kind = "Requirement";
 
+        public Long id;
+
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String code;
 
@@ -201,6 +206,7 @@ public class Process extends VersionInfo {
          * Copy constructor
          */
         public Requirement(ProcessEntity.Requirement requirement) {
+            this.id = requirement.id;
             this.code = requirement.code;
             this.requirement = requirement.requirement;
             this.source = requirement.source;
@@ -217,6 +223,8 @@ public class Process extends VersionInfo {
 
         @Schema(enumeration={ "Interface" })
         public String kind = "Interface";
+
+        public Long id;
 
         @Schema(enumeration={ "In", "Out" })
         public String direction;
@@ -242,6 +250,7 @@ public class Process extends VersionInfo {
          * Copy constructor
          */
         public Interface(ProcessEntity.Interface i) {
+            this.id = i.id;
             this.direction = i.direction;
             this.description = i.description;
             this.relevantMaterial = i.relevantMaterial;

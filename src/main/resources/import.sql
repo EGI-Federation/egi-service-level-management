@@ -3,7 +3,7 @@ values (1, 6166, 'Levente Farkas', 'levente@egi.eu'),
        (2, 171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
 
 
-insert into slm.processes (id, goals, scope, status, reviewfrequency, frequencyunit, nextreview, version, approvedon, changedon, changedescription)
+insert into slm.processes (id, goals, scope, status, reviewfrequency, frequencyunit, nextreview, version, approvedon, changedon, changedescription, contact)
 VALUES (1, 'The primary purpose of this process is to
 - Define, agree (with customers), and monitor service level agreements (SLAs)
 - Define, agree (with federation members and suppliers), and monitor operation level agreements (OLAs)
@@ -21,7 +21,7 @@ VALUES (1, 'The primary purpose of this process is to
         - FitSM training
         - ISO27k training
     - **Other**: Corporate SLA, no custom SLAs are foreseen.',
-        0, 1, 'year', '2021-05-14', 1, '2021-05-14', null, 'first version'),
+        0, 1, 'year', '2021-05-14', 1, '2021-05-14', '2021-02-19T19:23:18', 'first version', 'aaa@bbb.com'),
 
        (2, 'The primary purpose of this process is to
 - Define, agree (with customers), and monitor service level agreements (SLAs)
@@ -40,7 +40,7 @@ VALUES (1, 'The primary purpose of this process is to
         - FitSM training
         - ISO27k training
     - **Other**: Corporate SLA, no custom SLAs are foreseen.',
-        2, 8, 'day', '2023-11-14', 2, '2021-05-14', '2021-05-14', 'next version');
+        2, 8, 'day', '2023-11-14', 2, '2021-05-14', '2021-05-14', 'next version', 'contact@egi.eu');
 
 insert into slm.process_editor (process_id, user_id)
 values (1, 1),

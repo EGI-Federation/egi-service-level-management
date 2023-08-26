@@ -27,6 +27,9 @@ public class ProcessEntity extends PanacheEntity {
     @Schema(format = "url")
     public String urlDiagram;
 
+    @Column(length = 256)
+    public String contact;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "process_requirements",
                joinColumns = { @JoinColumn(name = "process_id") },
@@ -110,6 +113,7 @@ public class ProcessEntity extends PanacheEntity {
         @Column(length = 2048)
         public String requirement;
 
+        @Column(length = 1024)
         public String source;
 
         @ManyToMany(fetch = FetchType.EAGER)
@@ -126,6 +130,7 @@ public class ProcessEntity extends PanacheEntity {
     @Table(name = "interfaces")
     public static class Interface extends PanacheEntity {
 
+        @Schema(enumeration={ "In", "Out" })
         @Column(length = 5)
         public String direction;
 
