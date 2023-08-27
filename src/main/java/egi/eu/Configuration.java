@@ -244,7 +244,7 @@ public class Configuration extends BaseResource {
      * List process reviews.
      * @param auth The access token needed to call the service.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfProcessReviews>) or an ActionError entity
      */
     @GET
@@ -275,8 +275,10 @@ public class Configuration extends BaseResource {
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit)
+                                            long limit_)
     {
+        final long limit = (0 == limit_) ? 100 : limit_;
+
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());

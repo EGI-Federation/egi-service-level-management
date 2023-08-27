@@ -69,7 +69,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param olaId If provided, will only return UAs supporting the OLA with this Id
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link UnderpinningAgreement}>) or an ActionError entity
      */
@@ -113,7 +113,9 @@ public class UnderpinningAgreements extends BaseResource {
                                  @RestQuery("limit")
                                  @Parameter(description = "Restrict the number of results returned")
                                  @Schema(defaultValue = "100")
-                                 long limit) {
+                                 long limit_)
+    {
+        final long limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -170,8 +172,8 @@ public class UnderpinningAgreements extends BaseResource {
                                   @Parameter(required = true, description = "ID of supported Operating Level Agreement")
                                   int olaId,
 
-                                  UnderpinningAgreement ua) {
-
+                                  UnderpinningAgreement ua)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("olaId", olaId);
@@ -230,8 +232,8 @@ public class UnderpinningAgreements extends BaseResource {
                                   @Parameter(required = true, description = "ID of agreement to update")
                                   int uaId,
 
-                                  UnderpinningAgreement ua) {
-
+                                  UnderpinningAgreement ua)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaId", uaId);
@@ -289,8 +291,8 @@ public class UnderpinningAgreements extends BaseResource {
                                  @RestQuery("allVersions")
                                  @Parameter(description = "Whether to retrieve all versions")
                                  @Schema(defaultValue = "false")
-                                 boolean allVersions) {
-
+                                 boolean allVersions)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);
@@ -347,8 +349,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                 @RestPath("uaId")
                                 @Parameter(required = true, description = "ID of agreement to sign")
-                                int uaId) {
-
+                                int uaId)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);
@@ -399,8 +401,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                   @RestPath("uaId")
                                   @Parameter(required = true, description = "ID of agreement to revoke")
-                                  int uaId) {
-
+                                  int uaId)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("uaID", uaId);

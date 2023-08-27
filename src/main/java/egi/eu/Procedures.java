@@ -86,7 +86,7 @@ public class Procedures extends BaseResource {
      * List the procedures in this process.
      * @param auth The access token needed to call the service.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfProcedures >) or an ActionError entity
      */
@@ -126,8 +126,10 @@ public class Procedures extends BaseResource {
                                         @RestQuery("limit")
                                         @Parameter(description = "Restrict the number of results returned")
                                         @Schema(defaultValue = "100")
-                                        long limit)
+                                        long limit_)
     {
+        final long limit = (0 == limit_) ? 100 : limit_;
+
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
@@ -322,7 +324,7 @@ public class Procedures extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param procedureId The ID of the procedure to list reviews of.
      * @param offset The number of elements to skip
-     * @param limit The maximum number of elements to return
+     * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfProcedureReviews>) or an ActionError entity
      */
     @GET
@@ -360,8 +362,10 @@ public class Procedures extends BaseResource {
                                              @RestQuery("limit")
                                              @Parameter(description = "Restrict the number of results returned")
                                              @Schema(defaultValue = "100")
-                                             long limit)
+                                             long limit_)
     {
+        final long limit = (0 == limit_) ? 100 : limit_;
+
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
