@@ -9,6 +9,7 @@ egi:
     roles:
       process-owner: process-owner
       process-manager: process-manager
+      process-developer: process-developer
       catalog-manager: catalog-manager
       sla-owner: sla-owner
       ola-owner: ola-owner
@@ -90,7 +91,7 @@ quarkus:
     urls-primary-name: default
   smallrye-openapi:
     path: /openapi
-    info-version: 1.0.22
+    info-version: 1.0.23
     security-scheme-name: OIDC
     security-scheme-description: OpenID Connect access token issued by EGI Check-In
     security-scheme: jwt

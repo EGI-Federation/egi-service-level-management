@@ -44,6 +44,7 @@ public class RoleManipulationTest {
 //        userInfo.addEntitlement(prefix + String.format("%s:role=member", imsConfig.group()) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
+//        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
@@ -61,10 +62,11 @@ public class RoleManipulationTest {
 //            .onItem().transform(id -> id.getRoles())
 //            .onItem().transform(roles -> {
 //                // Check that it does not have any of the roles
-//                return roles.contains(Role.ISM_USER) ||
-//                       roles.contains(Role.ISM_ADMIN) ||
+//                return roles.contains(Role.IMS_USER) ||
+//                       roles.contains(Role.IMS_ADMIN) ||
 //                       roles.contains(Role.PROCESS_OWNER) ||
 //                       roles.contains(Role.PROCESS_MANAGER) ||
+//                       roles.contains(Role.PROCESS_DEVELOPER) ||
 //                       roles.contains(Role.CATALOG_MANAGER) ||
 //                       roles.contains(Role.REPORT_OWNER) ||
 //                       roles.contains(Role.UA_OWNER) ||

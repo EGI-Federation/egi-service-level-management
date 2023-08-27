@@ -33,7 +33,7 @@ public class RoleParsingTest {
     private final String imso = "ims-owner";
     private final String imsm = "ims-manager";
     private final String imsc = "ims-coordinator";
-    private String po, pm, cm, ro, uao, olao, slao;
+    private String po, pm, pd, cm, ro, uao, olao, slao;
     private Map<String, String> roleNames = new HashMap<String, String>();
     private CheckinUser userInfo;
     private QuarkusSecurityIdentity.Builder builder;
@@ -49,6 +49,7 @@ public class RoleParsingTest {
 
             po = roleNames.get("process-owner").toLowerCase();
             pm = roleNames.get("process-manager").toLowerCase();
+            pd = roleNames.get("process-developer").toLowerCase();
             cm = roleNames.get("catalog-manager").toLowerCase();
             ro = roleNames.get("report-owner").toLowerCase();
             uao = roleNames.get("ua-owner").toLowerCase();
@@ -80,6 +81,7 @@ public class RoleParsingTest {
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
@@ -101,6 +103,7 @@ public class RoleParsingTest {
                        roles.contains(Role.IMS_ADMIN) ||
                        roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
+                       roles.contains(Role.PROCESS_DEVELOPER) ||
                        roles.contains(Role.CATALOG_MANAGER) ||
                        roles.contains(Role.REPORT_OWNER) ||
                        roles.contains(Role.UA_OWNER) ||
@@ -116,7 +119,7 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_USER when VO member")
+    @DisplayName("IMS_USER when VO member")
     public void testVoMembership() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
@@ -143,7 +146,7 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN requires explicit IMS group membership")
+    @DisplayName("IMS_ADMIN requires explicit IMS group membership")
     public void testNoImsGroupAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
@@ -173,7 +176,7 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS owner")
+    @DisplayName("IMS_ADMIN when VO member, included in IMS group, and is IMS owner")
     public void testImsOwnerIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
@@ -203,7 +206,7 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS manager")
+    @DisplayName("IMS_ADMIN when VO member, included in IMS group, and is IMS manager")
     public void testImsManagerIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
@@ -233,7 +236,7 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("ISM_ADMIN when VO member, included in IMS group, and is IMS coordinator")
+    @DisplayName("IMS_ADMIN when VO member, included in IMS group, and is IMS coordinator")
     public void testImsCoordinatorIsAdmin() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
@@ -269,6 +272,7 @@ public class RoleParsingTest {
         userInfo.addEntitlement(prefix + "role=member" + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
@@ -288,6 +292,7 @@ public class RoleParsingTest {
                 // Check that it does not have any of the roles
                 return roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
+                       roles.contains(Role.PROCESS_DEVELOPER) ||
                        roles.contains(Role.CATALOG_MANAGER) ||
                        roles.contains(Role.REPORT_OWNER) ||
                        roles.contains(Role.UA_OWNER) ||
@@ -320,7 +325,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.PROCESS_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -350,7 +355,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.PROCESS_MANAGER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -360,6 +365,36 @@ public class RoleParsingTest {
         subscriber
             .awaitItem()
             .assertItem(true);
+    }
+
+    @Test
+    @DisplayName("PROCESS_DEVELOPER requires both VO and SLM group membership")
+    public void testProcessDeveloper() {
+        // Setup entitlements
+        userInfo.addEntitlement(prefix + "role=member" + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=member", imsConfig.group()) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
+
+        try {
+            builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
+        } catch (JsonProcessingException e) {
+            fail(e.getMessage());
+        }
+
+        // Parse roles from entitlements
+        UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
+                .onItem().transform(id -> id.getRoles())
+                .onItem().transform(roles -> {
+                    // Check that it has the correct role
+                    return roles.contains(Role.PROCESS_DEVELOPER) &&
+                           roles.contains(Role.IMS_USER);
+                })
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber
+                .awaitItem()
+                .assertItem(true);
     }
 
     @Test
@@ -380,7 +415,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.CATALOG_MANAGER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -410,7 +445,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.REPORT_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -440,7 +475,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.SLA_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -470,7 +505,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.OLA_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
@@ -500,7 +535,7 @@ public class RoleParsingTest {
         UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
-                // Check that it have the correct role
+                // Check that it has the correct role
                 return roles.contains(Role.UA_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
