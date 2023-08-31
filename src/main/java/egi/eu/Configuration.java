@@ -148,7 +148,7 @@ public class Configuration extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateConfiguration",  summary = "Update process details")
     @APIResponses(value = {
-            @APIResponse(responseCode = "204", description = "Updated",
+            @APIResponse(responseCode = "201", description = "Updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
