@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,6 +27,7 @@ public class Process extends VersionInfo {
 
         private final int value;
         private ProcessStatus(int value) { this.value = value; }
+        public int getValue() { return value; }
         public static ProcessStatus of(int value) {
             return switch(value) {
                 case 1 -> READY_FOR_APPROVAL;
@@ -42,6 +43,7 @@ public class Process extends VersionInfo {
 
     public Long id;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String code = PROCESS_CODE;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -58,10 +60,10 @@ public class Process extends VersionInfo {
     @Schema(format = "email")
     public String contact;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Set<Requirement> requirements;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Set<Interface> interfaces;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -71,14 +73,14 @@ public class Process extends VersionInfo {
     @Schema(enumeration={ "day", "month", "year" })
     public String frequencyUnit;
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date nextReview;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public LocalDateTime nextReview;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public User approver;
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date approvedOn;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public LocalDateTime approvedOn;
 
     public ProcessStatus status = ProcessStatus.DRAFT;
 
@@ -96,14 +98,14 @@ public class Process extends VersionInfo {
      */
     public static class HistoryOfProcess extends History<Process> {
         public HistoryOfProcess() { super(); }
-        public HistoryOfProcess(List<Version<Process>> olderVersions) { super(olderVersions); }
+        public HistoryOfProcess(List<Process> olderVersions) { super(olderVersions); }
     }
 
     /***
      * Constructor
      */
     public Process() {
-        this(null, false, false);
+        this(null, false);
     }
 
     /***
@@ -111,14 +113,14 @@ public class Process extends VersionInfo {
      * @param process The entity to copy
      */
     public Process(ProcessEntity process) {
-        this(process, false, false);
+        this(process, false);
     }
 
     /***
      * Copy constructor
      * @param process The entity to copy
      */
-    public Process(ProcessEntity process, boolean loadApiVersion, boolean storeVersion) {
+    public Process(ProcessEntity process, boolean loadApiVersion) {
 
         if(loadApiVersion) {
             final var config = ConfigProvider.getConfig();
@@ -147,13 +149,11 @@ public class Process extends VersionInfo {
         if(null != process.interfaces)
             this.interfaces = process.interfaces.stream().map(Process.Interface::new).collect(Collectors.toSet());
 
-        if(storeVersion) {
-            this.version = process.version;
-            this.changedOn = process.changedOn;
-            this.changeDescription = process.changeDescription;
-            if(null != process.changeBy)
-                this.changeBy = process.changeBy.fullName;
-        }
+        this.version = process.version;
+        this.changedOn = process.changedOn;
+        this.changeDescription = process.changeDescription;
+        if(null != process.changeBy)
+            this.changeBy = new User(process.changeBy);
     }
 
     /***
@@ -162,12 +162,11 @@ public class Process extends VersionInfo {
      */
     public Process(List<ProcessEntity> processVersions) {
         // Head of the list as the current version
-        this(processVersions.get(0), true, true);
+        this(processVersions.get(0), true);
 
         // The rest of the list as the history of this entity
         var olderVersions = processVersions.stream().skip(1).map(entity -> {
-                var process = new Process(entity);
-                return new Version<>(process, entity.version, entity.changedOn, null != entity.changeBy ? entity.changeBy.fullName : null, entity.changeDescription);
+                return new Process(entity, false);
             }).toList();
 
         if(!olderVersions.isEmpty())

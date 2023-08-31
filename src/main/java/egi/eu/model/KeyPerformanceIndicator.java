@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
 /***
  * Some process key performance indicator (KPI)
  */
-public class KeyPerformanceIndicator {
+public class KeyPerformanceIndicator extends VersionInfo {
 
     public enum KeyPerformanceIndicatorStatus {
         DRAFT,
@@ -61,7 +61,7 @@ public class KeyPerformanceIndicator {
     public List<Measurement> measurements;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date nextMeasurement;
+    public LocalDateTime nextMeasurement;
 
     @Schema(description="Updated on each measurement")
     public boolean onTrack;
@@ -73,7 +73,7 @@ public class KeyPerformanceIndicator {
     public CheckinUser approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date approvedOn;
+    public LocalDateTime approvedOn;
 
     public KeyPerformanceIndicatorStatus status;
 
@@ -89,6 +89,7 @@ public class KeyPerformanceIndicator {
      */
     public static class HistoryOfKeyPerformanceIndicator extends History<KeyPerformanceIndicator> {
         public HistoryOfKeyPerformanceIndicator() { super(); }
+        public HistoryOfKeyPerformanceIndicator(List<KeyPerformanceIndicator> olderVersions) { super(olderVersions); }
     }
 
 
@@ -108,7 +109,7 @@ public class KeyPerformanceIndicator {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String escalateIf;
 
-        public Date measuredOn;
+        public LocalDateTime measuredOn;
 
         // Links to escalation Jira tickets
         @JsonInclude(JsonInclude.Include.NON_NULL)

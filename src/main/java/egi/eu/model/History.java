@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class History<T> extends GenericEntity<T> {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<Version<T>> versions;
+    public List<T> versions;
 
 
     /**
@@ -27,7 +27,7 @@ public class History<T> extends GenericEntity<T> {
     /**
      * Construct from older versions
      */
-    public History(List<Version<T>> versions) {
+    public History(List<T> versions) {
         this();
         populate(versions);
     }
@@ -36,7 +36,7 @@ public class History<T> extends GenericEntity<T> {
      * Add versions
      * @param versions The entities to add.
      */
-    public void populate(List<Version<T>> versions) {
+    public void populate(List<T> versions) {
         if(null == this.versions)
             this.versions = new ArrayList<>();
 
@@ -47,7 +47,7 @@ public class History<T> extends GenericEntity<T> {
      * Add a new version
      * @param version The entity to add.
      */
-    public void add(Version<T> version) {
+    public void add(T version) {
         if(null == this.versions)
             this.versions = new ArrayList<>();
 

@@ -11,7 +11,7 @@ import java.util.List;
  * Details of an Service Level Agreement (SLA)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServiceLevelAgreement extends Version<ServiceLevelAgreement> {
+public class ServiceLevelAgreement extends VersionInfo {
 
     @Schema(enumeration={ "ServiceLevelAgreement" })
     public String kind = "ServiceLevelAgreement";
@@ -36,5 +36,6 @@ public class ServiceLevelAgreement extends Version<ServiceLevelAgreement> {
      */
     public static class HistoryOfServiceLevelAgreement extends History<ServiceLevelAgreement> {
         public HistoryOfServiceLevelAgreement() { super(); }
+        public HistoryOfServiceLevelAgreement(List<ServiceLevelAgreement> olderVersions) { super(olderVersions); }
     }
 }

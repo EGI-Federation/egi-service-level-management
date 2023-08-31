@@ -5,14 +5,14 @@ import egi.checkin.model.CheckinUser;
 import jakarta.persistence.Column;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
 /***
  * Procedure in this IMS process
  */
-public class Procedure {
+public class Procedure extends VersionInfo {
 
     public enum ProcedureStatus {
         DRAFT,
@@ -52,7 +52,7 @@ public class Procedure {
     public String frequencyUnit;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date nextReview;
+    public LocalDateTime nextReview;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CheckinUser owner;
@@ -61,7 +61,7 @@ public class Procedure {
     public CheckinUser approver;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date approvedOn;
+    public LocalDateTime approvedOn;
 
     public ProcedureStatus status;
 
@@ -79,6 +79,7 @@ public class Procedure {
      */
     public static class HistoryOfProcedure extends History<Procedure> {
         public HistoryOfProcedure() { super(); }
+        public HistoryOfProcedure(List<Procedure> olderVersions) { super(olderVersions); }
     }
 
 

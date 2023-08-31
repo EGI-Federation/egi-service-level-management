@@ -13,7 +13,7 @@ import egi.checkin.model.CheckinUser;
  * The roles that will govern access to the features
  * in section Service Level Management
  */
-public class Role {
+public class Role extends VersionInfo {
 
     public final static String PROCESS_OWNER = "process-owner";
     public final static String PROCESS_MANAGER = "process-manager";
@@ -73,6 +73,7 @@ public class Role {
      */
     public static class HistoryOfRole extends History<Role> {
         public HistoryOfRole() { super(); }
+        public HistoryOfRole(List<Role> olderVersions) { super(olderVersions); }
     }
 
 

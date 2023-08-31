@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -15,7 +15,7 @@ import java.util.List;
  * that are available to users/clients.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Catalog extends Version<Catalog> {
+public class Catalog extends VersionInfo {
 
     @Schema(enumeration={ "Catalog" })
     public String kind = "Catalog";
@@ -49,7 +49,7 @@ public class Catalog extends Version<Catalog> {
     public String frequencyUnit;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date nextReview;
+    public LocalDateTime nextReview;
 
     // Links
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -65,5 +65,6 @@ public class Catalog extends Version<Catalog> {
      */
     public static class HistoryOfCatalog extends History<Catalog> {
         public HistoryOfCatalog() { super(); }
+        public HistoryOfCatalog(List<Catalog> olderVersions) { super(olderVersions); }
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
  * Details of an Underpinning Agreement (UA)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UnderpinningAgreement extends Version<UnderpinningAgreement> {
+public class UnderpinningAgreement extends VersionInfo {
 
     @Schema(enumeration={ "UnderpinningAgreement" })
     public String kind = "UnderpinningAgreement";
@@ -36,5 +36,6 @@ public class UnderpinningAgreement extends Version<UnderpinningAgreement> {
      */
     public static class HistoryOfUnderpinningAgreement extends History<UnderpinningAgreement> {
         public HistoryOfUnderpinningAgreement() { super(); }
+        public HistoryOfUnderpinningAgreement(List<UnderpinningAgreement> olderVersions) { super(olderVersions); }
     }
 }

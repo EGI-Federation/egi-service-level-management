@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import egi.checkin.model.CheckinUser;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -24,7 +24,7 @@ public class Review<T> extends GenericEntity<T> {
     public T reviewedEntity;
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Date date;
+    public LocalDateTime date;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<CheckinUser> reviewers;

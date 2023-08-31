@@ -11,7 +11,7 @@ import java.util.List;
  * Details of a service (portfolio entry)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Service extends Version<Service> {
+public class Service extends VersionInfo {
 
     @Schema(enumeration={ "Service" })
     public String kind = "Service";
@@ -43,5 +43,6 @@ public class Service extends Version<Service> {
      */
     public static class HistoryOfService extends History<Service> {
         public HistoryOfService() { super(); }
+        public HistoryOfService(List<Service> olderVersions) { super(olderVersions); }
     }
 }
