@@ -1,6 +1,5 @@
 package egi.eu;
 
-import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -14,25 +13,22 @@ import org.jboss.resteasy.reactive.RestQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.hibernate.reactive.mutiny.Mutiny.Session;
 import io.smallrye.mutiny.Uni;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
-import jakarta.transaction.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-
+import java.util.*;
 
 import egi.checkin.model.CheckinUser;
-import egi.eu.model.Process;
-import egi.eu.model.*;
+import egi.eu.entity.UserEntity;
 import egi.eu.entity.ProcessEntity;
+import egi.eu.model.Process;
+import egi.eu.model.Process.ProcessStatus;
+import egi.eu.model.*;
+
 
 /***
  * Resource for process configuration queries and operations.
@@ -105,7 +101,6 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    @WithTransaction
     public Uni<Response> getConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
                                           @RestQuery("allVersions") @DefaultValue("false")
@@ -122,7 +117,9 @@ public class Configuration extends BaseResource {
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                return allVersions ? ProcessEntity.getAllVersions() : ProcessEntity.getLastVersion();
+                return allVersions ?
+                        sf.withSession(session -> ProcessEntity.getAllVersions()) :
+                        sf.withSession(session -> ProcessEntity.getLastVersionAsList());
             })
             .chain(versions -> {
                 // Got a list of versions
@@ -143,7 +140,7 @@ public class Configuration extends BaseResource {
     /**
      * Update process configuration.
      * @param auth The access token needed to call the service.
-     * @return API Response, wraps an ActionSuccess({@link Process}) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PUT
     @Path("/process")
@@ -151,9 +148,9 @@ public class Configuration extends BaseResource {
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateConfiguration",  summary = "Update process details")
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "Updated",
+            @APIResponse(responseCode = "204", description = "Updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = Process.class))),
+                    schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -161,7 +158,6 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    @Transactional
     public Uni<Response> updateConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
                                              Process process)
@@ -173,16 +169,51 @@ public class Configuration extends BaseResource {
 
         log.info("Updating process");
 
-        Uni<Response> result = Uni.createFrom().item(new ProcessEntity())
+        var latest = new ArrayList<ProcessEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
 
-            .chain(proc -> {
-                proc.goals = "Test 1";
-                return proc.persist();
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest process version
+                    ProcessEntity.getLastVersion()
+                    .chain(latestProcess -> {
+                        // Got the latest version
+                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
+                        if(ProcessStatus.DEPRECATED == latestStatus)
+                            // Cannot update deprecated entities
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot update deprecated process"));
+
+                        latest.add(latestProcess);
+
+                        // Get all users linked to this process that already exist in the database
+                        var ids = new HashSet<Long>();
+                        if(null != process.changeBy)
+                            ids.add(process.changeBy.checkinUserId);
+                        if(null != process.requirements)
+                            for(var req : process.requirements)
+                                if(null != req.responsibles)
+                                    for(var resp : req.responsibles)
+                                        ids.add(resp.checkinUserId);
+
+                        return UserEntity.findUsersWithCheckinUserIds(ids.stream().toList());
+                    })
+                    .chain(existingUsers -> {
+                        // Got the existing users
+                        var users = new HashMap<Long, UserEntity>();
+                        for(var user : existingUsers)
+                            users.put(user.checkinUserId, user);
+
+                        var latestProcess = latest.get(0);
+                        var newProcess = new ProcessEntity();
+                        newProcess.clone(process, latestProcess, users);
+                        return session.persist(newProcess);
+                    });
+                });
             })
-            .chain(updated -> {
+            .chain(unused -> {
                 // Update complete, success
                 log.info("Updated process");
-                return Uni.createFrom().item(Response.ok(updated).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated")).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to update process");

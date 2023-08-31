@@ -1,10 +1,9 @@
-insert into slm.users (id, checkinuserid, fullname, email)
-values (1, 6166, 'Levente Farkas', 'levente@egi.eu'),
-       (2, 171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
+insert into slm.users (checkinuserid, fullname, email)
+values (6166, 'Levente Farkas', 'levente@egi.eu'),
+       (171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
 
-
-insert into slm.processes (id, goals, scope, status, reviewfrequency, frequencyunit, nextreview, version, approvedon, changedon, changedescription, contact)
-VALUES (1, 'The primary purpose of this process is to
+insert into slm.processes (goals, scope, status, reviewfrequency, frequencyunit, nextreview, approvedon, changedon, changedescription, contact)
+VALUES ('The primary purpose of this process is to
 - Define, agree (with customers), and monitor service level agreements (SLAs)
 - Define, agree (with federation members and suppliers), and monitor operation level agreements (OLAs)
 - Define, agree (with suppliers), and monitor underpinning agreements (UA).',
@@ -21,9 +20,9 @@ VALUES (1, 'The primary purpose of this process is to
         - FitSM training
         - ISO27k training
     - **Other**: Corporate SLA, no custom SLAs are foreseen.',
-        0, 1, 'year', '2021-05-14', 1, '2021-05-14', '2021-02-19T19:23:18', 'first version', 'aaa@bbb.com'),
+        0, 1, 'year', '2021-05-14', null, '2021-02-19T19:23:18', 'first version', 'aaa@bbb.com'),
 
-       (2, 'The primary purpose of this process is to
+       ('The primary purpose of this process is to
 - Define, agree (with customers), and monitor service level agreements (SLAs)
 - Define, agree (with federation members and suppliers), and monitor operation level agreements (OLAs)
 - Define, agree (with suppliers), and monitor underpinning agreements (UA).',
@@ -40,7 +39,7 @@ VALUES (1, 'The primary purpose of this process is to
         - FitSM training
         - ISO27k training
     - **Other**: Corporate SLA, no custom SLAs are foreseen.',
-        2, 8, 'day', '2023-11-14', 2, '2021-05-14', '2021-05-14', 'next version', 'contact@egi.eu');
+        2, 8, 'day', '2023-11-14', '2021-05-14', '2021-05-14T22:03:18', 'next version', 'contact@egi.eu');
 
 insert into slm.process_editor (process_id, user_id)
 values (1, 1),
@@ -49,10 +48,10 @@ values (1, 1),
 insert into slm.process_approver (process_id, user_id)
 values (2, 2);
 
-insert into slm.requirements (id, code, source, requirement)
-values (1, 'PR2.2', 'FitSM', 'For all _services_ delivered to customers, **SLAs** shall be in place.'),
-       (2, 'PR2.3', 'FitSM', '**SLAs** shall be reviewed at planned intervals.'),
-       (3, null, 'ISO20K:2018', 'The catalogue of services shall include:
+insert into slm.requirements (code, source, requirement)
+values ('PR2.2', 'FitSM', 'For all _services_ delivered to customers, **SLAs** shall be in place.'),
+       ('PR2.3', 'FitSM', '**SLAs** shall be reviewed at planned intervals.'),
+       (null, 'ISO20K:2018', 'The catalogue of services shall include:
 - the dependencies between services, and
 - service components.');
 
@@ -68,12 +67,12 @@ values (1, 1),
        (2, 2),
        (3, 2);
 
-insert into slm.interfaces(id, direction, interfaceswith, description, relevantmaterial)
-values (1, 'In', 'CAPM', 'Reflecting demands, planned upgrades, downgrades and re-allocations of resources.', 'Capacity Plan Database'),
-       (2, 'Out', 'Internal', 'Data is gathered under http://argo.egi.eu/', 'Records of monitoring the performance of services and internal groups providing service components
+insert into slm.interfaces(direction, interfaceswith, description, relevantmaterial)
+values ('In', 'CAPM', 'Reflecting demands, planned upgrades, downgrades and re-allocations of resources.', 'Capacity Plan Database'),
+       ('Out', 'Internal', 'Data is gathered under http://argo.egi.eu/', 'Records of monitoring the performance of services and internal groups providing service components
 
 EGI OLA Services reporting data'),
-       (3, 'Out', 'ISRM, SRM, CRM, SACM, CAPM, IS', 'Agreed Service Level Agreement, Operational Level Agreement, Underpinning Agreements', '**SLA/OLA/UA** database
+       ('Out', 'ISRM, SRM, CRM, SACM, CAPM, IS', 'Agreed Service Level Agreement, Operational Level Agreement, Underpinning Agreements', '**SLA/OLA/UA** database
 
 - VO SLA OLAs
 - OLA and UA

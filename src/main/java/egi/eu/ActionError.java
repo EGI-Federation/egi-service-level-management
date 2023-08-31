@@ -170,7 +170,9 @@ public class ActionError {
         else if (type.equals(ActionException.class)) {
             ActionException ae = (ActionException)t;
             this.id = ae.id();
-            this.status = ae.status();
+
+            if(!updateStatusFromId())
+                this.status = ae.status();
 
             // Collect the details from the exception (if any)
             var aeDetails = ae.details();

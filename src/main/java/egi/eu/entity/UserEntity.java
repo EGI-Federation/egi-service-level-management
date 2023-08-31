@@ -1,9 +1,13 @@
 package egi.eu.entity;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.smallrye.common.constraint.NotNull;
+import io.smallrye.mutiny.Uni;
+import jakarta.persistence.*;
+
+import java.util.List;
+
+import egi.eu.model.User;
 
 
 /**
@@ -11,9 +15,14 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "users")
-public class UserEntity extends PanacheEntity {
+public class UserEntity extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @Column(unique = true)
+    @NotNull
     public Long checkinUserId;
 
     public String fullName;
@@ -25,4 +34,23 @@ public class UserEntity extends PanacheEntity {
      * Constructor
      */
     public UserEntity() { super(); }
+
+    /***
+     * Copy constructor
+     */
+    public UserEntity(User user) {
+        super();
+
+        this.checkinUserId = user.checkinUserId;
+        this.fullName = user.fullName;
+        this.email = user.email;
+    }
+
+    /***
+     * See which users already exist in the database
+     * @return List with existing users
+     */
+    public static Uni<List<UserEntity>> findUsersWithCheckinUserIds(List<Long> checkinUserIds) {
+        return list("checkinUserId in ?1", checkinUserIds);
+    }
 }
