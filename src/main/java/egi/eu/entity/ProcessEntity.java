@@ -114,11 +114,51 @@ public class ProcessEntity extends PanacheEntityBase {
     public ProcessEntity() { super(); }
 
     /***
-     * Create a new version of a process
+     * Copy constructor with new status
+     * @param process The process to copy
+     * @param newStatus The new status
+     */
+    public ProcessEntity(ProcessEntity process, Process.ProcessStatus newStatus) {
+        super();
+
+        // Copy simple fields
+        this.changeDescription = process.changeDescription;
+        this.changeBy = process.changeBy;
+
+        this.goals = process.goals;
+        this.scope = process.scope;
+        this.contact = process.contact;
+        this.reviewFrequency = process.reviewFrequency;
+        this.frequencyUnit = process.frequencyUnit;
+        this.nextReview = process.nextReview;
+        this.urlDiagram = process.urlDiagram;
+        this.status = newStatus.getValue();
+
+        // Will not copy the fields approver and approvedOn because even if the
+        // process was approved, changing it will require a new approval
+
+        // Copy requirement
+        if(null != process.requirements) {
+            this.requirements = new HashSet<>();
+            this.requirements.addAll(process.requirements);
+        }
+
+        // Copy interfaces
+        if(null != process.interfaces) {
+            this.interfaces = new HashSet<>();
+            this.interfaces.addAll(process.interfaces);
+        }
+    }
+
+    /***
+     * Copy constructor
      * @param process The new version (from the frontend)
      * @param latest The latest version in the database
+     * @param users The users that already exist in the database
      */
-    public void clone(Process process, ProcessEntity latest, Map<Long, UserEntity> users) {
+    public ProcessEntity(Process process, ProcessEntity latest, Map<Long, UserEntity> users) {
+        super();
+
         // Copy simple fields
         this.changeDescription = process.changeDescription;
         if(null != process.changeBy) {

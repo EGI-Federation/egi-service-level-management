@@ -140,6 +140,7 @@ public class Configuration extends BaseResource {
     /**
      * Update process configuration.
      * @param auth The access token needed to call the service.
+     * @param process The new process version.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PUT
@@ -158,9 +159,7 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-
-                                             Process process)
+    public Uni<Response> updateConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Process process)
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -203,9 +202,9 @@ public class Configuration extends BaseResource {
                         for(var user : existingUsers)
                             users.put(user.checkinUserId, user);
 
+                        // Create new process version
                         var latestProcess = latest.get(0);
-                        var newProcess = new ProcessEntity();
-                        newProcess.clone(process, latestProcess, users);
+                        var newProcess = new ProcessEntity(process, latestProcess, users);
                         return session.persist(newProcess);
                     });
                 });
@@ -217,6 +216,101 @@ public class Configuration extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to update process");
+                return new ActionError(e).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * Mark process as ready for approval.
+     * @param auth The access token needed to call the service.
+     * @param user The user making the change.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @PATCH
+    @Path("/process/readyforapproval")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_MANAGER })
+    @Operation(operationId = "requestApproval",  summary = "Request approval from process owner")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Requested",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> requestApproval(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, User user)
+    {
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("processName", imsConfig.group());
+
+        log.info("Requesting process approval");
+
+        var latest = new ArrayList<ProcessEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest process version
+                    ProcessEntity.getLastVersion()
+                    .chain(latestProcess -> {
+                        // Got the latest version
+                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
+                        if(ProcessStatus.DRAFT != latestStatus)
+                            // Cannot request approval if status is not DRAFT
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot request approval in this status"));
+
+                        latest.add(latestProcess);
+
+                        // Check if the calling user already exists in the database
+                        UserEntity existingUser = null;
+                        if(null != latestProcess.changeBy && user.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                            existingUser = latestProcess.changeBy;
+                        else if(null != latestProcess.requirements) {
+                            for(var req : latestProcess.requirements) {
+                                if (null != req.responsibles)
+                                    for(var resp : req.responsibles)
+                                        if (user.checkinUserId.equals(resp.checkinUserId)) {
+                                            existingUser = resp;
+                                            break;
+                                        }
+                                if(null != existingUser)
+                                    break;
+                            }
+                        }
+                        if(null != existingUser)
+                            return Uni.createFrom().item(existingUser);
+
+                        return UserEntity.findByCheckinUserId(user.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got the user in the database, if it exists
+                        if(null == existingUser)
+                            existingUser = new UserEntity(user);
+
+                        // Create new process version
+                        var latestProcess = latest.get(0);
+                        var newProcess = new ProcessEntity(latestProcess, ProcessStatus.READY_FOR_APPROVAL);
+                        newProcess.changeBy = existingUser;
+                        newProcess.changeDescription = null;
+
+                        return session.persist(newProcess);
+                    });
+                });
+            })
+            .chain(unused -> {
+                // Update complete, success
+                log.info("Requested process approval");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Requested")).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to request process approval");
                 return new ActionError(e).toResponse();
             });
 

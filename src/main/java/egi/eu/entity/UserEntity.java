@@ -53,4 +53,12 @@ public class UserEntity extends PanacheEntityBase {
     public static Uni<List<UserEntity>> findUsersWithCheckinUserIds(List<Long> checkinUserIds) {
         return list("checkinUserId in ?1", checkinUserIds);
     }
+
+    /***
+     * See which users already exist in the database
+     * @return List with existing users
+     */
+    public static Uni<UserEntity> findByCheckinUserId(Long checkinUserId) {
+        return find("checkinUserId", checkinUserId).firstResult();
+    }
 }
