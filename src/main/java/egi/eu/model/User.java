@@ -26,7 +26,7 @@ public class User {
     /***
      * Constructor
      */
-    public User() { super(); }
+    public User() {}
 
     /***
      * Copy constructor

@@ -1,5 +1,6 @@
 package egi.eu;
 
+import io.smallrye.mutiny.tuples.Tuple2;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -105,7 +106,8 @@ public class Configuration extends BaseResource {
 
                                           @RestQuery("allVersions") @DefaultValue("false")
                                           @Parameter(required = false, description = "Whether to retrieve all versions")
-                                          boolean allVersions) {
+                                          boolean allVersions)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
@@ -140,7 +142,7 @@ public class Configuration extends BaseResource {
     /**
      * Update process configuration.
      * @param auth The access token needed to call the service.
-     * @param process The new process version.
+     * @param process The new process version, includes details about who is making the change.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PUT
@@ -225,7 +227,7 @@ public class Configuration extends BaseResource {
     /**
      * Mark process as ready for approval.
      * @param auth The access token needed to call the service.
-     * @param user The user making the change.
+     * @param user The user asking for approval.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
@@ -249,8 +251,14 @@ public class Configuration extends BaseResource {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
+        addToDC("user", user);
 
         log.info("Requesting process approval");
+
+        if(null == user || null == user.checkinUserId || user.checkinUserId < 0) {
+            var ae = new ActionError("badRequest", "Invalid user information");
+            return Uni.createFrom().item(ae.toResponse());
+        }
 
         var latest = new ArrayList<ProcessEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
@@ -263,7 +271,7 @@ public class Configuration extends BaseResource {
                         // Got the latest version
                         final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
                         if(ProcessStatus.DRAFT != latestStatus)
-                            // Cannot request approval if status is not DRAFT
+                            // Cannot request approval if not draft
                             return Uni.createFrom().failure(new ActionException("badRequest", "Cannot request approval in this status"));
 
                         latest.add(latestProcess);
@@ -290,7 +298,7 @@ public class Configuration extends BaseResource {
                         return UserEntity.findByCheckinUserId(user.checkinUserId);
                     })
                     .chain(existingUser -> {
-                        // Got the user in the database, if it exists
+                        // Got the user from the database, if it exists
                         if(null == existingUser)
                             existingUser = new UserEntity(user);
 
@@ -311,6 +319,120 @@ public class Configuration extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to request process approval");
+                return new ActionError(e).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * Approve or reject the changes to the process.
+     * @param auth The access token needed to call the service.
+     * @param approval The approval operation/decision and approver user.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @PATCH
+    @Path("/process/approve")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER })
+    @Operation(operationId = "approveProcess",  summary = "Approve or reject process changes")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Approved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> approveChanges(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Approval approval)
+    {
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("processName", imsConfig.group());
+        addToDC("approval", approval);
+
+        if(null == approval || null == approval.operation || !(
+                approval.operation.equalsIgnoreCase(Approval.OPERATION_APPROVE) ||
+                approval.operation.equalsIgnoreCase(Approval.OPERATION_REJECT)) ) {
+            var operation = (null == approval || null == approval.operation) ? "null" : approval.operation;
+            var ae = new ActionError("badRequest", "Unknown approval operation",
+                    Tuple2.of("operation", operation));
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        boolean approve = approval.operation.equals(Approval.OPERATION_APPROVE);
+        log.infof("%s process changes", approve ? "Approving" : "Rejecting");
+
+        if(null == approval.approver || null == approval.approver.checkinUserId || approval.approver.checkinUserId < 0) {
+            var ae = new ActionError("badRequest", "Invalid user information");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        var latest = new ArrayList<ProcessEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest process version
+                    ProcessEntity.getLastVersion()
+                    .chain(latestProcess -> {
+                        // Got the latest version
+                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
+                        if(ProcessStatus.READY_FOR_APPROVAL != latestStatus)
+                            // Nothing to approve/reject in this state
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Nothing to approve or reject"));
+
+                        latest.add(latestProcess);
+
+                        // Check if the approving user already exists in the database
+                        UserEntity existingUser = null;
+                        if(null != latestProcess.changeBy && approval.approver.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                            existingUser = latestProcess.changeBy;
+                        else if(null != latestProcess.requirements) {
+                            for(var req : latestProcess.requirements) {
+                                if (null != req.responsibles)
+                                    for(var resp : req.responsibles)
+                                        if(approval.approver.checkinUserId.equals(resp.checkinUserId)) {
+                                            existingUser = resp;
+                                            break;
+                                        }
+                                if(null != existingUser)
+                                    break;
+                            }
+                        }
+                        if(null != existingUser)
+                            return Uni.createFrom().item(existingUser);
+
+                        return UserEntity.findByCheckinUserId(approval.approver.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got the user from the database, if it exists
+                        if(null == existingUser)
+                            existingUser = new UserEntity(approval.approver);
+
+                        // Create new process version
+                        var latestProcess = latest.get(0);
+                        var newStatus = approval.operation.equalsIgnoreCase(Approval.OPERATION_APPROVE) ?
+                                        ProcessStatus.APPROVED : ProcessStatus.DRAFT;
+                        var newProcess = new ProcessEntity(latestProcess, newStatus);
+                        newProcess.changeBy = existingUser;
+                        newProcess.changeDescription = approval.changeDescription;
+
+                        return session.persist(newProcess);
+                    });
+                });
+            })
+            .chain(unused -> {
+                // Update complete, success
+                var operation = approve ? "Approved" : "Rejected";
+                log.infof("%s process approval", operation);
+                return Uni.createFrom().item(Response.ok(new ActionSuccess(operation)).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.errorf("Failed to % process changes", approval.operation.toLowerCase());
                 return new ActionError(e).toResponse();
             });
 

@@ -207,11 +207,6 @@ public class Users extends BaseResource {
 
         log.info("Listing users");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -280,11 +275,6 @@ public class Users extends BaseResource {
 
         log.info("Adding user to group");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -348,11 +338,6 @@ public class Users extends BaseResource {
         addToDC("checkinUserId", checkinUserId);
 
         log.info("Removing user from group");
-
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
@@ -437,11 +422,6 @@ public class Users extends BaseResource {
 
         log.info("Listing users with roles");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -506,8 +486,9 @@ public class Users extends BaseResource {
                                        @RestQuery("role")
                                        @Parameter(description = "The role to assign to the user")
                                        @Schema(enumeration = {
-                                               Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER,
-                                               Role.REPORT_OWNER, Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
+                                               Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
+                                               Role.CATALOG_MANAGER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                               Role.OLA_OWNER, Role.SLA_OWNER })
                                        String role) {
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
@@ -517,21 +498,17 @@ public class Users extends BaseResource {
 
         log.info("Assigning role to user");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         if(null == role || !(
                 role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
                 role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
+                role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
                 role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
                 role.equalsIgnoreCase(Role.REPORT_OWNER) ||
                 role.equalsIgnoreCase(Role.UA_OWNER) ||
                 role.equalsIgnoreCase(Role.OLA_OWNER) ||
                 role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
             var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", role));
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
+            return Uni.createFrom().item(ae.toResponse());
         }
 
         Uni<Response> result = Uni.createFrom().nullItem()
@@ -595,8 +572,9 @@ public class Users extends BaseResource {
                                             @RestQuery("role")
                                             @Parameter(description = "The role to revoke from the user")
                                             @Schema(enumeration = {
-                                                    Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER,
-                                                    Role.REPORT_OWNER, Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
+                                                    Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
+                                                    Role.CATALOG_MANAGER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                                    Role.OLA_OWNER, Role.SLA_OWNER })
                                             String role) {
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
@@ -606,21 +584,17 @@ public class Users extends BaseResource {
 
         log.info("Revoking role from user");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         if(null == role || !(
                 role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
                 role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
+                role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
                 role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
                 role.equalsIgnoreCase(Role.REPORT_OWNER) ||
                 role.equalsIgnoreCase(Role.UA_OWNER) ||
                 role.equalsIgnoreCase(Role.OLA_OWNER) ||
                 role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
             var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", role));
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
+            return Uni.createFrom().item(ae.toResponse());
         }
 
         Uni<Response> result = Uni.createFrom().nullItem()
@@ -703,11 +677,6 @@ public class Users extends BaseResource {
 
         log.info("Listing assigned roles");
 
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
-
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -788,11 +757,6 @@ public class Users extends BaseResource {
         addToDC("limit", limit);
 
         log.info("Listing roles");
-
-        if(null == auth || auth.trim().isEmpty()) {
-            var ae = new ActionError("badRequest", "Access token missing");
-            return Uni.createFrom().item(ae.status(Response.Status.BAD_REQUEST).toResponse());
-        }
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
