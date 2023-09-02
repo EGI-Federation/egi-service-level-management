@@ -76,12 +76,6 @@ public class Process extends VersionInfo {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public LocalDateTime nextReview;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public User approver;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public LocalDateTime approvedOn;
-
     public ProcessStatus status = ProcessStatus.DRAFT;
 
     @Schema(description="The version of the process API")
@@ -138,9 +132,6 @@ public class Process extends VersionInfo {
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
-        if(null != process.approver)
-            this.approver = new User(process.approver);
-        this.approvedOn = process.approvedOn;
         this.status = ProcessStatus.of(process.status);
 
         if(null != process.requirements)

@@ -90,7 +90,9 @@ public class Configuration extends BaseResource {
     @Path("/process")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.IMS_USER)
-    @Operation(operationId = "getConfiguration",  summary = "Get process details")
+    @Operation(operationId = "getConfiguration",  summary = "Get process details",
+               description = "When all versions are requested the field history will hold versions prior " +
+                             "to the latest one, sorted by version in descending order.")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -234,7 +236,7 @@ public class Configuration extends BaseResource {
     @Path("/process/readyforapproval")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_MANAGER })
-    @Operation(operationId = "requestApproval",  summary = "Request approval from process owner")
+    @Operation(operationId = "requestApproval",  summary = "Request approval of the process changes")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Requested",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -328,7 +330,7 @@ public class Configuration extends BaseResource {
     /**
      * Approve or reject the changes to the process.
      * @param auth The access token needed to call the service.
-     * @param approval The approval operation/decision and approver user.
+     * @param approval The approval operation/decision and the approver user.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
@@ -440,6 +442,51 @@ public class Configuration extends BaseResource {
     }
 
     /**
+     * Deprecate process.
+     * @param auth The access token needed to call the service.
+     * @param user The user deprecating the process.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @DELETE
+    @Path("/process")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER })
+    @Operation(operationId = "deprecateProcess",  summary = "Deprecate the process")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Deprecated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> deprecateProcess(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, User user)
+    {
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("processName", imsConfig.group());
+
+        log.info("Deprecating process");
+
+        Uni<Response> result = Uni.createFrom().item(new Process())
+
+                .chain(revoked -> {
+                    // Deprecation complete, success
+                    log.info("Deprecated process");
+                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated")).build());
+                })
+                .onFailure().recoverWithItem(e -> {
+                    log.error("Failed to deprecate process");
+                    return new ActionError(e).toResponse();
+                });
+
+        return result;
+    }
+
+    /**
      * Review process.
      * @param auth The access token needed to call the service.
      * @param review The details of the process review.
@@ -545,50 +592,6 @@ public class Configuration extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to list process reviews");
-                return new ActionError(e).toResponse();
-            });
-
-        return result;
-    }
-
-    /**
-     * Deprecate process.
-     * @param auth The access token needed to call the service.
-     * @return API Response, wraps an ActionSuccess or an ActionError entity
-     */
-    @DELETE
-    @Path("/process")
-    @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "deprecateProcess",  summary = "Deprecate the process")
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "Deprecated",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = ActionSuccess.class))),
-            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = ActionError.class))),
-            @APIResponse(responseCode = "401", description="Authorization required"),
-            @APIResponse(responseCode = "403", description="Permission denied"),
-            @APIResponse(responseCode = "503", description="Try again later")
-    })
-    public Uni<Response> deprecateProcess(@RestHeader(HttpHeaders.AUTHORIZATION) String auth)
-    {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("processName", imsConfig.group());
-
-        log.info("Deprecating process");
-
-        Uni<Response> result = Uni.createFrom().item(new Process())
-
-            .chain(revoked -> {
-                // Deprecation complete, success
-                log.info("Deprecated process");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated")).build());
-            })
-            .onFailure().recoverWithItem(e -> {
-                log.error("Failed to deprecate process");
                 return new ActionError(e).toResponse();
             });
 

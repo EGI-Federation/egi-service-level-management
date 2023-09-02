@@ -63,15 +63,6 @@ public class ProcessEntity extends PanacheEntityBase {
 
     public LocalDateTime nextReview;
 
-    @ManyToOne(fetch = FetchType.EAGER,
-               cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "process_approver",
-               joinColumns = { @JoinColumn(name = "process_id") },
-               inverseJoinColumns = { @JoinColumn(name = "user_id") })
-    public UserEntity approver = null;
-
-    public LocalDateTime approvedOn;
-
     public int status;
 
     // Change tracking
@@ -134,9 +125,6 @@ public class ProcessEntity extends PanacheEntityBase {
         this.urlDiagram = process.urlDiagram;
         this.status = newStatus.getValue();
 
-        // Will not copy the fields approver and approvedOn because even if the
-        // process was approved, changing it will require a new approval
-
         // Copy requirement
         if(null != process.requirements) {
             this.requirements = new HashSet<>();
@@ -175,9 +163,6 @@ public class ProcessEntity extends PanacheEntityBase {
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
         this.urlDiagram = process.urlDiagram;
-
-        // Will not copy the fields approver and approvedOn because even if the
-        // process was approved, changing it will require a new approval
 
         final var latestStatus = ProcessStatus.of(latest.status);
         if(ProcessStatus.APPROVED == latestStatus)
