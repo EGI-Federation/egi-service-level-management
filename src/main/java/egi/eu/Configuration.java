@@ -172,6 +172,12 @@ public class Configuration extends BaseResource {
 
         log.info("Updating process");
 
+        if(null == process.changeBy || null == process.changeBy.checkinUserId || process.changeBy.checkinUserId < 0) {
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
         var latest = new ArrayList<ProcessEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
@@ -216,7 +222,8 @@ public class Configuration extends BaseResource {
             .chain(unused -> {
                 // Update complete, success
                 log.info("Updated process");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated")).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated"))
+                                                     .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to update process");
@@ -258,7 +265,8 @@ public class Configuration extends BaseResource {
         log.info("Requesting process approval");
 
         if(null == user || null == user.checkinUserId || user.checkinUserId < 0) {
-            var ae = new ActionError("badRequest", "Invalid user information");
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
             return Uni.createFrom().item(ae.toResponse());
         }
 
@@ -315,9 +323,10 @@ public class Configuration extends BaseResource {
                 });
             })
             .chain(unused -> {
-                // Update complete, success
+                // Request complete, success
                 log.info("Requested process approval");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Requested")).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Requested"))
+                                                     .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to request process approval");
@@ -369,7 +378,8 @@ public class Configuration extends BaseResource {
         log.infof("%s process changes", approve ? "Approving" : "Rejecting");
 
         if(null == approval.approver || null == approval.approver.checkinUserId || approval.approver.checkinUserId < 0) {
-            var ae = new ActionError("badRequest", "Invalid user information");
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
             return Uni.createFrom().item(ae.toResponse());
         }
 
@@ -428,10 +438,11 @@ public class Configuration extends BaseResource {
                 });
             })
             .chain(unused -> {
-                // Update complete, success
+                // Approval complete, success
                 var operation = approve ? "Approved" : "Rejected";
                 log.infof("%s process approval", operation);
-                return Uni.createFrom().item(Response.ok(new ActionSuccess(operation)).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess(operation))
+                                                     .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.errorf("Failed to % process changes", approval.operation.toLowerCase());
@@ -468,20 +479,78 @@ public class Configuration extends BaseResource {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
+        addToDC("user", user);
 
         log.info("Deprecating process");
 
-        Uni<Response> result = Uni.createFrom().item(new Process())
+        if(null == user || null == user.checkinUserId || user.checkinUserId < 0) {
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
 
-                .chain(revoked -> {
-                    // Deprecation complete, success
-                    log.info("Deprecated process");
-                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated")).build());
-                })
-                .onFailure().recoverWithItem(e -> {
-                    log.error("Failed to deprecate process");
-                    return new ActionError(e).toResponse();
+        var latest = new ArrayList<ProcessEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest process version
+                    ProcessEntity.getLastVersion()
+                    .chain(latestProcess -> {
+                        // Got the latest version
+                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
+                        if(ProcessStatus.APPROVED != latestStatus)
+                            // Cannot deprecate if not approved
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot deprecate non-approved process"));
+
+                        latest.add(latestProcess);
+
+                        // Check if the calling user already exists in the database
+                        UserEntity existingUser = null;
+                        if(null != latestProcess.changeBy && user.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                            existingUser = latestProcess.changeBy;
+                        else if(null != latestProcess.requirements) {
+                            for(var req : latestProcess.requirements) {
+                                if (null != req.responsibles)
+                                    for(var resp : req.responsibles)
+                                        if (user.checkinUserId.equals(resp.checkinUserId)) {
+                                            existingUser = resp;
+                                            break;
+                                        }
+                                if(null != existingUser)
+                                    break;
+                            }
+                        }
+                        if(null != existingUser)
+                            return Uni.createFrom().item(existingUser);
+
+                        return UserEntity.findByCheckinUserId(user.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got the user from the database, if it exists
+                        if(null == existingUser)
+                            existingUser = new UserEntity(user);
+
+                        // Create new process version
+                        var latestProcess = latest.get(0);
+                        var newProcess = new ProcessEntity(latestProcess, ProcessStatus.DEPRECATED);
+                        newProcess.changeBy = existingUser;
+                        newProcess.changeDescription = null;
+
+                        return session.persist(newProcess);
+                    });
                 });
+            })
+            .chain(revoked -> {
+                // Deprecation complete, success
+                log.info("Deprecated process");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated"))
+                                                     .status(Response.Status.CREATED).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to deprecate process");
+                return new ActionError(e).toResponse();
+            });
 
         return result;
     }
