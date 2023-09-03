@@ -280,6 +280,10 @@ public class Checkin {
 
             // Only include users that are members of the configured VO
             var user = new CheckinUser(role);
+            if(user.checkinUserId <= 0)
+                // Skip invalid users too
+                continue;
+
             if (voUsers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
                 // This is a membership record, not a role record
                 users.put(user.checkinUserId, user);
@@ -647,7 +651,7 @@ public class Checkin {
      * Filter records to the ones that indicate assigned roles in the group.
      * @param groupRoles List of Check-in role records
      * @param logRecords Whether to dump the records in the log
-     * @return List of roles currently assigned in the group, null on error.
+     * @return Roles currently assigned in the group, null on error.
      *         Unlike the cached list of VO members, the users in the returned roles
      *         will have their <b>roles</b> field filled.
      */

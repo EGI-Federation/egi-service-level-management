@@ -84,31 +84,34 @@ public class CheckinUser {
         this.checkinUserId = role.person.Id;
 
         // Get first voperson_id
-        for(var id : role.person.ids) {
-            if(null != id.type && id.type.equals("epuid")) {
-                this.userId = id.identifier;
-                break;
+        if(null != role.person.ids)
+            for(var id : role.person.ids) {
+                if(null != id.type && id.type.equals("epuid")) {
+                    this.userId = id.identifier;
+                    break;
+                }
             }
-        }
 
         // Get first complete name
-        for(var name : role.person.names) {
-            if(null != name.family && !name.family.isBlank() && null != name.given && !name.given.isBlank()) {
-                this.firstName = name.given;
-                this.lastName = name.family;
-                this.fullName = name.given + " " + name.family;
-                break;
+        if(null != role.person.names)
+            for(var name : role.person.names) {
+                if(null != name.family && !name.family.isBlank() && null != name.given && !name.given.isBlank()) {
+                    this.firstName = name.given;
+                    this.lastName = name.family;
+                    this.fullName = name.given + " " + name.family;
+                    break;
+                }
             }
-        }
 
         // Get first email address
-        for(var email : role.person.emails) {
-            if(null != email.mail && !email.mail.isBlank()) {
-                this.email = email.mail;
-                this.emailIsVerified = email.verified;
-                break;
+        if(null != role.person.emails)
+            for(var email : role.person.emails) {
+                if(null != email.mail && !email.mail.isBlank()) {
+                    this.email = email.mail;
+                    this.emailIsVerified = email.verified;
+                    break;
+                }
             }
-        }
     }
 
     public long getCheckinUserId() { return this.checkinUserId; }

@@ -5,17 +5,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-import egi.checkin.model.CheckinRole;
 import egi.checkin.model.CheckinUser;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 /**
  * Details of the current user
+ * Used only be the endpoint GET /user/info
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo extends User {
@@ -42,9 +40,6 @@ public class UserInfo extends User {
     @JsonProperty("eduperson_entitlement")
     public List<String> entitlements;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public Set<String> roles;
-
 
     /***
      * Constructor
@@ -69,11 +64,6 @@ public class UserInfo extends User {
         if(null != u.entitlements) {
             this.entitlements = new ArrayList<>(u.entitlements.size());
             this.entitlements.addAll(u.entitlements);
-        }
-
-        if(null != u.roles) {
-            this.roles = new HashSet<>(u.roles.size());
-            this.roles.addAll(u.roles);
         }
     }
 }

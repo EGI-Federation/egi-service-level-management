@@ -33,7 +33,7 @@ public class RoleParsingTest {
     private final String imso = "ims-owner";
     private final String imsm = "ims-manager";
     private final String imsc = "ims-coordinator";
-    private String po, pm, pd, cm, ro, uao, olao, slao;
+    private String po, pm, pd, co, ro, uao, olao, slao;
     private Map<String, String> roleNames = new HashMap<String, String>();
     private CheckinUser userInfo;
     private QuarkusSecurityIdentity.Builder builder;
@@ -50,7 +50,7 @@ public class RoleParsingTest {
             po = roleNames.get("process-owner").toLowerCase();
             pm = roleNames.get("process-manager").toLowerCase();
             pd = roleNames.get("process-developer").toLowerCase();
-            cm = roleNames.get("catalog-manager").toLowerCase();
+            co = roleNames.get("catalog-owner").toLowerCase();
             ro = roleNames.get("report-owner").toLowerCase();
             uao = roleNames.get("ua-owner").toLowerCase();
             olao = roleNames.get("ola-owner").toLowerCase();
@@ -82,7 +82,7 @@ public class RoleParsingTest {
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
-        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), co) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), olao) + postfix);
@@ -104,7 +104,7 @@ public class RoleParsingTest {
                        roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
                        roles.contains(Role.PROCESS_DEVELOPER) ||
-                       roles.contains(Role.CATALOG_MANAGER) ||
+                       roles.contains(Role.CATALOG_OWNER) ||
                        roles.contains(Role.REPORT_OWNER) ||
                        roles.contains(Role.UA_OWNER) ||
                        roles.contains(Role.OLA_OWNER) ||
@@ -273,7 +273,7 @@ public class RoleParsingTest {
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
-        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), co) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), olao) + postfix);
@@ -293,7 +293,7 @@ public class RoleParsingTest {
                 return roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
                        roles.contains(Role.PROCESS_DEVELOPER) ||
-                       roles.contains(Role.CATALOG_MANAGER) ||
+                       roles.contains(Role.CATALOG_OWNER) ||
                        roles.contains(Role.REPORT_OWNER) ||
                        roles.contains(Role.UA_OWNER) ||
                        roles.contains(Role.OLA_OWNER) ||
@@ -398,12 +398,12 @@ public class RoleParsingTest {
     }
 
     @Test
-    @DisplayName("CATALOG_MANAGER requires both VO and SLM group membership")
+    @DisplayName("CATALOG_OWNER requires both VO and SLM group membership")
     public void testCatalogManager() {
         // Setup entitlements
         userInfo.addEntitlement(prefix + "role=member" + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=member", imsConfig.group()) + postfix);
-        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
+        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), co) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
@@ -416,7 +416,7 @@ public class RoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it has the correct role
-                return roles.contains(Role.CATALOG_MANAGER) &&
+                return roles.contains(Role.CATALOG_OWNER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()

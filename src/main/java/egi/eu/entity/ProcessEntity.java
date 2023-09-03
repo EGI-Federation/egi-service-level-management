@@ -16,7 +16,7 @@ import java.util.Set;
 
 import egi.eu.model.Process;
 import egi.eu.model.Process.ProcessStatus;
-import org.hibernate.reactive.mutiny.Mutiny;
+import egi.eu.Utils;
 
 
 /***
@@ -82,22 +82,6 @@ public class ProcessEntity extends PanacheEntityBase {
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
     public UserEntity changeBy = null;
 
-
-    /***
-     * Compare two strings
-     * @param s1 The first string to compare, can be null
-     * @param s2 The second string to compare, can be null
-     * @return True if the strings are equal
-     */
-    private boolean equalStrings(String s1, String s2) {
-        if((null == s1) != (null == s2))
-            return false;
-
-        if(null != s1)
-            return s1.equals(s2);
-
-        return true;
-    }
 
     /***
      * Constructor
@@ -192,9 +176,9 @@ public class ProcessEntity extends PanacheEntityBase {
 
                 // See if this requirement has changed
                 boolean hasChanged = (
-                        !equalStrings(reqe.code, reql.code) ||
-                        !equalStrings(reqe.requirement, reql.requirement) ||
-                        !equalStrings(reqe.source, reql.source) ||
+                        !Utils.equalStrings(reqe.code, reql.code) ||
+                        !Utils.equalStrings(reqe.requirement, reql.requirement) ||
+                        !Utils.equalStrings(reqe.source, reql.source) ||
                        (null == reqe.responsibles) != (null == reql.responsibles));
 
                 if(!hasChanged && null != reqe.responsibles) {
@@ -240,10 +224,10 @@ public class ProcessEntity extends PanacheEntityBase {
 
                 // See if this interface has changed
                 boolean hasChanged = (
-                        !equalStrings(itfe.direction, itfl.direction) ||
-                        !equalStrings(itfe.description, itfl.description) ||
-                        !equalStrings(itfe.relevantMaterial, itfl.relevantMaterial) ||
-                        !equalStrings(itfe.interfacesWith, itfl.interfacesWith));
+                        !Utils.equalStrings(itfe.direction, itfl.direction) ||
+                        !Utils.equalStrings(itfe.description, itfl.description) ||
+                        !Utils.equalStrings(itfe.relevantMaterial, itfl.relevantMaterial) ||
+                        !Utils.equalStrings(itfe.interfacesWith, itfl.interfacesWith));
 
                 if(hasChanged)
                     this.interfaces.add(new Interface(itfe));

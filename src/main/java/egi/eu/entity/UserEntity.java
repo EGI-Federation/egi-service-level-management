@@ -14,6 +14,7 @@ import egi.eu.model.User;
  * Details of some user
  */
 @Entity
+@Cacheable
 @Table(name = "users")
 public class UserEntity extends PanacheEntityBase {
 

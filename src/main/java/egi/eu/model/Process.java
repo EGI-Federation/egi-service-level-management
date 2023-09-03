@@ -41,16 +41,17 @@ public class Process extends VersionInfo {
     @Schema(enumeration={ "Process" })
     public String kind = "Process";
 
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public Long id;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String code = PROCESS_CODE;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String goals;
+    public String goals; // Markdown
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String scope;
+    public String scope; // Markdown
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @Schema(format = "url")
@@ -178,10 +179,11 @@ public class Process extends VersionInfo {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String code;
 
-        public String requirement;
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public String requirement; // Markdown
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public String source;
+        public String source; // Markdown
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public Set<User> responsibles;
@@ -220,10 +222,10 @@ public class Process extends VersionInfo {
         public String direction;
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public String description;
+        public String description; // Markdown
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public String relevantMaterial;
+        public String relevantMaterial; // Markdown
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         @Schema(enumeration={ "Internal", "External", "Customer",

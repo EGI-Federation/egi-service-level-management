@@ -86,7 +86,7 @@ public class UsersTest {
     @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("List all users")
     public void testListUsersInVo() {
-        Users.PageOfUserInfos pu =
+        Users.PageOfUsers pu =
         given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer: " + BEARER_TOKEN)
             .queryParam("onlyGroup", "false")
@@ -96,14 +96,14 @@ public class UsersTest {
             .statusCode(Status.OK.getStatusCode())
             .body("kind", equalTo("UserList"))
             .body("users", not(emptyArray()))
-            .extract().body().as(Users.PageOfUserInfos.class);
+            .extract().body().as(Users.PageOfUsers.class);
     }
 
     @Test
     @TestSecurity(user = "test", roles = { Role.IMS_USER})
     @DisplayName("List group members")
     public void testListUsersInGroup() {
-        Users.PageOfUserInfos ul =
+        Users.PageOfUsers ul =
         given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer: " + BEARER_TOKEN)
             .queryParam("onlyGroup", "true")
@@ -113,7 +113,7 @@ public class UsersTest {
             .statusCode(Status.OK.getStatusCode())
             .body("kind", equalTo("UserList"))
             .body("users", not(emptyArray()))
-            .extract().body().as(Users.PageOfUserInfos.class);
+            .extract().body().as(Users.PageOfUsers.class);
     }
 
     /***

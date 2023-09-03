@@ -13,14 +13,12 @@ import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.vertx.mutiny.core.Vertx;
 import io.smallrye.mutiny.Uni;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -161,7 +159,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "createCatalog",  summary = "Create new catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Created",
@@ -265,7 +263,7 @@ public class Catalogs extends BaseResource {
     @PUT
     @Path("/catalog/{catalogId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "updateCatalog",  summary = "Update existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Updated",
@@ -321,7 +319,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog/{catalogId}/service")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "addService",  summary = "Add service to existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Added",
@@ -441,7 +439,7 @@ public class Catalogs extends BaseResource {
     @PUT
     @Path("/catalog/{catalogId}/service/{serviceId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "updateService",  summary = "Update service in existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Updated",
@@ -502,7 +500,7 @@ public class Catalogs extends BaseResource {
     @DELETE
     @Path("/catalog/{catalogId}/service/{serviceId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "removeService",  summary = "Remove service from existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Removed",
@@ -560,7 +558,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog/{catalogId}/review")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "reviewCatalog",  summary = "Review existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Reviewed",
@@ -687,7 +685,7 @@ public class Catalogs extends BaseResource {
     @DELETE
     @Path("/catalog/{catalogId}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "retireCatalog",  summary = "Retire existing catalog")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Retired",

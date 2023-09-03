@@ -139,7 +139,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                         final String po = rolePrefix + roleNames.get("process-owner").toLowerCase() + suffix;
                         final String pm = rolePrefix + roleNames.get("process-manager").toLowerCase() + suffix;
                         final String pd = rolePrefix + roleNames.get("process-developer").toLowerCase() + suffix;
-                        final String cm = rolePrefix + roleNames.get("catalog-manager").toLowerCase() + suffix;
+                        final String co = rolePrefix + roleNames.get("catalog-owner").toLowerCase() + suffix;
                         final String ro = rolePrefix + roleNames.get("report-owner").toLowerCase() + suffix;
                         final String uao = rolePrefix + roleNames.get("ua-owner").toLowerCase() + suffix;
                         final String olao = rolePrefix + roleNames.get("ola-owner").toLowerCase() + suffix;
@@ -165,8 +165,8 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                                 builder.addRole(Role.PROCESS_MANAGER);
                             else if (processMember && e.equals(pd))
                                 builder.addRole(Role.PROCESS_DEVELOPER);
-                            else if (processMember && e.equals(cm))
-                                builder.addRole(Role.CATALOG_MANAGER);
+                            else if (processMember && e.equals(co))
+                                builder.addRole(Role.CATALOG_OWNER);
                             else if (processMember && e.equals(ro))
                                 builder.addRole(Role.REPORT_OWNER);
                             else if (processMember && e.equals(uao))

@@ -7,6 +7,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.resteasy.reactive.RestHeader;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
@@ -15,11 +16,8 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.vertx.mutiny.core.Vertx;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -29,9 +27,11 @@ import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.CheckinUser;
+import egi.eu.entity.RoleEntity;
 import egi.eu.model.Role;
-import egi.eu.model.Page;
+import egi.eu.model.User;
 import egi.eu.model.UserInfo;
+import egi.eu.model.Page;
 
 
 /***
@@ -55,6 +55,9 @@ public class Users extends BaseResource {
     @Inject
     IntegratedManagementSystemConfig imsConfig;
 
+    @Inject
+    Mutiny.SessionFactory sf;
+
     // Parameter(s) to add to all endpoints
     @RestHeader(TEST_STUB)
     @Parameter(hidden = true)
@@ -65,12 +68,12 @@ public class Users extends BaseResource {
     /***
      * Page of users
      */
-    public static class PageOfUserInfos extends Page<UserInfo> {
-        public PageOfUserInfos(String baseUri, long offset, long limit, List<CheckinUser> users) {
+    public static class PageOfUsers extends Page<User> {
+        public PageOfUsers(String baseUri, long offset, long limit, List<CheckinUser> checkinUsers) {
             super();
 
-            var userInfos = users.stream().map(UserInfo::new).collect(Collectors.toList());
-            populate(baseUri, offset, limit, userInfos);
+            var users = checkinUsers.stream().map(User::new).collect(Collectors.toList());
+            populate(baseUri, offset, limit, users);
         }
     }
 
@@ -130,21 +133,22 @@ public class Users extends BaseResource {
                 // Get user info
                 return this.checkin.getUserInfoAsync(auth);
             })
-            .chain(userinfo -> {
+            .chain(checkinUser -> {
                 // Got user info, success
                 log.info("Got user info");
 
+                var user = new UserInfo(checkinUser);
                 var roles = identity.getRoles();
                 if(null != roles && !roles.isEmpty()) {
-                    userinfo.roles = new HashSet<>(roles);
+                    user.roles = new HashSet<>(roles);
 
                     // Do not return pseudo roles
-                    userinfo.roles.remove(Role.IMS_USER);
-                    userinfo.roles.remove(Role.IMS_ADMIN);
-                    userinfo.roles.remove(Role.PROCESS_MEMBER);
+                    user.roles.remove(Role.IMS_USER);
+                    user.roles.remove(Role.IMS_ADMIN);
+                    user.roles.remove(Role.PROCESS_MEMBER);
                 }
 
-                return Uni.createFrom().item(Response.ok(userinfo).build());
+                return Uni.createFrom().item(Response.ok(user).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to get user info");
@@ -160,7 +164,7 @@ public class Users extends BaseResource {
      * @param onlyProcess Filter out users that are not included in the configured Check-in group
      * @param offset The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
      */
     @GET
     @Path("/users")
@@ -170,7 +174,7 @@ public class Users extends BaseResource {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = PageOfUserInfos.class))),
+                    schema = @Schema(implementation = PageOfUsers.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -227,7 +231,7 @@ public class Users extends BaseResource {
                 // Got users, success
                 log.info("Got user list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
+                var page = new PageOfUsers(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -376,7 +380,7 @@ public class Users extends BaseResource {
      *      *                        all their roles reported, just the ones matching this expression.
      * @param offset The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfUserInfos}) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
      */
     @GET
     @Path("/users/roles")
@@ -386,7 +390,7 @@ public class Users extends BaseResource {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = PageOfUserInfos.class))),
+                    schema = @Schema(implementation = PageOfUsers.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -440,7 +444,7 @@ public class Users extends BaseResource {
                 // Got users holding roles, success
                 log.info("Got users with roles");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfUserInfos(uri.toString(), offset, limit, users);
+                var page = new PageOfUsers(uri.toString(), offset, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -487,7 +491,7 @@ public class Users extends BaseResource {
                                        @Parameter(description = "The role to assign to the user")
                                        @Schema(enumeration = {
                                                Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                               Role.CATALOG_MANAGER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                               Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
                                                Role.OLA_OWNER, Role.SLA_OWNER })
                                        String role) {
 
@@ -502,7 +506,7 @@ public class Users extends BaseResource {
                 role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
                 role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
                 role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
-                role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
+                role.equalsIgnoreCase(Role.CATALOG_OWNER) ||
                 role.equalsIgnoreCase(Role.REPORT_OWNER) ||
                 role.equalsIgnoreCase(Role.UA_OWNER) ||
                 role.equalsIgnoreCase(Role.OLA_OWNER) ||
@@ -573,7 +577,7 @@ public class Users extends BaseResource {
                                             @Parameter(description = "The role to revoke from the user")
                                             @Schema(enumeration = {
                                                     Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                                    Role.CATALOG_MANAGER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                                    Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
                                                     Role.OLA_OWNER, Role.SLA_OWNER })
                                             String role) {
 
@@ -588,7 +592,7 @@ public class Users extends BaseResource {
                 role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
                 role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
                 role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
-                role.equalsIgnoreCase(Role.CATALOG_MANAGER) ||
+                role.equalsIgnoreCase(Role.CATALOG_OWNER) ||
                 role.equalsIgnoreCase(Role.REPORT_OWNER) ||
                 role.equalsIgnoreCase(Role.UA_OWNER) ||
                 role.equalsIgnoreCase(Role.OLA_OWNER) ||
@@ -709,9 +713,7 @@ public class Users extends BaseResource {
     /**
      * List defined roles in the process.
      * @param auth The access token needed to call the service.
-     * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
-     * @param offset The number of elements to skip
-     * @param limit_ The maximum number of elements to return
+     * @param role Only return role matching this expression. If empty or null, all roles are returned.
      * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
      */
     @GET
@@ -731,48 +733,70 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> listRoles(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                   @Context UriInfo uriInfo,
-                                   @Context HttpHeaders httpHeaders,
 
                                    @RestQuery("role")
-                                   @Parameter(description = "Return only roles matching this expression")
-                                   String roleName,
-
-                                   @RestQuery("offset")
-                                   @Parameter(description = "Skip the first given number of results")
-                                   @Schema(defaultValue = "0")
-                                   long offset,
-
-                                   @RestQuery("limit")
-                                   @Parameter(description = "Restrict the number of results returned")
-                                   @Schema(defaultValue = "100")
-                                   long limit_) {
-
-        final long limit = (0 == limit_) ? 100 : limit_;
-
+                                   @Parameter(description = "Return only this role")
+                                   @Schema(enumeration = {
+                                           Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
+                                           Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                           Role.OLA_OWNER, Role.SLA_OWNER, Role.PROCESS_MEMBER })
+                                   String role)
+    {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("roleName", roleName);
-        addToDC("offset", offset);
-        addToDC("limit", limit);
+        addToDC("role", role);
 
-        log.info("Listing roles");
+        log.info("Listing role definitions");
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                // List roles
-                return Uni.createFrom().item(new ArrayList<Role>());
+                return null != role && !role.trim().isEmpty() ?
+                    sf.withSession(session -> RoleEntity.getRoleAllVersions(role.trim().toLowerCase())) :
+                    sf.withSession(session -> RoleEntity.getAllRoles());
             })
             .chain(roles -> {
                 // Got roles, success
-                log.info("Got roles");
-                var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfRoles(uri.toString(), offset, limit, roles);
+                log.info("Got role definitions");
+
+                if(null == roles || roles.isEmpty()) {
+                    var ae = new ActionError("notFound", "Unknown role", Tuple2.of("role", role));
+                    return Uni.createFrom().item(ae.toResponse());
+                }
+
+                var roleList = new ArrayList<Role>();
+                if(null == role) {
+                    // These are role records for multiple roles, we need to group them
+                    var roleMap = RoleEntity.groupRoles(roles);
+                    for(var entry : roleMap.entrySet()) {
+                        var roleWithHistory = new Role(entry.getValue());
+                        roleList.add(roleWithHistory);
+                    }
+
+                    roleList.sort(new Comparator<Role>() {
+                        @Override
+                        public int compare(Role lhs, Role rhs) {
+                            // -1 means lhs < rhs, 1 means lhs > rhs, 0 means equal for ascending sort
+                            if(null == lhs.globalRoleId && null != rhs.globalRoleId)
+                                return 1;
+                            else if(null != lhs.globalRoleId && null == rhs.globalRoleId)
+                                return -1;
+
+                            return lhs.name.compareTo(rhs.name);
+                        }
+                    });
+                }
+                else {
+                    // These are role records (versions) of a single role
+                    var roleWithHistory = new Role(roles);
+                    roleList.add(roleWithHistory);
+                }
+
+                var page = new PageOfRoles("#", 0, 100, roleList);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to list roles");
+                log.error("Failed to list role definitions");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
 

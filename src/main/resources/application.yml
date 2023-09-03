@@ -10,7 +10,7 @@ egi:
       process-owner: process-owner
       process-manager: process-manager
       process-developer: process-developer
-      catalog-manager: catalog-manager
+      catalog-owner: catalog-owner
       sla-owner: sla-owner
       ola-owner: ola-owner
       ua-owner: ua-owner
@@ -127,7 +127,7 @@ quarkus:
     reactive:
       url: postgresql://localhost:5432/ims
       additional-properties:
-        search_path: slm
+        search_path: slm # Default schema
     username: ims
     password: password
     devservices:
@@ -138,10 +138,15 @@ quarkus:
   hibernate-orm:
     log:
       sql: true
+      bind-parameters: false
+      queries-slower-than-ms: 10
+    metrics:
+      enabled: true
 
 "%dev":
   quarkus:
     hibernate-orm:
+      sql-load-script: import.sql
       database:
         generation: drop-and-create
 
@@ -150,3 +155,5 @@ quarkus:
     hibernate-orm:
       database:
         generation: none
+      log:
+        sql: false

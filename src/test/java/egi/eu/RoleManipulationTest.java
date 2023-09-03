@@ -45,7 +45,7 @@ public class RoleManipulationTest {
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
-//        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), cm) + postfix);
+//        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), co) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), ro) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), uao) + postfix);
 //        userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), olao) + postfix);
@@ -67,7 +67,7 @@ public class RoleManipulationTest {
 //                       roles.contains(Role.PROCESS_OWNER) ||
 //                       roles.contains(Role.PROCESS_MANAGER) ||
 //                       roles.contains(Role.PROCESS_DEVELOPER) ||
-//                       roles.contains(Role.CATALOG_MANAGER) ||
+//                       roles.contains(Role.CATALOG_OWNER) ||
 //                       roles.contains(Role.REPORT_OWNER) ||
 //                       roles.contains(Role.UA_OWNER) ||
 //                       roles.contains(Role.OLA_OWNER) ||
