@@ -14,16 +14,39 @@ import java.util.List;
 public class KeyPerformanceIndicator extends VersionInfo {
 
     public enum KeyPerformanceIndicatorStatus {
-        DRAFT,
-        READY_FOR_APPROVAL,
-        APPROVED,
-        DEPRECATED
+        DRAFT(0),
+        READY_FOR_APPROVAL(1),
+        APPROVED(2),
+        DEPRECATED(3);
+
+        private final int value;
+        private KeyPerformanceIndicatorStatus(int value) { this.value = value; }
+        public int getValue() { return value; }
+        public static KeyPerformanceIndicatorStatus of(int value) {
+            return switch(value) {
+                case 1 -> READY_FOR_APPROVAL;
+                case 2 -> APPROVED;
+                case 3 -> DEPRECATED;
+                default -> DRAFT;
+            };
+        }
     }
 
     public enum KeyPerformanceIndicatorEscalation {
-        NONE,
-        PROCESS_OWNER,
-        IMS_MANAGER
+        NONE(0),
+        PROCESS_MANAGER(1),
+        IMS_MANAGER(2);
+
+        private final int value;
+        private KeyPerformanceIndicatorEscalation(int value) { this.value = value; }
+        public int getValue() { return value; }
+        public static KeyPerformanceIndicatorEscalation of(int value) {
+            return switch(value) {
+                case 1 -> PROCESS_MANAGER;
+                case 2 -> IMS_MANAGER;
+                default -> NONE;
+            };
+        }
     }
 
     @Schema(enumeration={ "KeyPerformanceIndicator" })

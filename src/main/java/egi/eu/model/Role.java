@@ -25,7 +25,7 @@ public class Role extends VersionInfo {
     public final static String SLA_OWNER = "sla-owner";
 
     // Pseudo-roles that can be used in API endpoint annotations to define access,
-    // but are not considered/returned by the API endpoints
+    // but are not considered/returned by the API endpoints nor stored in Check-in
     public final static String IMS_USER = "ims";        // Marks membership in the VO
     public final static String IMS_ADMIN = "admin";     // Marks being an IMS admin (owner/manager/coordinator)
     public final static String PROCESS_MEMBER = "process-staff";  // Marks membership in the group

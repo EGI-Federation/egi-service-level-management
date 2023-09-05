@@ -15,11 +15,24 @@ import java.util.List;
 public class Procedure extends VersionInfo {
 
     public enum ProcedureStatus {
-        DRAFT,
-        READY_FOR_APPROVAL,
-        APPROVED,
-        IMPLEMENTED,
-        DEPRECATED
+        DRAFT(0),
+        READY_FOR_APPROVAL(1),
+        APPROVED(2),
+        IMPLEMENTED(3),
+        DEPRECATED(4);
+
+        private final int value;
+        private ProcedureStatus(int value) { this.value = value; }
+        public int getValue() { return value; }
+        public static ProcedureStatus of(int value) {
+            return switch(value) {
+                case 1 -> READY_FOR_APPROVAL;
+                case 2 -> APPROVED;
+                case 3 -> IMPLEMENTED;
+                case 4 -> DEPRECATED;
+                default -> DRAFT;
+            };
+        }
     }
 
     @Schema(enumeration={ "Procedure" })
