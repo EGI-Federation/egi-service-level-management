@@ -9,6 +9,7 @@ import egi.checkin.model.CheckinUser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -40,6 +41,9 @@ public class UserInfo extends User {
     @JsonProperty("eduperson_entitlement")
     public List<String> entitlements;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public Set<String> roles;
+
 
     /***
      * Constructor
@@ -52,18 +56,21 @@ public class UserInfo extends User {
     public UserInfo(CheckinUser u) {
         super(u);
 
-        this.firstName = u.firstName;
-        this.lastName = u.lastName;
-        this.emailIsVerified = u.emailIsVerified;
+        if(null != u) {
+            this.firstName = u.firstName;
+            this.lastName = u.lastName;
+            this.emailIsVerified = u.emailIsVerified;
+            this.roles  = u.roles;
 
-        if(null != u.assurances) {
-            this.assurances = new ArrayList<>(u.assurances.size());
-            this.assurances.addAll(u.assurances);
-        }
+            if (null != u.assurances) {
+                this.assurances = new ArrayList<>(u.assurances.size());
+                this.assurances.addAll(u.assurances);
+            }
 
-        if(null != u.entitlements) {
-            this.entitlements = new ArrayList<>(u.entitlements.size());
-            this.entitlements.addAll(u.entitlements);
+            if (null != u.entitlements) {
+                this.entitlements = new ArrayList<>(u.entitlements.size());
+                this.entitlements.addAll(u.entitlements);
+            }
         }
     }
 }

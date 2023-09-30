@@ -1,5 +1,6 @@
 package egi.eu;
 
+import egi.eu.model.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -27,11 +28,8 @@ import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.CheckinUser;
+import egi.eu.entity.UserEntity;
 import egi.eu.entity.RoleEntity;
-import egi.eu.model.Role;
-import egi.eu.model.User;
-import egi.eu.model.UserInfo;
-import egi.eu.model.Page;
 
 
 /***
@@ -68,11 +66,11 @@ public class Users extends BaseResource {
     /***
      * Page of users
      */
-    public static class PageOfUsers extends Page<User> {
+    public static class PageOfUsers extends Page<UserInfo> {
         public PageOfUsers(String baseUri, long offset, long limit, List<CheckinUser> checkinUsers) {
             super();
 
-            var users = checkinUsers.stream().map(User::new).collect(Collectors.toList());
+            var users = checkinUsers.stream().map(UserInfo::new).collect(Collectors.toList());
             populate(baseUri, offset, limit, users);
         }
     }
@@ -82,6 +80,14 @@ public class Users extends BaseResource {
      */
     public static class PageOfRoles extends Page<Role> {
         public PageOfRoles(String baseUri, long offset, long limit, List<Role> roles) {
+            super(baseUri, offset, limit, roles); }
+    }
+
+    /***
+     * Page of role infos
+     */
+    public static class PageOfRoleInfos extends Page<RoleInfo> {
+        public PageOfRoleInfos(String baseUri, long offset, long limit, List<RoleInfo> roles) {
             super(baseUri, offset, limit, roles); }
     }
 
@@ -465,7 +471,7 @@ public class Users extends BaseResource {
     @Path("/role/{checkinUserId}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "addRoleToUser",  summary = "Assign a role to a user",
+    @Operation(operationId = "assignRoleToUser",  summary = "Assign a role to a user",
                description ="To assign roles to a user, the user must be included in the SLM process.")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Assigned",
@@ -481,19 +487,19 @@ public class Users extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> addRoleToUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> assignRoleToUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                       @RestPath("checkinUserId")
-                                       @Parameter(description = "Id of user to assign the role to")
-                                       int checkinUserId,
+                                          @RestPath("checkinUserId")
+                                          @Parameter(description = "Id of user to assign the role to")
+                                          int checkinUserId,
 
-                                       @RestQuery("role")
-                                       @Parameter(description = "The role to assign to the user")
-                                       @Schema(enumeration = {
-                                               Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                               Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
-                                               Role.OLA_OWNER, Role.SLA_OWNER })
-                                       String role) {
+                                          @RestQuery("role")
+                                          @Parameter(description = "The role to assign to the user")
+                                          @Schema(enumeration = {
+                                                  Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
+                                                  Role.CATALOG_OWNER, Role.REPORT_OWNER,
+                                                  Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
+                                          String role) {
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -577,8 +583,8 @@ public class Users extends BaseResource {
                                             @Parameter(description = "The role to revoke from the user")
                                             @Schema(enumeration = {
                                                     Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                                    Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
-                                                    Role.OLA_OWNER, Role.SLA_OWNER })
+                                                    Role.CATALOG_OWNER, Role.REPORT_OWNER,
+                                                    Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
                                             String role) {
 
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
@@ -635,7 +641,7 @@ public class Users extends BaseResource {
      * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
      * @param offset The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess({@link PageOfRoleInfos}) or an ActionError entity
      */
     @GET
     @Path("/roles/assigned")
@@ -645,7 +651,7 @@ public class Users extends BaseResource {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = PageOfRoles.class))),
+                    schema = @Schema(implementation = PageOfRoleInfos.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -699,7 +705,7 @@ public class Users extends BaseResource {
                 // Got roles, success
                 log.info("Got assigned roles");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfRoles(uri.toString(), offset, limit, roles);
+                var page = new PageOfRoleInfos(uri.toString(), offset, limit, roles);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -744,7 +750,7 @@ public class Users extends BaseResource {
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("role", role);
+        addToDC("roleName", role);
 
         log.info("Listing role definitions");
 
@@ -809,7 +815,7 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess({@link Role}) or an ActionError entity
      */
     @PUT
-    @Path("/role/definition")
+    @Path("/role")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateRole",  summary = "Update role definition")
@@ -827,25 +833,67 @@ public class Users extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-
-                                    Role role)
+    public Uni<Response> updateRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Role role)
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("roleName", role.role);
+        addToDC("role", role);
 
-        log.info("Updating role definition");
+        log.info("Updating role");
 
-        Uni<Response> result = Uni.createFrom().item(new Role())
+        if(null == role.changeBy || null == role.changeBy.checkinUserId || role.changeBy.checkinUserId < 0) {
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == role.role || role.role.trim().isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role constant is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
 
+        var latest = new ArrayList<RoleEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest role version
+                    RoleEntity.getRoleLastVersion(role.role.trim().toLowerCase())
+                    .chain(latestRole -> {
+                        // Got the latest version
+                        final var latestStatus = Role.RoleStatus.of(latestRole.status);
+                        if(Role.RoleStatus.DEPRECATED == latestStatus)
+                            // Cannot update deprecated entities
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot update deprecated role"));
+
+                        latest.add(latestRole);
+
+                        // Check if caller user already exist in the database
+                        UserEntity existingUser = null;
+                        if(null != latestRole.changeBy && role.changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
+                            existingUser = latestRole.changeBy;
+                        if(null != existingUser)
+                            return Uni.createFrom().item(existingUser);
+
+                        return UserEntity.findByCheckinUserId(role.changeBy.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got caller user, if it exists in the database
+                        // Create new role version
+                        var latestRole = latest.get(0);
+                        var newRole = new RoleEntity(role, latestRole, existingUser);
+                        return session.persist(newRole);
+                    });
+                });
+            })
             .chain(updated -> {
                 // Update complete, success
-                log.info("Updated role definition");
-                return Uni.createFrom().item(Response.ok(updated).build());
+                log.info("Updated role");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated"))
+                                                     .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to update role definition");
+                log.error("Failed to update role");
                 return new ActionError(e).toResponse();
             });
 
