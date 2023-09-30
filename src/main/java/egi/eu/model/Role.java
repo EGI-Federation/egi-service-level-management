@@ -7,6 +7,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 
 /***
@@ -78,7 +79,8 @@ public class Role extends VersionInfo {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String globalRoleTasks; // Markdown
 
-    public RoleStatus status = RoleStatus.DRAFT;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public RoleStatus status = null;
 
     // Change history
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -138,27 +140,5 @@ public class Role extends VersionInfo {
         var olderVersions = roleVersions.stream().skip(1).map(Role::new).toList();
         if(!olderVersions.isEmpty())
             this.history = new HistoryOfRole(olderVersions);
-    }
-
-    /***
-     * Record that a user has this role assigned
-     * @param user The user the role is assigned to
-     */
-    public Role addUser(User user) {
-        if(null == this.users)
-            this.users = new ArrayList<>();
-
-        this.users.add(user);
-
-        return this;
-    }
-
-    /***
-     * Record that a user has this role assigned
-     * @param user The user the role is assigned to
-     */
-    public Role addUser(CheckinUser user) {
-        this.addUser(new User(user));
-        return this;
     }
 }

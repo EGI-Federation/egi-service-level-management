@@ -109,7 +109,7 @@ public class ProcessEntity extends PanacheEntityBase {
         this.urlDiagram = process.urlDiagram;
         this.status = newStatus.getValue();
 
-        // Copy requirement
+        // Copy requirements
         if(null != process.requirements) {
             this.requirements = new HashSet<>();
             this.requirements.addAll(process.requirements);
@@ -134,7 +134,7 @@ public class ProcessEntity extends PanacheEntityBase {
         // Copy simple fields
         this.changeDescription = process.changeDescription;
         if(null != process.changeBy) {
-            if(users.containsKey(process.changeBy.checkinUserId))
+            if(null != users && users.containsKey(process.changeBy.checkinUserId))
                 this.changeBy = users.get(process.changeBy.checkinUserId);
             else
                 this.changeBy = new UserEntity(process.changeBy);

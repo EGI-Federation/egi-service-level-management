@@ -2,7 +2,6 @@ package egi.checkin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import egi.eu.model.Role;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import io.smallrye.mutiny.Uni;
@@ -21,9 +20,10 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import egi.checkin.model.*;
 import egi.eu.IntegratedManagementSystemConfig;
 import egi.eu.ActionException;
+import egi.eu.model.RoleInfo;
+import egi.checkin.model.*;
 
 
 /**
@@ -375,6 +375,11 @@ public class Checkin {
 
                 return Uni.createFrom().item(updatedObject);
             })
+            .chain(updated -> {
+                // Success, invalidate role cache
+                Checkin.roleRecords = null;
+                return Uni.createFrom().item(updated);
+            })
             .onFailure().recoverWithUni(e -> {
                 log.errorf("Failed to %s membership record", deletedRoles.isEmpty() ? "add" : "restore");
 
@@ -455,6 +460,8 @@ public class Checkin {
             })
             .chain(updated -> {
                 // Membership record marked deleted, success
+                // Invalidate role cache
+                Checkin.roleRecords = null;
                 return Uni.createFrom().item(true);
             })
             .onFailure().recoverWithUni(e -> {
@@ -610,13 +617,13 @@ public class Checkin {
      *                 all their roles reported, just the ones matching this expression.
      * @return List of all users holding effective roles in the group, see also {@link CheckinUser}
      */
-    public Uni<List<Role>> listGroupRolesAsync(String groupName, String roleName) {
+    public Uni<List<RoleInfo>> listGroupRolesAsync(String groupName, String roleName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
         }
 
-        Uni<List<Role>> result = Uni.createFrom().nullItem()
+        Uni<List<RoleInfo>> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 // Check-in does not enforce that users in a group are enrolled in the group's parent VO.
@@ -637,7 +644,7 @@ public class Checkin {
                     return Uni.createFrom().failure(new ActionException("notReady"));
 
                 // Return roles
-                List<Role> roles = rolesWithUsers.values().stream().toList();
+                List<RoleInfo> roles = rolesWithUsers.values().stream().toList();
                 return Uni.createFrom().item(roles);
             })
             .onFailure().invoke(e -> {
@@ -655,7 +662,7 @@ public class Checkin {
      *         Unlike the cached list of VO members, the users in the returned roles
      *         will have their <b>roles</b> field filled.
      */
-    private Map<String, Role> filterToGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
+    private Map<String, RoleInfo> filterToGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
         if (!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group roles, VO members not loaded");
@@ -679,7 +686,7 @@ public class Checkin {
 
         var voUsers = voMembers;
         Map<Long, CheckinUser> users = new HashMap<>(); // Users with assigned roles
-        Map<String, Role> roles = new HashMap<>();   // Roles assigned in the group
+        Map<String, RoleInfo> roles = new HashMap<>();   // Roles assigned in the group
         Map<String, Set<Long>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
         for (var roleRecord : records) {
             if (roleRecord.deleted || !roleRecord.status.equalsIgnoreCase("Active"))
@@ -690,7 +697,7 @@ public class Checkin {
             var user = new CheckinUser(roleRecord);
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
-                Role role = null;
+                RoleInfo role = null;
                 Set<Long> usersWithRole = null;
                 if(roles.containsKey(roleRecord.role)) {
                     role = roles.get(roleRecord.role);
@@ -698,7 +705,7 @@ public class Checkin {
                 }
                 else {
                     // This is a role we see for the first time
-                    role = new Role(roleRecord.role);
+                    role = new RoleInfo(roleRecord.role);
                     roles.put(roleRecord.role, role);
 
                     usersWithRole = new HashSet<>();
@@ -851,6 +858,11 @@ public class Checkin {
 
                 return Uni.createFrom().item(updatedObject);
             })
+            .chain(updated -> {
+                // Success, invalidate role cache
+                Checkin.roleRecords = null;
+                return Uni.createFrom().item(updated);
+            })
             .onFailure().recoverWithUni(e -> {
                 log.errorf("Failed to %s role record", deletedRoles.isEmpty() ? "add" : "restore");
 
@@ -932,6 +944,8 @@ public class Checkin {
             })
             .chain(updated -> {
                 // Role record marked deleted, success
+                // Invalidate role cache
+                Checkin.roleRecords = null;
                 return Uni.createFrom().item(true);
             })
             .onFailure().recoverWithUni(e -> {

@@ -194,7 +194,7 @@ public class Configuration extends BaseResource {
 
                         latest.add(latestProcess);
 
-                        // Get all users linked to this process that already exist in the database
+                        // Get users linked to this process that already exist in the database
                         var ids = new HashSet<Long>();
                         if(null != process.changeBy)
                             ids.add(process.changeBy.checkinUserId);

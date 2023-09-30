@@ -1,3 +1,7 @@
+insert into slm.users (checkinuserid, fullname, email)
+values (6166, 'Levente Farkas', 'levente@egi.eu'),
+       (171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
+
 insert into slm.roles (role, name, version, status, changedon, changedescription, tasks, globalRoleId)
 values ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 1),
        ('process-manager', 'Process Manager', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 2),
@@ -25,7 +29,7 @@ values ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Perform regular reviews of the UA
 - Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions', null),
        ('process-developer', 'Process Developer', 1, 0, '2023-09-02T19:23:18', 'First version', '...', null),
-       ('process-developer', 'Process Developer', 2, 0, '2023-09-02T19:23:18', 'First version',
+       ('process-developer', 'Process Developer', 2, 0, '2023-09-02T19:23:18', 'Second version',
         '- Develop the necessary software changes to the SLM API that implement the changes in draft process, procedure, KPI, and role versions
 - Improve the IMS front-end to allow exploiting all features of the SLM API', null);
 
@@ -37,11 +41,9 @@ values (1, 2),
        (5, 2),
        (6, 2),
        (7, 2),
-       (9, 1);
-
-insert into slm.users (checkinuserid, fullname, email)
-values (6166, 'Levente Farkas', 'levente@egi.eu'),
-       (171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
+       (8, 1),
+       (9, 1),
+       (10, 2);
 
 insert into slm.processes (goals, scope, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
 VALUES ('The primary purpose of this process is...',
