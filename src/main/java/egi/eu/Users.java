@@ -723,7 +723,7 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
      */
     @GET
-    @Path("/roles")
+    @Path("/role/definitions")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.IMS_USER)
     @Operation(operationId = "listRoles",  summary = "List role definitions")
@@ -815,7 +815,7 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PUT
-    @Path("/role")
+    @Path("/role/definition")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateRole",  summary = "Update role definition")
@@ -909,12 +909,12 @@ public class Users extends BaseResource {
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
-    @Path("/role/{role}")
+    @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "implementRole",  summary = "Mark role definition as implemented")
     @APIResponses(value = {
-            @APIResponse(responseCode = "201", description = "Updated",
+            @APIResponse(responseCode = "201", description = "Implemented",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionSuccess.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
@@ -938,6 +938,7 @@ public class Users extends BaseResource {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("roleName", role);
+        addToDC("change", change);
 
         log.info("Implementing role");
 

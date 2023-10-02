@@ -77,10 +77,6 @@ public class RoleEntity extends PanacheEntityBase {
         super();
 
         // Copy simple fields
-        this.changeDescription = role.changeDescription;
-        this.changeBy = role.changeBy;
-        this.version = role.version + 1;
-
         this.role = role.role;
         this.name = role.name;
         this.tasks = role.tasks;
@@ -88,6 +84,8 @@ public class RoleEntity extends PanacheEntityBase {
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
         this.status = newStatus.getValue();
+
+        this.version = role.version + 1;
     }
 
     /***
