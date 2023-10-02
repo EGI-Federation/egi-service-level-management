@@ -30,7 +30,7 @@ values ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions', null),
        ('process-developer', 'Process Developer', 1, 0, '2023-09-02T19:23:18', 'First version', '...', null),
        ('process-developer', 'Process Developer', 2, 0, '2023-09-02T19:23:18', 'Second version',
-        '- Develop the necessary software changes to the SLM API that implement the changes in draft process, procedure, KPI, and role versions
+        '- Make the necessary software changes to the SLM API so that requested changes to process, procedure, KPI, and role entities are implemented
 - Improve the IMS front-end to allow exploiting all features of the SLM API', null);
 
 insert into slm.role_editor (role_id, user_id)

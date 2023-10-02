@@ -97,9 +97,6 @@ public class ProcessEntity extends PanacheEntityBase {
         super();
 
         // Copy simple fields
-        this.changeDescription = process.changeDescription;
-        this.changeBy = process.changeBy;
-
         this.goals = process.goals;
         this.scope = process.scope;
         this.contact = process.contact;

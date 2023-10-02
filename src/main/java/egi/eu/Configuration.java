@@ -236,7 +236,7 @@ public class Configuration extends BaseResource {
     /**
      * Mark process as ready for approval.
      * @param auth The access token needed to call the service.
-     * @param user The user asking for approval.
+     * @param change The user asking for approval.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
@@ -255,16 +255,17 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> requestApproval(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, User user)
+    public Uni<Response> requestApproval(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Change change)
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
-        addToDC("user", user);
+        addToDC("change", change);
 
         log.info("Requesting process approval");
 
-        if(null == user || null == user.checkinUserId || user.checkinUserId < 0) {
+        if(null == change || null == change.changeBy ||
+           null == change.changeBy.checkinUserId || change.changeBy.checkinUserId < 0) {
             // No anonymous changes allowed
             var ae = new ActionError("badRequest", "Check-in identity is required");
             return Uni.createFrom().item(ae.toResponse());
@@ -288,13 +289,13 @@ public class Configuration extends BaseResource {
 
                         // Check if the calling user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && user.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                        if(null != latestProcess.changeBy && change.changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
                             existingUser = latestProcess.changeBy;
                         else if(null != latestProcess.requirements) {
                             for(var req : latestProcess.requirements) {
                                 if (null != req.responsibles)
                                     for(var resp : req.responsibles)
-                                        if (user.checkinUserId.equals(resp.checkinUserId)) {
+                                        if (change.changeBy.checkinUserId.equals(resp.checkinUserId)) {
                                             existingUser = resp;
                                             break;
                                         }
@@ -305,18 +306,18 @@ public class Configuration extends BaseResource {
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
-                        return UserEntity.findByCheckinUserId(user.checkinUserId);
+                        return UserEntity.findByCheckinUserId(change.changeBy.checkinUserId);
                     })
                     .chain(existingUser -> {
                         // Got the user from the database, if it exists
                         if(null == existingUser)
-                            existingUser = new UserEntity(user);
+                            existingUser = new UserEntity(change.changeBy);
 
                         // Create new process version
                         var latestProcess = latest.get(0);
                         var newProcess = new ProcessEntity(latestProcess, ProcessStatus.READY_FOR_APPROVAL);
                         newProcess.changeBy = existingUser;
-                        newProcess.changeDescription = null;
+                        newProcess.changeDescription = change.changeDescription;
 
                         return session.persist(newProcess);
                     });
@@ -358,7 +359,7 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> approveChanges(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Approval approval)
+    public Uni<Response> approveChanges(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Change approval)
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
@@ -366,18 +367,19 @@ public class Configuration extends BaseResource {
         addToDC("approval", approval);
 
         if(null == approval || null == approval.operation || !(
-                approval.operation.equalsIgnoreCase(Approval.OPERATION_APPROVE) ||
-                approval.operation.equalsIgnoreCase(Approval.OPERATION_REJECT)) ) {
+                approval.operation.equalsIgnoreCase(Change.OPERATION_APPROVE) ||
+                approval.operation.equalsIgnoreCase(Change.OPERATION_REJECT)) ) {
             var operation = (null == approval || null == approval.operation) ? "null" : approval.operation;
             var ae = new ActionError("badRequest", "Unknown approval operation",
-                    Tuple2.of("operation", operation));
+                                     Tuple2.of("operation", operation));
             return Uni.createFrom().item(ae.toResponse());
         }
 
-        boolean approve = approval.operation.equals(Approval.OPERATION_APPROVE);
+        boolean approve = approval.operation.equals(Change.OPERATION_APPROVE);
         log.infof("%s process changes", approve ? "Approving" : "Rejecting");
 
-        if(null == approval.approver || null == approval.approver.checkinUserId || approval.approver.checkinUserId < 0) {
+        if(null == approval || null == approval.changeBy ||
+           null == approval.changeBy.checkinUserId || approval.changeBy.checkinUserId < 0) {
             // No anonymous changes allowed
             var ae = new ActionError("badRequest", "Check-in identity is required");
             return Uni.createFrom().item(ae.toResponse());
@@ -401,13 +403,13 @@ public class Configuration extends BaseResource {
 
                         // Check if the approving user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && approval.approver.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                        if(null != latestProcess.changeBy && approval.changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
                             existingUser = latestProcess.changeBy;
                         else if(null != latestProcess.requirements) {
                             for(var req : latestProcess.requirements) {
                                 if (null != req.responsibles)
                                     for(var resp : req.responsibles)
-                                        if(approval.approver.checkinUserId.equals(resp.checkinUserId)) {
+                                        if(approval.changeBy.checkinUserId.equals(resp.checkinUserId)) {
                                             existingUser = resp;
                                             break;
                                         }
@@ -418,16 +420,16 @@ public class Configuration extends BaseResource {
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
-                        return UserEntity.findByCheckinUserId(approval.approver.checkinUserId);
+                        return UserEntity.findByCheckinUserId(approval.changeBy.checkinUserId);
                     })
                     .chain(existingUser -> {
                         // Got the user from the database, if it exists
                         if(null == existingUser)
-                            existingUser = new UserEntity(approval.approver);
+                            existingUser = new UserEntity(approval.changeBy);
 
                         // Create new process version
                         var latestProcess = latest.get(0);
-                        var newStatus = approval.operation.equalsIgnoreCase(Approval.OPERATION_APPROVE) ?
+                        var newStatus = approval.operation.equalsIgnoreCase(Change.OPERATION_APPROVE) ?
                                         ProcessStatus.APPROVED : ProcessStatus.DRAFT;
                         var newProcess = new ProcessEntity(latestProcess, newStatus);
                         newProcess.changeBy = existingUser;
@@ -455,7 +457,7 @@ public class Configuration extends BaseResource {
     /**
      * Deprecate process.
      * @param auth The access token needed to call the service.
-     * @param user The user deprecating the process.
+     * @param change The user deprecating the process.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @DELETE
@@ -474,16 +476,17 @@ public class Configuration extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> deprecateProcess(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, User user)
+    public Uni<Response> deprecateProcess(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Change change)
     {
         addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
         addToDC("processName", imsConfig.group());
-        addToDC("user", user);
+        addToDC("change", change);
 
         log.info("Deprecating process");
 
-        if(null == user || null == user.checkinUserId || user.checkinUserId < 0) {
+        if(null == change || null == change.changeBy ||
+           null == change.changeBy.checkinUserId || change.changeBy.checkinUserId < 0) {
             // No anonymous changes allowed
             var ae = new ActionError("badRequest", "Check-in identity is required");
             return Uni.createFrom().item(ae.toResponse());
@@ -507,13 +510,13 @@ public class Configuration extends BaseResource {
 
                         // Check if the calling user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && user.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
+                        if(null != latestProcess.changeBy && change.changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
                             existingUser = latestProcess.changeBy;
                         else if(null != latestProcess.requirements) {
                             for(var req : latestProcess.requirements) {
                                 if (null != req.responsibles)
                                     for(var resp : req.responsibles)
-                                        if (user.checkinUserId.equals(resp.checkinUserId)) {
+                                        if (change.changeBy.checkinUserId.equals(resp.checkinUserId)) {
                                             existingUser = resp;
                                             break;
                                         }
@@ -524,18 +527,18 @@ public class Configuration extends BaseResource {
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
-                        return UserEntity.findByCheckinUserId(user.checkinUserId);
+                        return UserEntity.findByCheckinUserId(change.changeBy.checkinUserId);
                     })
                     .chain(existingUser -> {
                         // Got the user from the database, if it exists
                         if(null == existingUser)
-                            existingUser = new UserEntity(user);
+                            existingUser = new UserEntity(change.changeBy);
 
                         // Create new process version
                         var latestProcess = latest.get(0);
                         var newProcess = new ProcessEntity(latestProcess, ProcessStatus.DEPRECATED);
                         newProcess.changeBy = existingUser;
-                        newProcess.changeDescription = null;
+                        newProcess.changeDescription = change.changeDescription;
 
                         return session.persist(newProcess);
                     });
