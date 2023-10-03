@@ -904,7 +904,7 @@ public class Users extends BaseResource {
     }
 
     /**
-     * Mark role definition as implemented.
+     * Implement role as implemented.
      * @param auth The access token needed to call the service.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
@@ -912,7 +912,7 @@ public class Users extends BaseResource {
     @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "implementRole",  summary = "Mark role definition as implemented")
+    @Operation(operationId = "implementRole",  summary = "Implement role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Implemented",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -1001,6 +1001,110 @@ public class Users extends BaseResource {
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to implement role");
+                return new ActionError(e).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * Deprecate role.
+     * @param auth The access token needed to call the service.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @DELETE
+    @Path("/role/definition/{role}")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @Operation(operationId = "deprecateRole",  summary = "Deprecate role")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Deprecated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> deprecateRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
+                                       @RestPath("role")
+                                       @Parameter(description = "The role to deprecate")
+                                       String role,
+
+                                       Change change)
+    {
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("roleName", role);
+        addToDC("change", change);
+
+        log.info("Deprecating role");
+
+        if(null == change || null == change.changeBy ||
+           null == change.changeBy.checkinUserId || change.changeBy.checkinUserId < 0) {
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == role || role.isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        var latest = new ArrayList<RoleEntity>();
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest role version
+                    RoleEntity.getRoleLastVersion(role.toLowerCase())
+                    .chain(latestRole -> {
+                        // Got the latest version
+                        if(null == latestRole)
+                            return Uni.createFrom().failure(new ActionException("notFound", "Unknown role"));
+
+                        final var latestStatus = Role.RoleStatus.of(latestRole.status);
+                        if(Role.RoleStatus.DRAFT != latestStatus)
+                            // Can only deprecate implemented entities
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot deprecate in this status"));
+
+                        latest.add(latestRole);
+
+                        // Check if caller user already exist in the database
+                        UserEntity existingUser = null;
+                        if(null != latestRole.changeBy && change.changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
+                            existingUser = latestRole.changeBy;
+                        if(null != existingUser)
+                            return Uni.createFrom().item(existingUser);
+
+                        return UserEntity.findByCheckinUserId(change.changeBy.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got caller user, if it exists in the database
+                        // Create new role version
+                        var latestRole = latest.get(0);
+                        var newRole = new RoleEntity(latestRole, Role.RoleStatus.DEPRECATED);
+                        newRole.changeBy = existingUser;
+                        newRole.changeDescription = change.changeDescription;
+                        return session.persist(newRole);
+                    });
+                });
+            })
+            .chain(updated -> {
+                // Deprecation complete, success
+                log.info("Deprecated role");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated"))
+                                                     .status(Response.Status.CREATED).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to deprecate role");
                 return new ActionError(e).toResponse();
             });
 
