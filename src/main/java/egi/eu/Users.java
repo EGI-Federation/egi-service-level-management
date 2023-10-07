@@ -810,6 +810,89 @@ public class Users extends BaseResource {
     }
 
     /**
+     * Add new role definition.
+     * @param auth The access token needed to call the service.
+     * @return API Response, wraps an ActionSuccess or an ActionError entity
+     */
+    @POST
+    @Path("/role/definition")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @Operation(operationId = "addRole",  summary = "Add new role")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "201", description = "Added",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionSuccess.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> addRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Role role)
+    {
+        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("role", role);
+
+        log.info("Adding role");
+
+        if(null == role.changeBy || null == role.changeBy.checkinUserId || role.changeBy.checkinUserId < 0) {
+            // No anonymous changes allowed
+            var ae = new ActionError("badRequest", "Check-in identity is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == role.role || role.role.isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role constant is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == role.name || role.name.isEmpty()) {
+            // Role name be specified
+            var ae = new ActionError("badRequest", "Role name is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withTransaction((session, tx) -> { return
+                    // Get the latest role version
+                    RoleEntity.getRoleAllVersions(role.role.toLowerCase())
+                    .chain(roleVersions -> {
+                        // Got all versions of a role with the specified name
+                        if(null != roleVersions && !roleVersions.isEmpty())
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Role must be unique"));
+
+                        return UserEntity.findByCheckinUserId(role.changeBy.checkinUserId);
+                    })
+                    .chain(existingUser -> {
+                        // Got caller user, if it exists in the database
+                        // Create new role
+                        var newRole = new RoleEntity(role, null, existingUser);
+                        return session.persist(newRole);
+                    });
+                });
+            })
+            .chain(updated -> {
+                // Add complete, success
+                log.info("Added role");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Added"))
+                                                     .status(Response.Status.CREATED).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to add role");
+                return new ActionError(e).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
      * Update role definition.
      * @param auth The access token needed to call the service.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
@@ -904,7 +987,7 @@ public class Users extends BaseResource {
     }
 
     /**
-     * Implement role as implemented.
+     * Mark role as implemented.
      * @param auth The access token needed to call the service.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
@@ -1071,7 +1154,7 @@ public class Users extends BaseResource {
                             return Uni.createFrom().failure(new ActionException("notFound", "Unknown role"));
 
                         final var latestStatus = Role.RoleStatus.of(latestRole.status);
-                        if(Role.RoleStatus.DRAFT != latestStatus)
+                        if(Role.RoleStatus.IMPLEMENTED != latestStatus)
                             // Can only deprecate implemented entities
                             return Uni.createFrom().failure(new ActionException("badRequest", "Cannot deprecate in this status"));
 

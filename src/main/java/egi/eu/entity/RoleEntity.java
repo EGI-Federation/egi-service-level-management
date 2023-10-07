@@ -99,7 +99,7 @@ public class RoleEntity extends PanacheEntityBase {
 
         // Copy simple fields
         this.changeDescription = role.changeDescription;
-        this.version = latest.version + 1;
+        this.version = null == latest ? 1 : latest.version + 1;
         if(null != role.changeBy) {
             if(null != user && role.changeBy.checkinUserId.equals(user.checkinUserId))
                 this.changeBy = user;
@@ -114,12 +114,16 @@ public class RoleEntity extends PanacheEntityBase {
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
 
-        final var latestStatus = Role.RoleStatus.of(latest.status);
-        if (Role.RoleStatus.IMPLEMENTED == latestStatus)
-            // Changing an implemented role will require a new implementation
+        if(null == latest)
             this.status = Process.ProcessStatus.DRAFT.getValue();
-        else
-            this.status = latestStatus.getValue();
+        else {
+            final var latestStatus = Role.RoleStatus.of(latest.status);
+            if (Role.RoleStatus.IMPLEMENTED == latestStatus)
+                // Changing an implemented role will require a new implementation
+                this.status = Process.ProcessStatus.DRAFT.getValue();
+            else
+                this.status = latestStatus.getValue();
+        }
     }
 
     /***
