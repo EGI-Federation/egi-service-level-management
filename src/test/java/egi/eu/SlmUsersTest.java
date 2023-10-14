@@ -5,7 +5,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import egi.checkin.InjectMockCheckin;
+import egi.checkin.InjectSlmMockCheckin;
 import egi.eu.model.Role;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -22,17 +22,17 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import egi.checkin.MockCheckin;
-import egi.checkin.MockCheckinProxy;
+import egi.checkin.SlmMockCheckin;
+import egi.checkin.SlmMockCheckinProxy;
 import egi.checkin.model.CheckinUser;
 
 
 @QuarkusTest
-@QuarkusTestResource(MockCheckinProxy.class)
-public class UsersTest {
+@QuarkusTestResource(SlmMockCheckinProxy.class)
+public class SlmUsersTest {
 
-    @InjectMockCheckin
-    private MockCheckin mockCheckin;
+    @InjectSlmMockCheckin
+    private SlmMockCheckin mockCheckin;
 
     // The mock Check-in server will accept any token
     private static final String BEARER_TOKEN = UUID.randomUUID().toString();

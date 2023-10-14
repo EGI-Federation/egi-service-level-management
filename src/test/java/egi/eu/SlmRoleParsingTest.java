@@ -22,12 +22,12 @@ import egi.checkin.model.CheckinUser;
 
 
 @QuarkusTest
-public class RoleParsingTest {
+public class SlmRoleParsingTest {
 
     @Inject
     IntegratedManagementSystemConfig imsConfig;
 
-    private static final Logger log = Logger.getLogger(RoleParsingTest.class);
+    private static final Logger log = Logger.getLogger(SlmRoleParsingTest.class);
     private String prefix;
     private final String postfix = "#aai.egi.eu";
     private final String imso = "ims-owner";

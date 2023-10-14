@@ -5,8 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.Options;
 
 
-public class MockCheckin  extends WireMockServer {
-    public MockCheckin(Options options) {
+public class SlmMockCheckin extends WireMockServer {
+    public SlmMockCheckin(Options options) {
         super(options);
     }
 

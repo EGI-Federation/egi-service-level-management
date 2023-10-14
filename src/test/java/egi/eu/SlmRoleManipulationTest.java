@@ -1,6 +1,6 @@
 package egi.eu;
 
-import egi.checkin.MockCheckin;
+import egi.checkin.SlmMockCheckin;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.jboss.logging.Logger;
@@ -12,19 +12,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 
 import egi.checkin.Checkin;
-import egi.checkin.MockCheckinProxy;
+import egi.checkin.SlmMockCheckinProxy;
 
 
 @QuarkusTest
-@QuarkusTestResource(MockCheckinProxy.class)
-public class RoleManipulationTest {
+@QuarkusTestResource(SlmMockCheckinProxy.class)
+public class SlmRoleManipulationTest {
 
     @Inject
     IntegratedManagementSystemConfig imsConfig;
 
-    private MockCheckin mockCheckin;
+    private SlmMockCheckin mockCheckin;
 
-    private static final Logger log = Logger.getLogger(RoleManipulationTest.class);
+    private static final Logger log = Logger.getLogger(SlmRoleManipulationTest.class);
     private ObjectMapper mapper = new ObjectMapper();
     private Checkin checkin;
 

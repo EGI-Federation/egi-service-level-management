@@ -18,12 +18,12 @@ import java.util.Map;
 import egi.checkin.model.CheckinUser;
 
 
-public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
+public class SlmMockCheckinProxy implements QuarkusTestResourceLifecycleManager {
 
-    private static final Logger log = Logger.getLogger(MockCheckinProxy.class);
+    private static final Logger log = Logger.getLogger(SlmMockCheckinProxy.class);
     private static boolean logRequestBody = false;
 
-    private MockCheckin mockCheckin;
+    private SlmMockCheckin mockCheckin;
     private static String urlCheckin;
     private static final String pathGetUserInfo = "/auth/realms/egi/protocol/openid-connect/userinfo";
     private static String pathGetVoMembership;
@@ -33,7 +33,7 @@ public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
     /***
      * Construct and load configuration
      */
-    public MockCheckinProxy() {
+    public SlmMockCheckinProxy() {
         final var config = ConfigProvider.getConfig();
         final var coId = config.getValue("egi.checkin.co-id", String.class);
         final var vo = config.getValue("egi.ims.vo", String.class);;
@@ -58,7 +58,7 @@ public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
     public Map<String, String> start() {
 
         //logRequestBody = true;
-        mockCheckin = new MockCheckin(options()
+        mockCheckin = new SlmMockCheckin(options()
                             .port(9091)
                             .usingFilesUnderDirectory("src/test/resources/checkin"));
         mockCheckin.start();
@@ -98,7 +98,7 @@ public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
                 .proxiedFrom(urlCheckin)));
 
         // Add logging of mocked requests
-        mockCheckin.addMockServiceRequestListener(MockCheckinProxy::requestReceived);
+        mockCheckin.addMockServiceRequestListener(SlmMockCheckinProxy::requestReceived);
 
         return Collections.singletonMap("egi.checkin.server", mockCheckin.baseUrl());
     }
@@ -117,7 +117,7 @@ public class MockCheckinProxy implements QuarkusTestResourceLifecycleManager {
      */
     @Override
     public void inject(TestInjector testInjector) {
-        testInjector.injectIntoFields(mockCheckin, new TestInjector.AnnotatedAndMatchesType(InjectMockCheckin.class, MockCheckin.class));
+        testInjector.injectIntoFields(mockCheckin, new TestInjector.AnnotatedAndMatchesType(InjectSlmMockCheckin.class, SlmMockCheckin.class));
     }
 
     /**
