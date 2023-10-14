@@ -13,14 +13,12 @@ import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.vertx.mutiny.core.Vertx;
 import io.smallrye.mutiny.Uni;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -248,12 +246,12 @@ public class Procedures extends BaseResource {
 
         log.info("Getting procedure");
 
-        Uni<Response> result = Uni.createFrom().item(new Catalog())
+        Uni<Response> result = Uni.createFrom().item(new Procedure())
 
-            .chain(catalog -> {
+            .chain(procedure -> {
                 // Got procedure, success
                 log.info("Got procedure");
-                return Uni.createFrom().item(Response.ok(catalog).build());
+                return Uni.createFrom().item(Response.ok(procedure).build());
             })
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to get procedure");
