@@ -71,6 +71,14 @@ public class Checkin {
         return !stale;
     }
 
+    /***
+     * Ensure no role records are cached (need to reload them on next API call)
+     */
+    private void invalidateCachedRoleRecords() {
+       Checkin.roleRecords = null;
+       Checkin.rolesUpdatedAt = 0;
+    }
+
     /**
      * Prepare REST client for EGI Check-in.
      * @return true on success
@@ -376,8 +384,8 @@ public class Checkin {
                 return Uni.createFrom().item(updatedObject);
             })
             .chain(updated -> {
-                // Success, invalidate role cache
-                Checkin.roleRecords = null;
+                // Success, invalidate cached role records
+                invalidateCachedRoleRecords();
                 return Uni.createFrom().item(updated);
             })
             .onFailure().recoverWithUni(e -> {
@@ -460,8 +468,8 @@ public class Checkin {
             })
             .chain(updated -> {
                 // Membership record marked deleted, success
-                // Invalidate role cache
-                Checkin.roleRecords = null;
+                // Invalidate cached role records
+                invalidateCachedRoleRecords();
                 return Uni.createFrom().item(true);
             })
             .onFailure().recoverWithUni(e -> {
@@ -860,7 +868,7 @@ public class Checkin {
             })
             .chain(updated -> {
                 // Success, invalidate role cache
-                Checkin.roleRecords = null;
+                invalidateCachedRoleRecords();
                 return Uni.createFrom().item(updated);
             })
             .onFailure().recoverWithUni(e -> {
@@ -945,7 +953,7 @@ public class Checkin {
             .chain(updated -> {
                 // Role record marked deleted, success
                 // Invalidate role cache
-                Checkin.roleRecords = null;
+                invalidateCachedRoleRecords();
                 return Uni.createFrom().item(true);
             })
             .onFailure().recoverWithUni(e -> {
