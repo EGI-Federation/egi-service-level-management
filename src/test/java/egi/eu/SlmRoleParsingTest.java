@@ -99,6 +99,7 @@ public class SlmRoleParsingTest {
                 // Check that it does not have any of the roles
                 return roles.contains(Role.IMS_USER) ||
                        roles.contains(Role.IMS_ADMIN) ||
+                       roles.contains(Role.PROCESS_MEMBER) ||
                        roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
                        roles.contains(Role.PROCESS_DEVELOPER) ||
@@ -257,7 +258,8 @@ public class SlmRoleParsingTest {
             .onItem().transform(id -> id.getRoles())
             .onItem().transform(roles -> {
                 // Check that it does not have any of the roles
-                return roles.contains(Role.PROCESS_OWNER) ||
+                return roles.contains(Role.PROCESS_MEMBER) ||
+                       roles.contains(Role.PROCESS_OWNER) ||
                        roles.contains(Role.PROCESS_MANAGER) ||
                        roles.contains(Role.PROCESS_DEVELOPER) ||
                        roles.contains(Role.CATALOG_OWNER) ||
@@ -294,6 +296,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.PROCESS_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -324,6 +327,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.PROCESS_MANAGER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -354,6 +358,7 @@ public class SlmRoleParsingTest {
                 .onItem().transform(roles -> {
                     // Check that it has the correct role
                     return roles.contains(Role.PROCESS_DEVELOPER) &&
+                           roles.contains(Role.PROCESS_MEMBER) &&
                            roles.contains(Role.IMS_USER);
                 })
                 .subscribe()
@@ -384,6 +389,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.CATALOG_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -414,6 +420,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.REPORT_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -444,6 +451,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.SLA_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -474,6 +482,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.OLA_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()
@@ -504,6 +513,7 @@ public class SlmRoleParsingTest {
             .onItem().transform(roles -> {
                 // Check that it has the correct role
                 return roles.contains(Role.UA_OWNER) &&
+                       roles.contains(Role.PROCESS_MEMBER) &&
                        roles.contains(Role.IMS_USER);
             })
             .subscribe()

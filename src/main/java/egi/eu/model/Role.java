@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 
 
 /***
- * The roles that will govern access to the features
- * in section Service Level Management
+ * The roles that will govern access to the features in section Service Level Management
  */
 public class Role extends VersionInfo {
 

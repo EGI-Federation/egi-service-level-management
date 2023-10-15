@@ -127,7 +127,7 @@ public class SlmRoleCustomization implements SecurityIdentityAugmentor {
                             builder.addRole(Role.PROCESS_MEMBER);
                         }
                         if(userInfo.entitlements.contains(imsPrefix + "member" + suffix)) {
-                            // This user is member of the ISM group, which is a prerequisite to holding admin roles
+                            // This user is member of the IMS group, which is a prerequisite to holding admin roles
                             systemMember = true;
                         }
 
