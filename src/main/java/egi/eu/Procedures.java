@@ -96,7 +96,7 @@ public class Procedures extends BaseResource {
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = Catalogs.PageOfCatalogs.class))),
+                    schema = @Schema(implementation = PageOfProcedures.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
