@@ -391,7 +391,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/users/roles")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_MEMBER })
+    @RolesAllowed({ Role.IMS_USER })
     @Operation(operationId = "listUsersWithRoles",  summary = "List users with roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -646,7 +646,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/roles/assigned")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_MEMBER })
+    @RolesAllowed({ Role.IMS_USER })
     @Operation(operationId = "listAssignedRoles",  summary = "List assigned roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
@@ -994,7 +994,7 @@ public class Users extends BaseResource {
     @PATCH
     @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.PROCESS_DEVELOPER })
     @Operation(operationId = "implementRole",  summary = "Implement role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Implemented",
@@ -1098,7 +1098,7 @@ public class Users extends BaseResource {
     @DELETE
     @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
+    @RolesAllowed({ Role.PROCESS_OWNER })
     @Operation(operationId = "deprecateRole",  summary = "Deprecate role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Deprecated",
