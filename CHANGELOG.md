@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 1.0.37
+- Process management complete
+- User and role management complete
 
-## [X.X.XX]
-- Change description (#PR_NUMBER) (AUTHOR)
+## 1.0.17
+- User management is ready (uses Check-in COManage)
+- Added filtering and pagination to list queries
+
+## 1.0.6
+- Initial release
