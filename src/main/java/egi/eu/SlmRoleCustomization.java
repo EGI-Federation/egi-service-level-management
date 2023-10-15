@@ -27,9 +27,9 @@ import org.jboss.logging.MDC;
  * See also https://quarkus.io/guides/security-customization#security-identity-customization
  */
 @ApplicationScoped
-public class RoleCustomization implements SecurityIdentityAugmentor {
+public class SlmRoleCustomization implements SecurityIdentityAugmentor {
 
-    private static final Logger log = Logger.getLogger(RoleCustomization.class);
+    private static final Logger log = Logger.getLogger(SlmRoleCustomization.class);
 
     @Inject
     protected IntegratedManagementSystemConfig config;
@@ -117,7 +117,6 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
                         final String imsPrefix = voPrefix + "ims:role=";
                         final String imsOwner = imsPrefix + "ims-owner" + suffix;
                         final String imsManager = imsPrefix + "ims-manager" + suffix;
-                        final String imsCoordinator = imsPrefix + "ims-coordinator" + suffix;
                         final String rolePrefix = voPrefix + config.group() + ":role=";
 
                         boolean systemMember = false;
@@ -157,7 +156,7 @@ public class RoleCustomization implements SecurityIdentityAugmentor {
 
                         for (var e : userInfo.entitlements) {
 
-                            if (systemMember && (e.equals(imsOwner) || e.equals(imsManager) || e.equals(imsCoordinator)))
+                            if (systemMember && (e.equals(imsOwner) || e.equals(imsManager)))
                                 builder.addRole(Role.IMS_ADMIN);
                             else if (processMember && e.equals(po))
                                 builder.addRole(Role.PROCESS_OWNER);

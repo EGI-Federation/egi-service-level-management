@@ -32,12 +32,11 @@ public class SlmRoleParsingTest {
     private final String postfix = "#aai.egi.eu";
     private final String imso = "ims-owner";
     private final String imsm = "ims-manager";
-    private final String imsc = "ims-coordinator";
     private String po, pm, pd, co, ro, uao, olao, slao;
     private Map<String, String> roleNames = new HashMap<String, String>();
     private CheckinUser userInfo;
     private QuarkusSecurityIdentity.Builder builder;
-    private RoleCustomization roleCustomization;
+    private SlmRoleCustomization roleCustomization;
     private ObjectMapper mapper = new ObjectMapper();
 
 
@@ -57,7 +56,7 @@ public class SlmRoleParsingTest {
             slao = roleNames.get("sla-owner").toLowerCase();
         }
 
-        roleCustomization = new RoleCustomization();
+        roleCustomization = new SlmRoleCustomization();
         roleCustomization.setConfig(imsConfig);
 
         userInfo = new CheckinUser();
@@ -78,7 +77,6 @@ public class SlmRoleParsingTest {
         userInfo.addEntitlement(prefix + String.format("%s:role=member", imsConfig.group()) + postfix);
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imso) + postfix);
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
-        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), po) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pm) + postfix);
         userInfo.addEntitlement(prefix + String.format("%s:role=%s", imsConfig.group(), pd) + postfix);
@@ -152,7 +150,6 @@ public class SlmRoleParsingTest {
         userInfo.addEntitlement(prefix + "role=member" + postfix);
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imso) + postfix);
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
-        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
@@ -212,36 +209,6 @@ public class SlmRoleParsingTest {
         userInfo.addEntitlement(prefix + "role=member" + postfix);
         userInfo.addEntitlement(prefix + "ims:role=member" + postfix);
         userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsm) + postfix);
-
-        try {
-            builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
-        } catch (JsonProcessingException e) {
-            fail(e.getMessage());
-        }
-
-        // Parse roles from entitlements
-        UniAssertSubscriber<Boolean> subscriber = this.roleCustomization.augment(this.builder.build(), null)
-                .onItem().transform(id -> id.getRoles())
-                .onItem().transform(roles -> {
-                    // Check that it has the correct roles
-                    return roles.contains(Role.IMS_USER) &&
-                           roles.contains(Role.IMS_ADMIN);
-                })
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        subscriber
-                .awaitItem()
-                .assertItem(true);
-    }
-
-    @Test
-    @DisplayName("IMS_ADMIN when VO member, included in IMS group, and is IMS coordinator")
-    public void testImsCoordinatorIsAdmin() {
-        // Setup entitlements
-        userInfo.addEntitlement(prefix + "role=member" + postfix);
-        userInfo.addEntitlement(prefix + "ims:role=member" + postfix);
-        userInfo.addEntitlement(prefix + String.format("ims:role=%s", imsc) + postfix);
 
         try {
             builder.addAttribute("userinfo", mapper.writeValueAsString(userInfo));
