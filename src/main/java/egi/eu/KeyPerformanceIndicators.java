@@ -130,8 +130,8 @@ public class KeyPerformanceIndicators extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
@@ -165,6 +165,7 @@ public class KeyPerformanceIndicators extends BaseResource {
     @POST
     @Path("/kpi")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "createKPI",  summary = "Create new KPI")
     @APIResponses(value = {
@@ -178,12 +179,10 @@ public class KeyPerformanceIndicators extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-
-                                   KeyPerformanceIndicator kpi)
+    public Uni<Response> createKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, KeyPerformanceIndicator kpi)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpi", kpi);
 
@@ -240,8 +239,8 @@ public class KeyPerformanceIndicators extends BaseResource {
                                   @Parameter(required = false, description = "Whether to retrieve all versions")
                                   boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
         addToDC("allVersions", allVersions);
@@ -272,6 +271,7 @@ public class KeyPerformanceIndicators extends BaseResource {
     @PUT
     @Path("/kpi/{kpiId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateKPI",  summary = "Update existing KPI")
     @APIResponses(value = {
@@ -296,8 +296,8 @@ public class KeyPerformanceIndicators extends BaseResource {
 
                                    KeyPerformanceIndicator kpi)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
         addToDC("kpi", kpi);
@@ -366,8 +366,8 @@ public class KeyPerformanceIndicators extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
         addToDC("offset", offset);
@@ -402,6 +402,7 @@ public class KeyPerformanceIndicators extends BaseResource {
     @POST
     @Path("/kpi/{kpiId}/review")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(Role.PROCESS_OWNER)
     @Operation(operationId = "reviewKPI",  summary = "Review existing KPI")
     @APIResponses(value = {
@@ -426,8 +427,8 @@ public class KeyPerformanceIndicators extends BaseResource {
 
                                    KeyPerformanceIndicatorReview review)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
         addToDC("review", review);
@@ -480,8 +481,8 @@ public class KeyPerformanceIndicators extends BaseResource {
                                       @Parameter(required = true, description = "ID of KPI to deprecate")
                                       int kpiId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
 

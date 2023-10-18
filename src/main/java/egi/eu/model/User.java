@@ -17,7 +17,7 @@ import java.util.Set;
 public class User {
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Long checkinUserId = null;
+    public String checkinUserId = null;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String fullName;
@@ -25,10 +25,20 @@ public class User {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String email;
 
+
     /***
      * Constructor
      */
     public User() {}
+
+    /***
+     * Constructor
+     */
+    public User(String checkinUserId, String fullName, String email) {
+        this.checkinUserId = checkinUserId;
+        this.fullName = fullName;
+        this.email = email;
+    }
 
     /***
      * Copy constructor

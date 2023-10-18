@@ -4,7 +4,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,12 +36,14 @@ public class CheckinRole {
      * You will have to refer to this when updating or deleting this membership/role
      */
     @JsonProperty("Id")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public long roleId;
 
     /***
      * The user this role is about
      */
     @JsonProperty("Person")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Person person;
 
     /***
@@ -47,13 +57,14 @@ public class CheckinRole {
      * The group or VO this role is about
      */
     @JsonProperty("Cou")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Group group;
 
     /***
      * The role of the user
      * Will be "member" to show membership in the group or VO, or the role name
      */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String role;
 
     @JsonProperty("Affiliation")
@@ -97,7 +108,8 @@ public class CheckinRole {
     public int revision;
 
     @JsonProperty("Deleted")
-    public boolean deleted;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public Boolean deleted;
 
 
     /***
@@ -108,7 +120,7 @@ public class CheckinRole {
     /***
      * Construct role record for specified user
      */
-    public CheckinRole(long checkinUserId, String groupName, String coId, String affiliation, String status) {
+    public CheckinRole(String checkinUserId, String groupName, String coId, String affiliation, String status) {
         this.person = new Person(checkinUserId);
         this.group = new Group(coId, groupName);
         this.affiliation = affiliation;
@@ -119,7 +131,7 @@ public class CheckinRole {
     /***
      * Check if this is a membership record or a role record
      */
-    public boolean isRole() {
+    public boolean checkIfRole() {
         return null != this.title && !this.title.isBlank() && this.title.equalsIgnoreCase(this.role);
     }
 
@@ -129,13 +141,15 @@ public class CheckinRole {
      */
     public static class Person {
 
-        public long Id;
-
         @JsonProperty("Type")
-        public String type;
+        public String type = "CO";
+
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        public long Id; // CoManage Id
 
         @JsonProperty("Identifier")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        @JsonSerialize(using = IdentifierListSerializer.class)
         public List<Identifier> ids;
 
         @JsonProperty("Name")
@@ -155,9 +169,54 @@ public class CheckinRole {
         /***
          * Construct as specific user
          */
-        public Person(long checkinUserId) {
-            this.type = "CO";
-            this.Id = checkinUserId;
+        public Person(String checkinUserId) {
+            this.ids = new ArrayList<>();
+            this.ids.add(new Identifier(checkinUserId));
+        }
+
+        /***
+         * Construct as specific user
+         */
+        public Person(long coManageId) {
+            this.Id = coManageId;
+        }
+
+        /***
+         * Get the Check-in user Id.
+         * @return Check-in user Id, null if no identifier of type "epuid" found
+         */
+        public String checkinUserId() {
+            if(null != this.ids && !this.ids.isEmpty())
+                for(var id : this.ids) {
+                    if(null != id.type && id.type.equalsIgnoreCase("epuid")) {
+                        if(null != id.id)
+                            return id.id;
+                        if(null != id.identifier)
+                            return id.identifier;
+                    }
+                }
+
+            return null;
+        }
+
+        /***
+         * Custom serializer for field ids. Serialize it as a single object when it contains just one Id.
+         */
+        public static class IdentifierListSerializer extends JsonSerializer<List<Identifier>> {
+
+            @Override
+            public void serialize(List<Identifier> ids, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+                    throws IOException, JsonProcessingException {
+
+                if(ids.size() > 1)
+                    jsonGenerator.writeStartArray();
+
+                for(var id : ids)
+                    jsonGenerator.writeObject(id);
+
+                if(ids.size() > 1)
+                    jsonGenerator.writeEndArray();
+            }
         }
 
 
@@ -165,8 +224,32 @@ public class CheckinRole {
          * An identifier the user is known by
          */
         public static class Identifier {
+
+            @JsonProperty("Type")
+            public String kind;
+
+            @JsonProperty("Id")
+            @JsonInclude(JsonInclude.Include.NON_EMPTY)
+            public String id;
+
+            @JsonInclude(JsonInclude.Include.NON_EMPTY)
             public String type;
+
+            @JsonInclude(JsonInclude.Include.NON_EMPTY)
             public String identifier;
+
+            /***
+             * Constructor
+             */
+            public Identifier() {}
+
+            /***
+             * Construct as specific user
+             */
+            public Identifier(String checkinUserId) {
+                this.kind = "epuid";
+                this.id = checkinUserId;
+            }
         }
 
         /***

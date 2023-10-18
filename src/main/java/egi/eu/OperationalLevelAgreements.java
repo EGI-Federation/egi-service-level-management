@@ -117,8 +117,8 @@ public class OperationalLevelAgreements extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -152,6 +152,7 @@ public class OperationalLevelAgreements extends BaseResource {
     @POST
     @Path("/sla/{slaId}/ola")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.OLA_OWNER })
     @Operation(operationId = "createOLA",  summary = "Create new Operational Level Agreement")
     @APIResponses(value = {
@@ -166,13 +167,15 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> createOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("slaId")
                                    @Parameter(required = true, description = "ID of supported Service Level Agreement")
                                    int slaId,
+
                                    OperationalLevelAgreement ola)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("slaId", slaId);
         addToDC("ola", ola);
 
@@ -203,6 +206,7 @@ public class OperationalLevelAgreements extends BaseResource {
     @PUT
     @Path("/ola/{olaId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.OLA_OWNER })
     @Operation(operationId = "updateOLA",  summary = "Update existing Operational Level Agreement",
                description = "Agreements are immutable, once signed. Before an agreement is marked as signed, " +
@@ -224,13 +228,15 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> updateOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("olaId")
                                    @Parameter(required = true, description = "ID of agreement to update")
                                    int olaId,
+
                                    OperationalLevelAgreement ola)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaId", olaId);
         addToDC("ola", ola);
 
@@ -278,16 +284,18 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> fetchOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                   @RestPath("olaId")
                                   @Parameter(required = true, description = "ID of agreement to get")
                                   int olaId,
+
                                   @RestQuery("allVersions")
                                   @Parameter(description = "Whether to retrieve all versions")
                                   @Schema(defaultValue = "false")
                                   boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaID", olaId);
         addToDC("allVersions", allVersions);
 
@@ -339,12 +347,13 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> signOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                  @RestPath("olaId")
                                  @Parameter(required = true, description = "ID of agreement to sign")
                                  int olaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaID", olaId);
 
         log.info("Signing OLA");
@@ -390,12 +399,13 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "503", description="Try again later")
     })
     public Uni<Response> revokeOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+
                                    @RestPath("olaId")
                                    @Parameter(required = true, description = "ID of agreement to revoke")
                                    int olaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaID", olaId);
 
         log.info("Revoking OLA");

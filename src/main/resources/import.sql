@@ -1,49 +1,52 @@
 insert into slm.users (checkinuserid, fullname, email)
-values (6166, 'Levente Farkas', 'levente@egi.eu'),
-       (171, 'Giuseppe La Rocca', 'giuseppe@egi.eu');
+values ('e9c37aa0d1cf14c56e560f9f9915da6761f54383badb501a2867bc43581b835c@egi.eu', 'Levente Farkas', 'levente.farkas@egi.eu'),
+       ('025166931789a0f57793a6092726c2ad89387a4cc167e7c63c5d85fc91021d18@egi.eu', 'Giuseppe La Rocca', 'giuseppe.larocca@egi.eu');
 
-insert into slm.roles (role, name, version, status, changedon, changedescription, tasks, globalRoleId)
-values ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 1),
-       ('process-manager', 'Process Manager', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 2),
-       ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 3),
-       ('report-owner', 'Report Owner', 1, 1, '2021-02-19T19:23:18', 'First version', 'Inherited', 4),
-       ('catalog-owner', 'Service Catalog Owner', 1, 1, '2021-02-19T19:23:18', 'First version',
-        '- Maintain Service Catalogue
-- Provide access to appropriate parts of the service catalogue(s) to its customers, users and other interested parties', null),
-       ('sla-owner', 'Service Level Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version',
-        '- Maintain the SLA under his/her ownership and ensure it is specified and documented according to relevant specifications
+insert into slm.roles (role, name, version, status, changedon, changedescription, globalRoleId, tasks)
+values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First version', 1, null),
+       ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First version', 2, null),
+       ('process-manager', 'Process Manager', 1, 1, '2021-02-19T19:23:18', 'First version', 3, null),
+       ('report-owner', 'Report Owner', 1, 1, '2021-02-19T19:23:18', 'First version', 4, null),
+
+       ('process-developer', 'Process Developer', 1, 1, '2023-09-02T19:23:18', 'First version', null,
+'- Make the necessary software changes to the SLM API so that requested changes to process, procedure, KPI, and role entities are implemented
+- Improve the IMS front-end to allow exploiting all features of the SLM API'),
+
+       ('catalog-owner', 'Service Catalog Owner', 1, 1, '2021-02-19T19:23:18', 'First version', null,
+'- Maintain Service Catalogue
+- Provide access to appropriate parts of the service catalogue(s) to its customers, users and other interested parties'),
+
+       ('sla-owner', 'Service Level Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version', null,
+'- Maintain the SLA under his/her ownership and ensure it is specified and documented according to relevant specifications
 - Evaluate the fulfillment of the SLA
 - Ensure that violations of the targets defined in the SLA are identified and investigated to prevent future recurrence
 - Perform regular reviews of the SLA
-- Understand new or changed requirements of the SLA under his/her ownership, and initiate necessary updates or other follow-up actions', null),
-       ('ola-owner', 'Operational Level Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version',
-        '- Maintain the OLA under his/her ownership and ensure it is specified and documented according to relevant specifications
+- Understand new or changed requirements of the SLA under his/her ownership, and initiate necessary updates or other follow-up actions'),
+
+       ('ola-owner', 'Operational Level Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version', null,
+'- Maintain the OLA under his/her ownership and ensure it is specified and documented according to relevant specifications
 - Evaluate the fulfillment of the OLA
 - Ensure that violations of the targets defined in the OLA are identified and investigated to prevent future recurrence
 - Perform regular reviews of the OLA
-- Understand new or changed requirements of the OLA under his/her ownership, and initiate necessary updates or other follow-up actions', null),
-       ('ua-owner', 'Underpinning Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version',
-        '- Maintain the UA under his/her ownership and ensure it is specified and documented according to relevant specifications
+- Understand new or changed requirements of the OLA under his/her ownership, and initiate necessary updates or other follow-up actions'),
+
+       ('ua-owner', 'Underpinning Agreement Owner', 1, 1, '2021-02-19T19:23:18', 'First version', null,
+'- Maintain the UA under his/her ownership and ensure it is specified and documented according to relevant specifications
 - Evaluate the fulfillment of the UA
 - Ensure that violations of the targets defined in the UA are identified and investigated to prevent future recurrence
 - Perform regular reviews of the UA
-- Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions', null),
-       ('process-developer', 'Process Developer', 1, 0, '2023-09-02T19:23:18', 'First version', '...', null),
-       ('process-developer', 'Process Developer', 2, 0, '2023-09-02T19:23:18', 'Second version',
-        '- Make the necessary software changes to the SLM API so that requested changes to process, procedure, KPI, and role entities are implemented
-- Improve the IMS front-end to allow exploiting all features of the SLM API', null);
+- Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions');
 
 insert into slm.role_editor (role_id, user_id)
 values (1, 2),
        (2, 2),
        (3, 2),
-       (4, 2),
+       (4, 1),
        (5, 2),
        (6, 2),
        (7, 2),
-       (8, 1),
-       (9, 1),
-       (10, 2);
+       (8, 2),
+       (9, 2);
 
 insert into slm.processes (goals, scope, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
 VALUES ('The primary purpose of this process is...',

@@ -125,8 +125,8 @@ public class Catalogs extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -159,6 +159,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "createCatalog",  summary = "Create new catalog")
     @APIResponses(value = {
@@ -172,11 +173,10 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                       Catalog catalog)
+    public Uni<Response> createCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Catalog catalog)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalog", catalog);
 
         log.info("Creating catalog");
@@ -232,8 +232,8 @@ public class Catalogs extends BaseResource {
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
         addToDC("allVersions", allVersions);
 
@@ -263,6 +263,7 @@ public class Catalogs extends BaseResource {
     @PUT
     @Path("/catalog/{catalogId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "updateCatalog",  summary = "Update existing catalog")
     @APIResponses(value = {
@@ -287,8 +288,8 @@ public class Catalogs extends BaseResource {
 
                                        Catalog catalog)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogId", catalogId);
         addToDC("catalog", catalog);
 
@@ -319,6 +320,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog/{catalogId}/service")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "addService",  summary = "Add service to existing catalog")
     @APIResponses(value = {
@@ -343,8 +345,8 @@ public class Catalogs extends BaseResource {
 
                                    Service service)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogId", catalogId);
         addToDC("service", service);
 
@@ -406,8 +408,8 @@ public class Catalogs extends BaseResource {
                                       @Parameter(required = false, description = "Whether to retrieve all versions")
                                       boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
         addToDC("serviceID", serviceId);
         addToDC("allVersions", allVersions);
@@ -439,6 +441,7 @@ public class Catalogs extends BaseResource {
     @PUT
     @Path("/catalog/{catalogId}/service/{serviceId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "updateService",  summary = "Update service in existing catalog")
     @APIResponses(value = {
@@ -467,8 +470,8 @@ public class Catalogs extends BaseResource {
 
                                        Service service)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogId", catalogId);
         addToDC("serviceId", serviceId);
         addToDC("service", service);
@@ -526,8 +529,8 @@ public class Catalogs extends BaseResource {
                                        @Parameter(required = true, description = "ID of service to remove")
                                        int serviceId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogId", catalogId);
         addToDC("serviceId", serviceId);
 
@@ -558,6 +561,7 @@ public class Catalogs extends BaseResource {
     @POST
     @Path("/catalog/{catalogId}/review")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.CATALOG_OWNER})
     @Operation(operationId = "reviewCatalog",  summary = "Review existing catalog")
     @APIResponses(value = {
@@ -582,8 +586,8 @@ public class Catalogs extends BaseResource {
 
                                        CatalogReview review)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
         addToDC("review", review);
 
@@ -651,8 +655,8 @@ public class Catalogs extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -707,8 +711,8 @@ public class Catalogs extends BaseResource {
                                        @Parameter(required = true, description = "ID of catalog to retire")
                                        int catalogId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
 
         log.info("Retiring catalog");

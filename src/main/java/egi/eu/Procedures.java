@@ -128,8 +128,8 @@ public class Procedures extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
@@ -163,6 +163,7 @@ public class Procedures extends BaseResource {
     @POST
     @Path("/procedure")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "createProcedure",  summary = "Create new procedure")
     @APIResponses(value = {
@@ -176,12 +177,10 @@ public class Procedures extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-
-                                         Procedure procedure)
+    public Uni<Response> createProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Procedure procedure)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedure", procedure);
 
@@ -238,8 +237,8 @@ public class Procedures extends BaseResource {
                                         @Parameter(required = false, description = "Whether to retrieve all versions")
                                         boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("allVersions", allVersions);
@@ -270,6 +269,7 @@ public class Procedures extends BaseResource {
     @PUT
     @Path("/procedure/{procedureId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateProcedure",  summary = "Update existing procedure")
     @APIResponses(value = {
@@ -294,8 +294,8 @@ public class Procedures extends BaseResource {
 
                                          Procedure procedure)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("procedure", procedure);
@@ -364,8 +364,8 @@ public class Procedures extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("offset", offset);
@@ -401,6 +401,7 @@ public class Procedures extends BaseResource {
     @Path("/procedure/{procedureId}/review")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.PROCESS_OWNER)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(operationId = "reviewProcedure",  summary = "Review existing procedure")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Reviewed",
@@ -424,8 +425,8 @@ public class Procedures extends BaseResource {
 
                                          ProcedureReview review)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
         addToDC("review", review);
@@ -478,8 +479,8 @@ public class Procedures extends BaseResource {
                                             @Parameter(required = true, description = "ID of procedure to deprecate")
                                             int procedureId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("procedureId", procedureId);
 

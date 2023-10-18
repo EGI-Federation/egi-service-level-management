@@ -117,8 +117,8 @@ public class UnderpinningAgreements extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaId", olaId);
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
@@ -153,6 +153,7 @@ public class UnderpinningAgreements extends BaseResource {
     @POST
     @Path("/ola/{olaId}/ua")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.UA_OWNER })
     @Operation(operationId = "createUA",  summary = "Create new Underpinning Agreement")
     @APIResponses(value = {
@@ -174,8 +175,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                   UnderpinningAgreement ua)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaId", olaId);
         addToDC("ua", ua);
 
@@ -206,6 +207,7 @@ public class UnderpinningAgreements extends BaseResource {
     @PUT
     @Path("/ua/{uaId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.UA_OWNER })
     @Operation(operationId = "updateUA",  summary = "Update existing Underpinning Agreement",
                description = "Agreements are immutable, once signed. Before an agreement is marked as signed, " +
@@ -234,8 +236,8 @@ public class UnderpinningAgreements extends BaseResource {
 
                                   UnderpinningAgreement ua)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("uaId", uaId);
         addToDC("ua", ua);
 
@@ -293,8 +295,8 @@ public class UnderpinningAgreements extends BaseResource {
                                  @Schema(defaultValue = "false")
                                  boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("uaID", uaId);
         addToDC("allVersions", allVersions);
 
@@ -351,8 +353,8 @@ public class UnderpinningAgreements extends BaseResource {
                                 @Parameter(required = true, description = "ID of agreement to sign")
                                 int uaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("uaID", uaId);
 
         log.info("Signing UA");
@@ -403,8 +405,8 @@ public class UnderpinningAgreements extends BaseResource {
                                   @Parameter(required = true, description = "ID of agreement to revoke")
                                   int uaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("uaID", uaId);
 
         log.info("Revoking UA");

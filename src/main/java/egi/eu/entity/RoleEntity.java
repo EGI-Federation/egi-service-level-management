@@ -1,6 +1,5 @@
 package egi.eu.entity;
 
-import egi.eu.model.Process;
 import org.hibernate.annotations.UpdateTimestamp;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Sort;
@@ -25,7 +24,7 @@ public class RoleEntity extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(length = 20)
+    @Column(length = 50)
     @NotNull
     public String role;
 
@@ -115,12 +114,12 @@ public class RoleEntity extends PanacheEntityBase {
         this.globalRoleTasks = role.globalRoleTasks;
 
         if(null == latest)
-            this.status = Process.ProcessStatus.DRAFT.getValue();
+            this.status = Role.RoleStatus.DRAFT.getValue();
         else {
             final var latestStatus = Role.RoleStatus.of(latest.status);
             if (Role.RoleStatus.IMPLEMENTED == latestStatus)
                 // Changing an implemented role will require a new implementation
-                this.status = Process.ProcessStatus.DRAFT.getValue();
+                this.status = Role.RoleStatus.DRAFT.getValue();
             else
                 this.status = latestStatus.getValue();
         }

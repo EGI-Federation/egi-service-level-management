@@ -22,12 +22,14 @@ public class CheckinUser {
     public final static String ATTR_USERNAME = "userName";
     public final static String ATTR_FIRSTNAME = "firstName";
     public final static String ATTR_LASTNAME = "lastName";
+    public final static String ATTR_FULLNAME = "fullName";
     public final static String ATTR_EMAIL = "email";
     public final static String ATTR_EMAILCHECKED = "emailVerified";
     public final static String ATTR_ASSURANCE = "assurance";
 
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public long checkinUserId;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonProperty("voperson_id")
+    public String checkinUserId;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String fullName;
@@ -45,10 +47,6 @@ public class CheckinUser {
 
     @JsonProperty("email_verified")
     public boolean emailIsVerified;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty("voperson_id")
-    public String userId;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("preferred_user_name")
@@ -74,23 +72,14 @@ public class CheckinUser {
     /***
      * Construct with Check-in user ID
      */
-    public CheckinUser(Long checkinUserId) { this.checkinUserId = checkinUserId; }
+    public CheckinUser(String checkinUserId) { this.checkinUserId = checkinUserId; }
 
     /***
      * Construct from Check-in membership record
      */
     public CheckinUser(CheckinRole role) {
 
-        this.checkinUserId = role.person.Id;
-
-        // Get first voperson_id
-        if(null != role.person.ids)
-            for(var id : role.person.ids) {
-                if(null != id.type && id.type.equals("epuid")) {
-                    this.userId = id.identifier;
-                    break;
-                }
-            }
+        this.checkinUserId = role.person.checkinUserId();
 
         // Get first complete name
         if(null != role.person.names)
@@ -114,9 +103,26 @@ public class CheckinUser {
             }
     }
 
-    public long getCheckinUserId() { return this.checkinUserId; }
-    public CheckinUser setUserId(String userId) { this.userId = userId; return this; }
-    public CheckinUser setCheckinUserId(long userId) { this.checkinUserId = userId; return this; }
+    /***
+     * Construct and return full name of the user
+     * @return Full name of the user
+     */
+    public String getFullName() {
+        if(null == this.fullName) {
+            if(null != this.firstName)
+                this.fullName = this.firstName;
+            if(null != this.lastName) {
+                if(null != this.fullName && !this.fullName.isBlank())
+                    this.fullName += " ";
+                this.fullName += this.lastName;
+            }
+        }
+
+        return this.fullName;
+    }
+
+    public String getCheckinUserId() { return this.checkinUserId; }
+    public CheckinUser setCheckinUserId(String userId) { this.checkinUserId = userId; return this; }
     public CheckinUser setFirstName(String firstName) { this.firstName = firstName; return this; }
     public CheckinUser setLastName(String lastName) { this.lastName = lastName; return this; }
     public CheckinUser setFullName(String fullName) { this.fullName = fullName; return this; }

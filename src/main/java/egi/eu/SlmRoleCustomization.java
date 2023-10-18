@@ -66,8 +66,8 @@ public class SlmRoleCustomization implements SecurityIdentityAugmentor {
                     json = isAJO ? ((AbstractJsonObjectResponse)ui).getJsonObject().toString() : ui.toString();
                     userInfo = mapper.readValue(json, CheckinUser.class);
 
-                    if(null != userInfo.userId)
-                        builder.addAttribute(CheckinUser.ATTR_USERID, userInfo.userId);
+                    if(null != userInfo.checkinUserId)
+                        builder.addAttribute(CheckinUser.ATTR_USERID, userInfo.checkinUserId);
 
                     if(null != userInfo.userName)
                         builder.addAttribute(CheckinUser.ATTR_USERNAME, userInfo.userName);
@@ -77,6 +77,9 @@ public class SlmRoleCustomization implements SecurityIdentityAugmentor {
 
                     if(null != userInfo.lastName)
                         builder.addAttribute(CheckinUser.ATTR_LASTNAME, userInfo.lastName);
+
+                    if(null != userInfo.fullName || null != userInfo.firstName || null != userInfo.lastName)
+                        builder.addAttribute(CheckinUser.ATTR_FULLNAME, userInfo.getFullName());
 
                     if(null != userInfo.email)
                         builder.addAttribute(CheckinUser.ATTR_EMAIL, userInfo.email);

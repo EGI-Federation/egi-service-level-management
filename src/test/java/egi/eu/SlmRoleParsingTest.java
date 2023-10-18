@@ -59,8 +59,7 @@ public class SlmRoleParsingTest {
         roleCustomization = new SlmRoleCustomization();
         roleCustomization.setConfig(imsConfig);
 
-        userInfo = new CheckinUser();
-        userInfo.userId = "e9c37aa0d1cf14c56e560f9f9915da6761f54383badb501a2867bc43581b835c@egi.eu";
+        userInfo = new CheckinUser("e9c37aa0d1cf14c56e560f9f9915da6761f54383badb501a2867bc43581b835c@egi.eu");
         userInfo.addEntitlement("urn:mace:egi.eu:group:vo.access.egi.eu:role=member#aai.egi.eu");
         userInfo.addEntitlement("urn:mace:egi.eu:group:vo.access.egi.eu:role=vm_operator#aai.egi.eu");
 

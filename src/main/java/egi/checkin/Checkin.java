@@ -33,10 +33,10 @@ public class Checkin {
 
     private static final Logger log = Logger.getLogger(Checkin.class);
     private static CheckinService checkin;
-    private static Map<Long, CheckinUser> voMembers; // Does not cache assigned roles
-    private static long voMembersUpdatedAt = 0;   // Milliseconds since epoch
+    private static Map<String, CheckinUser> voMembers;  // Does not cache assigned roles
+    private static long voMembersUpdatedAt = 0;         // Milliseconds since epoch
     private static CheckinRoleList roleRecords;
-    private static long rolesUpdatedAt = 0;       // Milliseconds since epoch
+    private static long rolesUpdatedAt = 0;             // Milliseconds since epoch
 
     private CheckinConfig checkinConfig;
     private IntegratedManagementSystemConfig imsConfig;
@@ -191,14 +191,14 @@ public class Checkin {
                 // Got VO role records, keep just the membership ones
                 var members = filterList(voRoles.records, role -> role.role.equals("member"));
 
-                Map<Long, CheckinUser> users = new HashMap<>();
+                Map<String, CheckinUser> users = new HashMap<>();
                 for(var role : members) {
                     if(role.deleted || !role.status.equalsIgnoreCase("Active"))
                         // Inactive membership record, skip
                         continue;
 
                     var user = new CheckinUser(role);
-                    if (!users.containsKey(user.checkinUserId))
+                    if(!users.containsKey(user.checkinUserId))
                         users.put(user.checkinUserId, user);
                 }
 
@@ -269,7 +269,7 @@ public class Checkin {
      * @param logRecords Whether to dump the membership records in the log
      * @return List of member users, null on error
      */
-    private Map<Long, CheckinUser> filterToGroupMembers(CheckinRoleList groupRoles, boolean logRecords) {
+    private Map<String, CheckinUser> filterToGroupMembers(CheckinRoleList groupRoles, boolean logRecords) {
         if(!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group members, VO members not loaded");
@@ -280,19 +280,19 @@ public class Checkin {
         var members = filterList(groupRoles.records, role -> role.role.equals("member"));
 
         var voUsers = voMembers;
-        Map<Long, CheckinUser> users = new HashMap<>();
-        for (var role : members) {
+        Map<String, CheckinUser> users = new HashMap<>();
+        for(var role : members) {
             if (role.deleted || !role.status.equalsIgnoreCase("Active"))
                 // Not an active membership record, skip
                 continue;
 
             // Only include users that are members of the configured VO
             var user = new CheckinUser(role);
-            if(user.checkinUserId <= 0)
+            if(null == user.checkinUserId || user.checkinUserId.isBlank())
                 // Skip invalid users too
                 continue;
 
-            if (voUsers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
+            if(voUsers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
                 // This is a membership record, not a role record
                 users.put(user.checkinUserId, user);
         }
@@ -309,7 +309,7 @@ public class Checkin {
      * @param groupName The group to add the user to
      * @return Details of membership record, see also {@link CheckinObject}
      */
-    public Uni<CheckinObject> addUserToGroupAsync(long checkinUserId, String groupName) {
+    public Uni<CheckinObject> addUserToGroupAsync(String checkinUserId, String groupName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -319,7 +319,7 @@ public class Checkin {
 
         MDC.put("coId", coId);
         MDC.put("groupName", groupName);
-        MDC.put("checkinUserId", checkinUserId);
+        MDC.put("userId", checkinUserId);
 
         final var header = getBasicAuthHeader();
         final var deletedRoles = new ArrayList<CheckinRole>();
@@ -339,7 +339,7 @@ public class Checkin {
             .chain(roles -> {
                 // Got group membership records
                 var deleted = filterList(roles.records,
-                                         role -> checkinUserId == role.person.Id &&
+                                         role -> checkinUserId.equals(role.person.checkinUserId()) &&
                                                  role.role.equals("member") &&
                                                  (role.deleted || role.status.equalsIgnoreCase("Deleted")) &&
                                                  null == role.from && null == role.until);
@@ -422,7 +422,7 @@ public class Checkin {
      * @param groupName The group to remove the user from
      * @return True on success
      */
-    public Uni<Boolean> removeUserFromGroupAsync(long checkinUserId, String groupName) {
+    public Uni<Boolean> removeUserFromGroupAsync(String checkinUserId, String groupName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -432,7 +432,7 @@ public class Checkin {
 
         MDC.put("coId", coId);
         MDC.put("groupName", groupName);
-        MDC.put("checkinUserId", checkinUserId);
+        MDC.put("userId", checkinUserId);
 
         final var header = getBasicAuthHeader();
         final var deletedRoles = new ArrayList<CheckinRole>();
@@ -446,7 +446,7 @@ public class Checkin {
             .chain(roles -> {
                 // Got group membership records
                 var active = filterList(roles.records,
-                                        role -> checkinUserId == role.person.Id &&
+                                        role -> checkinUserId.equals(role.person.checkinUserId()) &&
                                                 role.role.equals("member") &&
                                                 !role.deleted && !role.status.equalsIgnoreCase("Deleted") &&
                                                 null == role.from && null == role.until);
@@ -558,7 +558,7 @@ public class Checkin {
      *         Unlike the cached list of VO members, the users in the returned list
      *         will have their <b>roles</b> field filled.
      */
-    private Map<Long, CheckinUser> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
+    private Map<String, CheckinUser> filterToUsersWithGroupRoles(CheckinRoleList groupRoles, String roleName, boolean logRecords) {
         if(!voMembersCached()) {
             // We need the VO members to be already cached
             log.error("Cannot filter group roles, VO members not loaded");
@@ -573,7 +573,7 @@ public class Checkin {
         // If an expression is specified, consider just matching roles
         final String rexRole = null != roleName ? roleName.replace("-", "\\-") + ".*" : null;
         var records = filterList(groupRoles.records, role -> {
-            if(role.isRole()) {
+            if(role.checkIfRole()) {
                 return null == roleName || roleName.isBlank() || role.role.matches(rexRole);
             }
 
@@ -581,15 +581,19 @@ public class Checkin {
         });
 
         var voUsers = voMembers;
-        Map<Long, CheckinUser> users = new HashMap<>();    // Users with assigned roles
-        for (var role : records) {
-            if (role.deleted || !role.status.equalsIgnoreCase("Active"))
+        Map<String, CheckinUser> users = new HashMap<>();    // Users with assigned roles
+        for(var role : records) {
+            if(role.deleted || !role.status.equalsIgnoreCase("Active"))
                 // Not an active role record, skip
                 continue;
 
             // Only include users that are members of both the VO and the group
             var user = new CheckinUser(role);
-            if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
+            if(null == user.checkinUserId || user.checkinUserId.isBlank())
+                // Skip invalid users too
+                continue;
+
+            if(voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 if(users.containsKey(user.checkinUserId)) {
                     // This user already holds some role, add this role too
@@ -665,6 +669,7 @@ public class Checkin {
     /***
      * Filter records to the ones that indicate assigned roles in the group.
      * @param groupRoles List of Check-in role records
+     * @param roleName Role name fragment or regular expression
      * @param logRecords Whether to dump the records in the log
      * @return Roles currently assigned in the group, null on error.
      *         Unlike the cached list of VO members, the users in the returned roles
@@ -685,7 +690,7 @@ public class Checkin {
         // If an expression is specified, consider just matching roles
         final String rexRole = null != roleName ? roleName.replace("-", "\\-") + ".*" : null;
         var records = filterList(groupRoles.records, role -> {
-            if(role.isRole()) {
+            if(role.checkIfRole()) {
                 return null == roleName || roleName.isBlank() || role.role.matches(rexRole);
             }
 
@@ -693,20 +698,24 @@ public class Checkin {
         });
 
         var voUsers = voMembers;
-        Map<Long, CheckinUser> users = new HashMap<>(); // Users with assigned roles
+        Map<String, CheckinUser> users = new HashMap<>(); // Users with assigned roles
         Map<String, RoleInfo> roles = new HashMap<>();   // Roles assigned in the group
-        Map<String, Set<Long>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
-        for (var roleRecord : records) {
-            if (roleRecord.deleted || !roleRecord.status.equalsIgnoreCase("Active"))
+        Map<String, Set<String>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
+        for(var roleRecord : records) {
+            if(roleRecord.deleted || !roleRecord.status.equalsIgnoreCase("Active"))
                 // Not an active role record, skip
                 continue;
 
             // Only include users that are members of both the VO and the group
             var user = new CheckinUser(roleRecord);
+            if(null == user.checkinUserId || user.checkinUserId.isBlank())
+                // Skip invalid users too
+                continue;
+
             if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 RoleInfo role = null;
-                Set<Long> usersWithRole = null;
+                Set<String> usersWithRole = null;
                 if(roles.containsKey(roleRecord.role)) {
                     role = roles.get(roleRecord.role);
                     usersWithRole = roleUsers.get(roleRecord.role);
@@ -768,7 +777,7 @@ public class Checkin {
      *                  The user must be included this group before the operation is allowed.
      * @return Details of membership record, see also {@link CheckinObject}
      */
-    public Uni<CheckinObject> assignUserRoleAsync(long checkinUserId, String groupName, String roleName) {
+    public Uni<CheckinObject> assignUserRoleAsync(String checkinUserId, String groupName, String roleName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -787,7 +796,7 @@ public class Checkin {
         MDC.put("coId", coId);
         MDC.put("groupName", groupName);
         MDC.put("roleName", roleName);
-        MDC.put("checkinUserId", checkinUserId);
+        MDC.put("userId", checkinUserId);
 
         final var header = getBasicAuthHeader();
         final var deletedRoles = new ArrayList<CheckinRole>();
@@ -822,8 +831,8 @@ public class Checkin {
             .chain(roles -> {
                 // Got group role records
                 var deleted = filterList(roles.records,
-                        role -> checkinUserId == role.person.Id &&
-                                role.isRole() && role.role.equalsIgnoreCase(roleName) &&
+                        role -> checkinUserId.equals(role.person.checkinUserId()) &&
+                                role.checkIfRole() && role.role.equalsIgnoreCase(roleName) &&
                                 (role.deleted || role.status.equalsIgnoreCase("Deleted")) &&
                                 null == role.from && null == role.until);
 
@@ -905,7 +914,7 @@ public class Checkin {
      * @param groupName The group in which the role is assigned
      * @return True on success
      */
-    public Uni<Boolean> revokeUserRoleAsync(long checkinUserId, String groupName, String roleName) {
+    public Uni<Boolean> revokeUserRoleAsync(String checkinUserId, String groupName, String roleName) {
         if(null == checkin) {
             log.error("Check-in not ready, call init() first");
             return Uni.createFrom().failure(new ActionException("notReady"));
@@ -916,7 +925,7 @@ public class Checkin {
         MDC.put("coId", coId);
         MDC.put("groupName", groupName);
         MDC.put("roleName", roleName);
-        MDC.put("checkinUserId", checkinUserId);
+        MDC.put("userId", checkinUserId);
 
         final var header = getBasicAuthHeader();
         final var deletedRoles = new ArrayList<CheckinRole>();
@@ -930,8 +939,8 @@ public class Checkin {
             .chain(roles -> {
                 // Got group membership records
                 var active = filterList(roles.records,
-                        role -> checkinUserId == role.person.Id &&
-                                role.isRole() && role.role.equalsIgnoreCase(roleName) &&
+                        role -> checkinUserId.equals(role.person.checkinUserId()) &&
+                                role.checkIfRole() && role.role.equalsIgnoreCase(roleName) &&
                                 !role.deleted && !role.status.equalsIgnoreCase("Deleted") &&
                                 null == role.from && null == role.until);
 
@@ -1066,7 +1075,7 @@ public class Checkin {
      * @param onlyGroup Whether logging records only for users included in the configured group
      *                  or for all members of the configured VO.
      */
-    private void logGroupMembers(List<CheckinRole> records, Map<Long, CheckinUser> users, boolean onlyGroup) {
+    private void logGroupMembers(List<CheckinRole> records, Map<String, CheckinUser> users, boolean onlyGroup) {
 
         log.infof("Found %d active members in %s %s", users.size(),
                 onlyGroup ? "group" : "VO",
@@ -1075,24 +1084,24 @@ public class Checkin {
         Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         for(var role : records) {
-            var trace = "userId:" + role.person.Id;
-            var user = users.get(role.person.Id);
+            var checkinUserId = role.person.checkinUserId();
+            var trace = "userId:" + checkinUserId;
+            var user = users.get(checkinUserId);
             if(null == user && onlyGroup && voMembersCached()) {
                 var voUsers = voMembers;
-                user = voUsers.get(role.person.Id);
+                user = voUsers.get(checkinUserId);
             }
 
             MDC.put("roleId", role.roleId);
             MDC.put("roleStatus", role.status);
-            MDC.put("checkinUserId", role.person.Id);
+            MDC.put("userId", checkinUserId);
 
             if(null != user) {
-                trace = user.fullName + ", " + trace;
-
                 MDC.put("userFullName", user.fullName);
-                if(null != user.userId)
-                    MDC.put("userId", user.userId);
+                trace = user.fullName + ", " + trace;
             }
+            else
+                MDC.remove("userFullName");
 
             if(null != role.from) {
                 MDC.put("roleFrom", role.from);
@@ -1101,13 +1110,16 @@ public class Checkin {
                         formatter.format(role.from),
                         formatter.format(role.until));
             }
+            else {
+                MDC.remove("roleFrom");
+                MDC.remove("roleUntil");
+            }
 
             log.infof("recordId:%d %s -> %s", role.roleId, role.status, trace);
         }
 
         MDC.remove("roleId");
         MDC.remove("roleStatus");
-        MDC.remove("checkinUserId");
         MDC.remove("userId");
         MDC.remove("userFullName");
         MDC.remove("roleFrom");
@@ -1119,7 +1131,7 @@ public class Checkin {
      * @param records The Check-in role records for the group
      * @param users The users identified to hold roles in the group
      */
-    private void logGroupRoles(List<CheckinRole> records, Map<Long, CheckinUser> users) {
+    private void logGroupRoles(List<CheckinRole> records, Map<String, CheckinUser> users) {
 
         log.infof("Found %d users with matching role(s) in group %s", users.size(), this.imsConfig.group());
 
@@ -1136,15 +1148,14 @@ public class Checkin {
             MDC.put("roleId", role.roleId);
             MDC.put("roleName", role.role);
             MDC.put("roleStatus", role.status);
-            MDC.put("checkinUserId", role.person.Id);
+            MDC.put("userId", role.person.Id);
 
             if(null != user) {
-                trace = user.fullName + ", " + trace;
-
                 MDC.put("userFullName", user.fullName);
-                if(null != user.userId)
-                    MDC.put("userId", user.userId);
+                trace = user.fullName + ", " + trace;
             }
+            else
+                MDC.remove("userFullName");
 
             if(null != role.from) {
                 MDC.put("roleFrom", role.from);
@@ -1153,6 +1164,10 @@ public class Checkin {
                         formatter.format(role.from),
                         formatter.format(role.until));
             }
+            else {
+                MDC.remove("roleFrom");
+                MDC.remove("roleUntil");
+            }
 
             log.infof("recordId:%d %s:%s -> %s", role.roleId, role.status, role.role, trace);
         }
@@ -1160,7 +1175,6 @@ public class Checkin {
         MDC.remove("roleId");
         MDC.remove("roleName");
         MDC.remove("roleStatus");
-        MDC.remove("checkinUserId");
         MDC.remove("userId");
         MDC.remove("userFullName");
         MDC.remove("roleFrom");

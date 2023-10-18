@@ -125,7 +125,7 @@ public class ProcessEntity extends PanacheEntityBase {
      * @param latest The latest version in the database
      * @param users The users that already exist in the database
      */
-    public ProcessEntity(Process process, ProcessEntity latest, Map<Long, UserEntity> users) {
+    public ProcessEntity(Process process, ProcessEntity latest, Map<String, UserEntity> users) {
         super();
 
         // Copy simple fields
@@ -182,7 +182,7 @@ public class ProcessEntity extends PanacheEntityBase {
                     if(reqe.responsibles.size() != reql.responsibles.size())
                         hasChanged = true;
                     else {
-                        var responsibles = new HashSet<Long>(); // Responsible users in the latest version
+                        var responsibles = new HashSet<String>(); // Responsible users in the latest version
                         for(var resp : reql.responsibles)
                             responsibles.add(resp.checkinUserId);
                         for(var resp : reqe.responsibles)
@@ -304,7 +304,7 @@ public class ProcessEntity extends PanacheEntityBase {
         /***
          * Copy constructor
          */
-        public Requirement(Process.Requirement requirement, Map<Long, UserEntity> users) {
+        public Requirement(Process.Requirement requirement, Map<String, UserEntity> users) {
             super();
 
             this.code = requirement.code;

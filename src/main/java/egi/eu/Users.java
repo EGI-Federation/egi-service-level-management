@@ -1,5 +1,6 @@
 package egi.eu;
 
+import egi.eu.entity.RoleLogEntity;
 import egi.eu.model.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -19,6 +20,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -97,6 +99,17 @@ public class Users extends BaseResource {
      */
     public Users() { super(log); }
 
+    /***
+     * Filter a list with a predicate.
+     * @param criteria The predicate to apply to each element
+     * @param list The list to filter
+     * @param <T> Type of list elements
+     * @return Another list containing just the matching elements
+     */
+    private<T> List<T> filterList(List<T> list, Predicate<T> criteria) {
+        return list.stream().filter(criteria).collect(Collectors.<T>toList());
+    }
+
     /**
      * Retrieve information about current user.
      * @param auth The access token needed to call the service.
@@ -118,10 +131,10 @@ public class Users extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> getUserInfo(@RestHeader(HttpHeaders.AUTHORIZATION) String auth) {
-
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+    public Uni<Response> getUserInfo(@RestHeader(HttpHeaders.AUTHORIZATION) String auth)
+    {
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
 
         log.info("Getting user info");
 
@@ -205,12 +218,12 @@ public class Users extends BaseResource {
                                    @RestQuery("limit")
                                    @Parameter(description = "Restrict the number of results returned")
                                    @Schema(defaultValue = "100")
-                                   long limit_) {
-
+                                   long limit_)
+    {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("onlyProcess", onlyProcess);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -251,12 +264,14 @@ public class Users extends BaseResource {
     /**
      * Add user to the configured group.
      * @param auth The access token needed to call the service.
-     * @param checkinUserId The Check-in Id of the user to add to the group.
+     * @param userId The Check-in Id of the user to add to the group (unused).
+     * @param user The user to add to the group.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @POST
-    @Path("/process/{checkinUserId}")
+    @Path("/process/{userId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "addUserToGroup",  summary = "Include user in the SLM process")
     @APIResponses(value = {
@@ -275,16 +290,33 @@ public class Users extends BaseResource {
     })
     public Uni<Response> addUserToGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                        @RestPath("checkinUserId")
+                                        @RestPath("userId")
                                         @Parameter(description = "Id of user to include in the process")
-                                        int checkinUserId) {
+                                        String userId,
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("checkinUserId", checkinUserId);
+                                        User user)
+    {
+        var grant = new RoleGrant(new User(
+            (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+            (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+            (String)identity.getAttribute(CheckinUser.ATTR_EMAIL)
+        ));
+        grant.assign = true;
+        grant.role = Role.PROCESS_MEMBER;
+
+        addToDC("userIdCaller", grant.changeBy.checkinUserId);
+        addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("user", user);
 
         log.info("Adding user to group");
 
+        if(null == user || null == user.checkinUserId || user.checkinUserId.isBlank()) {
+            // User must be specified
+            var ae = new ActionError("badRequest", "User is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        var added = new ArrayList<Boolean>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -297,14 +329,27 @@ public class Users extends BaseResource {
             })
             .chain(unused -> {
                 // Add user
-                return checkin.addUserToGroupAsync(checkinUserId, this.imsConfig.group());
+                return checkin.addUserToGroupAsync(user.checkinUserId, this.imsConfig.group());
+            })
+            .chain(addedOrUpdated -> {
+                // Added user, log it
+                added.add(true);
+                return logRoleAssignment(grant);
             })
             .chain(unused -> {
-                // Added user, success
+                // Added user logged, success
                 log.info("Added user to group");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Included")).build());
             })
             .onFailure().recoverWithItem(e -> {
+                if(!added.isEmpty()) {
+                    // User added, but not logged
+                    log.warn("Added user to group, but failed to log it");
+                    return Response.ok(new ActionSuccess("Included, but not logged"))
+                            .status(Response.Status.CREATED)
+                            .build();
+                }
+
                 log.error("Failed to add user to group");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
@@ -315,12 +360,14 @@ public class Users extends BaseResource {
     /**
      * Remove user to the configured group.
      * @param auth The access token needed to call the service.
-     * @param checkinUserId The Check-in Id of the user to remove from the group.
+     * @param userId The Check-in Id of the user to remove from the group (unused).
+     * @param user The user to remove from the group.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @DELETE
-    @Path("/process/{checkinUserId}")
+    @Path("/process/{userId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "removeUserFromGroup",  summary = "Exclude user from the SLM process")
     @APIResponses(value = {
@@ -339,16 +386,33 @@ public class Users extends BaseResource {
     })
     public Uni<Response> removeUserFromGroup(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                             @RestPath("checkinUserId")
+                                             @RestPath("userId")
                                              @Parameter(description = "Id of user to exclude from the process")
-                                             int checkinUserId) {
+                                             String userId,
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("checkinUserId", checkinUserId);
+                                             User user)
+    {
+        var grant = new RoleGrant(new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL)
+        ));
+        grant.assign = false;
+        grant.role = Role.PROCESS_MEMBER;
+
+        addToDC("userIdCaller", grant.changeBy.checkinUserId);
+        addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("user", user);
 
         log.info("Removing user from group");
 
+        if(null == user || null == user.checkinUserId || user.checkinUserId.isBlank()) {
+            // User must be specified
+            var ae = new ActionError("badRequest", "User is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        var removed = new ArrayList<Boolean>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -361,14 +425,27 @@ public class Users extends BaseResource {
             })
             .chain(unused -> {
                 // Remove user
-                return checkin.removeUserFromGroupAsync(checkinUserId, this.imsConfig.group());
+                return checkin.removeUserFromGroupAsync(user.checkinUserId, this.imsConfig.group());
+            })
+            .chain(success -> {
+                // Removed user, log it
+                removed.add(true);
+                return logRoleAssignment(grant);
             })
             .chain(unused -> {
-                // Removed user, success
+                // Removed user logged, success
                 log.info("Removed user from group");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Excluded")).build());
             })
             .onFailure().recoverWithItem(e -> {
+                if(!removed.isEmpty()) {
+                    // User removed, but not logged
+                    log.warn("Removed user from group, but failed to log it");
+                    return Response.ok(new ActionSuccess("Excluded, but not logged"))
+                            .status(Response.Status.CREATED)
+                            .build();
+                }
+
                 log.error("Failed to remove user from group");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
@@ -420,12 +497,12 @@ public class Users extends BaseResource {
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_) {
-
+                                            long limit_)
+    {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("roleNameFragment", roleNameFragment);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -461,15 +538,50 @@ public class Users extends BaseResource {
         return result;
     }
 
+    /***
+     * Log the assignment/revocation of a role.
+     * @param grant The role that was assigned/revoked and the users involved
+     * @return True on success
+     */
+    private Uni<Void> logRoleAssignment(RoleGrant grant) {
+
+        Uni<Void> result = sf.withTransaction((session, tx) -> { return
+                // Find the users involved in this log entry
+                UserEntity.findUsersWithCheckinUserIds(Arrays.asList(
+                                grant.roleHolder.checkinUserId,
+                                grant.changeBy.checkinUserId))
+                    .chain(users -> {
+                        // Got users with the specified Ids
+                        var roleHolderL = filterList(users, user -> user.checkinUserId.equals(grant.roleHolder.checkinUserId));
+                        var changeByL = filterList(users, user -> user.checkinUserId.equals(grant.changeBy.checkinUserId));
+
+                        var roleHolder = roleHolderL.isEmpty() ? new UserEntity(grant.roleHolder) : roleHolderL.get(0);
+                        var changeBy = changeByL.isEmpty() ? new UserEntity(grant.changeBy) : changeByL.get(0);
+
+                        // Create new role assignment log entry
+                        var newRoleLog = new RoleLogEntity(grant.role, grant.assign, roleHolder, changeBy);
+                        return session.persist(newRoleLog);
+                    });
+            })
+            .chain(unused -> {
+                // Role grant logged, success
+                return Uni.createFrom().voidItem();
+            });
+
+        return result;
+    }
+
     /**
      * Assign a role to a user.
      * @param auth The access token needed to call the service.
-     * @param checkinUserId The Check-in Id of the user to assign the role to.
+     * @param userId The Check-in Id of the user to assign the role to (unused).
+     * @param grant The role to assign and the user to assign to.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @POST
-    @Path("/role/{checkinUserId}")
+    @Path("/role/{userId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "assignRoleToUser",  summary = "Assign a role to a user",
                description ="To assign roles to a user, the user must be included in the SLM process.")
@@ -489,38 +601,52 @@ public class Users extends BaseResource {
     })
     public Uni<Response> assignRoleToUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                          @RestPath("checkinUserId")
+                                          @RestPath("userId")
                                           @Parameter(description = "Id of user to assign the role to")
-                                          int checkinUserId,
+                                          String userId,
 
-                                          @RestQuery("role")
-                                          @Parameter(description = "The role to assign to the user")
-                                          @Schema(enumeration = {
-                                                  Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                                  Role.CATALOG_OWNER, Role.REPORT_OWNER,
-                                                  Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
-                                          String role) {
+                                          RoleGrant grant)
+    {
+        grant.changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("checkinUserId", checkinUserId);
-        addToDC("roleName", role);
+        addToDC("userIdCaller", grant.changeBy.checkinUserId);
+        addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("grant", grant);
 
         log.info("Assigning role to user");
 
-        if(null == role || !(
-                role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
-                role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
-                role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
-                role.equalsIgnoreCase(Role.CATALOG_OWNER) ||
-                role.equalsIgnoreCase(Role.REPORT_OWNER) ||
-                role.equalsIgnoreCase(Role.UA_OWNER) ||
-                role.equalsIgnoreCase(Role.OLA_OWNER) ||
-                role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
-            var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", role));
+        if(null == grant) {
+            var ae = new ActionError("badRequest", "Missing role grant");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == grant.roleHolder || null == grant.roleHolder.checkinUserId || grant.roleHolder.checkinUserId.isBlank()) {
+            // Assignee must be specified
+            var ae = new ActionError("badRequest", "Role holder is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == grant.role || grant.role.isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role constant is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(!grant.role.equalsIgnoreCase(Role.PROCESS_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.PROCESS_MANAGER) &&
+           !grant.role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) &&
+           !grant.role.equalsIgnoreCase(Role.CATALOG_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.REPORT_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.UA_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.OLA_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.SLA_OWNER) ) {
+            var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", grant.role));
             return Uni.createFrom().item(ae.toResponse());
         }
 
+        grant.assign = true;
+
+        var assigned = new ArrayList<Boolean>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
@@ -532,15 +658,28 @@ public class Users extends BaseResource {
                 return Uni.createFrom().item(unused);
             })
             .chain(unused -> {
-                // Add role
-                return checkin.assignUserRoleAsync(checkinUserId, this.imsConfig.group(), role);
+                // Assign role
+                return checkin.assignUserRoleAsync(grant.roleHolder.checkinUserId, this.imsConfig.group(), grant.role);
+            })
+            .chain(addedOrUpdated -> {
+                // Assigned role, log it
+                assigned.add(true);
+                return logRoleAssignment(grant);
             })
             .chain(unused -> {
-                // Added role, success
+                // Role assignment logged, success
                 log.info("Assigned role to user");
-                return Uni.createFrom().item(Response.ok(new ActionSuccess("Assigned")).build());
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Assigned, logged")).build());
             })
             .onFailure().recoverWithItem(e -> {
+                if(!assigned.isEmpty()) {
+                    // Role assigned, but not logged
+                    log.error("Assigned role, but failed to log it");
+                    return Response.ok(new ActionSuccess("Assigned, but not logged"))
+                                   .status(Response.Status.CREATED)
+                                   .build();
+                }
+
                 log.error("Failed to assign role to user");
                 return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
@@ -551,12 +690,14 @@ public class Users extends BaseResource {
     /**
      * Revoke a role from a user.
      * @param auth The access token needed to call the service.
-     * @param checkinUserId The Check-in Id of the user to revoke the role from
+     * @param userId The Check-in Id of the user to revoke the role from (unused).
+     * @param grant The role to revoke and the user to revoke it from.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @DELETE
-    @Path("/role/{checkinUserId}")
+    @Path("/role/{userId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "revokeRoleFromUser",  summary = "Revoke a role from a user")
     @APIResponses(value = {
@@ -575,61 +716,88 @@ public class Users extends BaseResource {
     })
     public Uni<Response> revokeRoleFromUser(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                            @RestPath("checkinUserId")
+                                            @RestPath("userId")
                                             @Schema(title = "Id of user to revoke the role from")
-                                            int checkinUserId,
+                                            String userId,
 
-                                            @RestQuery("role")
-                                            @Parameter(description = "The role to revoke from the user")
-                                            @Schema(enumeration = {
-                                                    Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
-                                                    Role.CATALOG_OWNER, Role.REPORT_OWNER,
-                                                    Role.UA_OWNER, Role.OLA_OWNER, Role.SLA_OWNER })
-                                            String role) {
+                                            RoleGrant grant)
+    {
+        grant.changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
-        addToDC("checkinUserId", checkinUserId);
-        addToDC("roleName", role);
+        addToDC("userIdCaller", grant.changeBy.checkinUserId);
+        addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("grant", grant);
 
         log.info("Revoking role from user");
 
-        if(null == role || !(
-                role.equalsIgnoreCase(Role.PROCESS_OWNER) ||
-                role.equalsIgnoreCase(Role.PROCESS_MANAGER) ||
-                role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) ||
-                role.equalsIgnoreCase(Role.CATALOG_OWNER) ||
-                role.equalsIgnoreCase(Role.REPORT_OWNER) ||
-                role.equalsIgnoreCase(Role.UA_OWNER) ||
-                role.equalsIgnoreCase(Role.OLA_OWNER) ||
-                role.equalsIgnoreCase(Role.SLA_OWNER)) ) {
-            var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", role));
+        if(null == grant) {
+            var ae = new ActionError("badRequest", "Missing role grant");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == grant.roleHolder || null == grant.roleHolder.checkinUserId || grant.roleHolder.checkinUserId.isEmpty()) {
+            // Assignee must be specified
+            var ae = new ActionError("badRequest", "Role holder is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(null == grant.role || grant.role.isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role constant is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+        if(!grant.role.equalsIgnoreCase(Role.PROCESS_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.PROCESS_MANAGER) &&
+           !grant.role.equalsIgnoreCase(Role.PROCESS_DEVELOPER) &&
+           !grant.role.equalsIgnoreCase(Role.CATALOG_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.REPORT_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.UA_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.OLA_OWNER) &&
+           !grant.role.equalsIgnoreCase(Role.SLA_OWNER) ) {
+            var ae = new ActionError("badRequest", "Unknown role", Tuple2.of("role", grant.role));
             return Uni.createFrom().item(ae.toResponse());
         }
 
+        grant.assign = false;
+
+        var revoked = new ArrayList<Boolean>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
-                .chain(unused -> {
-                    // Get REST client for Check-in
-                    if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
-                        // Could not get REST client
-                        return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+            .chain(unused -> {
+                // Get REST client for Check-in
+                if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
+                    // Could not get REST client
+                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
 
-                    return Uni.createFrom().item(unused);
-                })
-                .chain(unused -> {
-                    // Revoke role
-                    return checkin.revokeUserRoleAsync(checkinUserId, this.imsConfig.group(), role);
-                })
-                .chain(unused -> {
-                    // Revoked role, success
-                    log.info("Revoked role from user");
-                    return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).build());
-                })
-                .onFailure().recoverWithItem(e -> {
-                    log.error("Failed to revoke role from user");
-                    return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
-                });
+                return Uni.createFrom().item(unused);
+            })
+            .chain(unused -> {
+                // Revoke role
+                return checkin.revokeUserRoleAsync(grant.roleHolder.checkinUserId, this.imsConfig.group(), grant.role);
+            })
+            .chain(success -> {
+                // Revoked role, log it
+                revoked.add(true);
+                return logRoleAssignment(grant);
+            })
+            .chain(unused -> {
+                // Revoked role, success
+                log.info("Revoked role from user");
+                return Uni.createFrom().item(Response.ok(new ActionSuccess("Revoked")).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                if(!revoked.isEmpty()) {
+                    // Role assigned, but not logged
+                    log.error("Revoked role, but failed to log it");
+                    return Response.ok(new ActionSuccess("Revoked, but not logged"))
+                            .status(Response.Status.CREATED)
+                            .build();
+                }
+
+                log.error("Failed to revoke role from user");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
+            });
 
         return result;
     }
@@ -675,12 +843,12 @@ public class Users extends BaseResource {
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_) {
-
+                                            long limit_)
+    {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("roleName", roleName);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -748,8 +916,8 @@ public class Users extends BaseResource {
                                            Role.OLA_OWNER, Role.SLA_OWNER, Role.PROCESS_MEMBER })
                                    String role)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("roleName", role);
 
         log.info("Listing role definitions");
@@ -817,6 +985,7 @@ public class Users extends BaseResource {
     @POST
     @Path("/role/definition")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "addRole",  summary = "Add new role")
     @APIResponses(value = {
@@ -835,17 +1004,17 @@ public class Users extends BaseResource {
     })
     public Uni<Response> addRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Role role)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        role.changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
+
+        addToDC("userIdCaller", role.changeBy.checkinUserId);
+        addToDC("userNameCaller", role.changeBy.fullName);
         addToDC("role", role);
 
         log.info("Adding role");
 
-        if(null == role.changeBy || null == role.changeBy.checkinUserId || role.changeBy.checkinUserId < 0) {
-            // No anonymous changes allowed
-            var ae = new ActionError("badRequest", "Check-in identity is required");
-            return Uni.createFrom().item(ae.toResponse());
-        }
         if(null == role.role || role.role.isEmpty()) {
             // Role must be specified
             var ae = new ActionError("badRequest", "Role constant is required");
@@ -878,7 +1047,7 @@ public class Users extends BaseResource {
                     });
                 });
             })
-            .chain(updated -> {
+            .chain(unused -> {
                 // Add complete, success
                 log.info("Added role");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Added"))
@@ -900,6 +1069,7 @@ public class Users extends BaseResource {
     @PUT
     @Path("/role/definition")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "updateRole",  summary = "Update role definition")
     @APIResponses(value = {
@@ -918,17 +1088,17 @@ public class Users extends BaseResource {
     })
     public Uni<Response> updateRole(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Role role)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        role.changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
+
+        addToDC("userIdCaller", role.changeBy.checkinUserId);
+        addToDC("userNameCaller", role.changeBy.fullName);
         addToDC("role", role);
 
         log.info("Updating role");
 
-        if(null == role.changeBy || null == role.changeBy.checkinUserId || role.changeBy.checkinUserId < 0) {
-            // No anonymous changes allowed
-            var ae = new ActionError("badRequest", "Check-in identity is required");
-            return Uni.createFrom().item(ae.toResponse());
-        }
         if(null == role.role || role.role.isEmpty()) {
             // Role must be specified
             var ae = new ActionError("badRequest", "Role constant is required");
@@ -972,7 +1142,7 @@ public class Users extends BaseResource {
                     });
                 });
             })
-            .chain(updated -> {
+            .chain(unused -> {
                 // Update complete, success
                 log.info("Updated role");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated"))
@@ -989,11 +1159,14 @@ public class Users extends BaseResource {
     /**
      * Mark role as implemented.
      * @param auth The access token needed to call the service.
+     * @param role The role to implement.
+     * @param change Contains the change description.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
     @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_DEVELOPER })
     @Operation(operationId = "implementRole",  summary = "Implement role")
     @APIResponses(value = {
@@ -1018,19 +1191,18 @@ public class Users extends BaseResource {
 
                                        Change change)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        var changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
+
+        addToDC("userIdCaller", changeBy.checkinUserId);
+        addToDC("userNameCaller", changeBy.fullName);
         addToDC("roleName", role);
         addToDC("change", change);
 
         log.info("Implementing role");
 
-        if(null == change || null == change.changeBy ||
-           null == change.changeBy.checkinUserId || change.changeBy.checkinUserId < 0) {
-            // No anonymous changes allowed
-            var ae = new ActionError("badRequest", "Check-in identity is required");
-            return Uni.createFrom().item(ae.toResponse());
-        }
         if(null == role || role.isEmpty()) {
             // Role must be specified
             var ae = new ActionError("badRequest", "Role is required");
@@ -1058,12 +1230,12 @@ public class Users extends BaseResource {
 
                         // Check if caller user already exist in the database
                         UserEntity existingUser = null;
-                        if(null != latestRole.changeBy && change.changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
+                        if(null != latestRole.changeBy && changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
                             existingUser = latestRole.changeBy;
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
-                        return UserEntity.findByCheckinUserId(change.changeBy.checkinUserId);
+                        return UserEntity.findByCheckinUserId(changeBy.checkinUserId);
                     })
                     .chain(existingUser -> {
                         // Got caller user, if it exists in the database
@@ -1076,7 +1248,7 @@ public class Users extends BaseResource {
                     });
                 });
             })
-            .chain(updated -> {
+            .chain(unused -> {
                 // Update complete, success
                 log.info("Implemented role");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Implemented"))
@@ -1093,11 +1265,14 @@ public class Users extends BaseResource {
     /**
      * Deprecate role.
      * @param auth The access token needed to call the service.
+     * @param role The role to deprecate.
+     * @param change Contains the change description.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @DELETE
     @Path("/role/definition/{role}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER })
     @Operation(operationId = "deprecateRole",  summary = "Deprecate role")
     @APIResponses(value = {
@@ -1122,19 +1297,18 @@ public class Users extends BaseResource {
 
                                        Change change)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        var changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
+
+        addToDC("userIdCaller", changeBy.checkinUserId);
+        addToDC("userNameCaller", changeBy.fullName);
         addToDC("roleName", role);
         addToDC("change", change);
 
         log.info("Deprecating role");
 
-        if(null == change || null == change.changeBy ||
-           null == change.changeBy.checkinUserId || change.changeBy.checkinUserId < 0) {
-            // No anonymous changes allowed
-            var ae = new ActionError("badRequest", "Check-in identity is required");
-            return Uni.createFrom().item(ae.toResponse());
-        }
         if(null == role || role.isEmpty()) {
             // Role must be specified
             var ae = new ActionError("badRequest", "Role is required");
@@ -1162,12 +1336,12 @@ public class Users extends BaseResource {
 
                         // Check if caller user already exist in the database
                         UserEntity existingUser = null;
-                        if(null != latestRole.changeBy && change.changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
+                        if(null != latestRole.changeBy && changeBy.checkinUserId.equals(latestRole.changeBy.checkinUserId))
                             existingUser = latestRole.changeBy;
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
-                        return UserEntity.findByCheckinUserId(change.changeBy.checkinUserId);
+                        return UserEntity.findByCheckinUserId(changeBy.checkinUserId);
                     })
                     .chain(existingUser -> {
                         // Got caller user, if it exists in the database
@@ -1180,7 +1354,7 @@ public class Users extends BaseResource {
                     });
                 });
             })
-            .chain(updated -> {
+            .chain(unused -> {
                 // Deprecation complete, success
                 log.info("Deprecated role");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated"))

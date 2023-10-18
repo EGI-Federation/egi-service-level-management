@@ -112,8 +112,8 @@ public class ServiceLevelAgreements extends BaseResource {
     {
         final long limit = (0 == limit_) ? 100 : limit_;
 
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
         addToDC("offset", offset);
         addToDC("limit", limit);
@@ -146,6 +146,7 @@ public class ServiceLevelAgreements extends BaseResource {
     @POST
     @Path("/sla")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.SLA_OWNER })
     @Operation(operationId = "createSLA",  summary = "Create new Service Level Agreement")
     @APIResponses(value = {
@@ -159,12 +160,10 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-
-                                   ServiceLevelAgreement sla)
+    public Uni<Response> createSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, ServiceLevelAgreement sla)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("sla", sla);
 
         log.info("Creating SLA");
@@ -194,6 +193,7 @@ public class ServiceLevelAgreements extends BaseResource {
     @PUT
     @Path("/sla/{slaId}")
     @SecurityRequirement(name = "OIDC")
+    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.SLA_OWNER })
     @Operation(operationId = "updateSLA",  summary = "Update existing Service Level Agreement",
                description = "Agreements are immutable, once signed. Before an agreement is marked as signed, " +
@@ -222,8 +222,8 @@ public class ServiceLevelAgreements extends BaseResource {
 
                                    ServiceLevelAgreement sla)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("slaId", slaId);
         addToDC("sla", sla);
 
@@ -281,8 +281,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                   @Schema(defaultValue = "false")
                                   boolean allVersions)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("slaId", slaId);
         addToDC("allVersions", allVersions);
 
@@ -339,8 +339,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                  @Parameter(required = true, description = "ID of agreement to sign")
                                  int slaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("slaId", slaId);
 
         log.info("Signing SLA");
@@ -391,8 +391,8 @@ public class ServiceLevelAgreements extends BaseResource {
                                    @Parameter(required = true, description = "ID of agreement to revoke")
                                    int slaId)
     {
-        addToDC("userId", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userName", identity.getAttribute(CheckinUser.ATTR_USERNAME));
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("slaId", slaId);
 
         log.info("Revoking SLA");
