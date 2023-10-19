@@ -50,11 +50,11 @@ public class Checkin {
      * @return True if VO members are available in the cache
      */
     private boolean voMembersCached() {
-        if(null == voMembers)
+        if(null == Checkin.voMembers)
             return false;
 
         final long millisecondsSinceEpoch = Instant.now().toEpochMilli();
-        final boolean stale = voMembersUpdatedAt + this.checkinConfig.cacheMembers() < millisecondsSinceEpoch;
+        final boolean stale = Checkin.voMembersUpdatedAt + this.checkinConfig.cacheMembers() < millisecondsSinceEpoch;
         return !stale;
     }
 
@@ -176,7 +176,7 @@ public class Checkin {
         if(voMembersCached()) {
             // We have a cache, and it's not stale
             log.info("Using cached VO members");
-            var users = voMembers;
+            var users = Checkin.voMembers;
             List<CheckinUser> userList = new ArrayList<>(users.values());
             return Uni.createFrom().item(userList);
         }
@@ -206,8 +206,8 @@ public class Checkin {
                     logGroupMembers(members, users, false);
 
                 // Cache VO member list
-                voMembers = users;
-                voMembersUpdatedAt = Instant.now().toEpochMilli();
+                Checkin.voMembers = users;
+                Checkin.voMembersUpdatedAt = Instant.now().toEpochMilli();
 
                 // Return VO members
                 List<CheckinUser> userList = new ArrayList<>(users.values());
@@ -241,7 +241,7 @@ public class Checkin {
                 // called just to list members of the configured group.
                 return listVoMembersAsync(this.imsConfig.vo());
             })
-            .chain(voMembers -> {
+            .chain(vom -> {
                 // VO members are now cached, get group role records
                 log.info("Getting members of group " + groupName);
                 return getGroupMembersAndRolesAsync(groupName);
@@ -279,10 +279,9 @@ public class Checkin {
         // Keep just the records that mean membership in the group
         var members = filterList(groupRoles.records, role -> role.role.equals("member"));
 
-        var voUsers = voMembers;
         Map<String, CheckinUser> users = new HashMap<>();
         for(var role : members) {
-            if (role.deleted || !role.status.equalsIgnoreCase("Active"))
+            if(role.deleted || null == role.status || !role.status.equalsIgnoreCase("Active"))
                 // Not an active membership record, skip
                 continue;
 
@@ -292,7 +291,8 @@ public class Checkin {
                 // Skip invalid users too
                 continue;
 
-            if(voUsers.containsKey(user.checkinUserId) && !users.containsKey(user.checkinUserId))
+            if(null != Checkin.voMembers && Checkin.voMembers.containsKey(user.checkinUserId) &&
+                    !users.containsKey(user.checkinUserId))
                 // This is a membership record, not a role record
                 users.put(user.checkinUserId, user);
         }
@@ -524,7 +524,7 @@ public class Checkin {
                 // called just to list members of the configured group.
                 return listVoMembersAsync(this.imsConfig.vo());
             })
-            .chain(voMembers -> {
+            .chain(vom -> {
                 // VO members are now cached, get group role records
                 log.info("Getting users with roles in group " + groupName);
                 return getGroupMembersAndRolesAsync(groupName);
@@ -580,7 +580,6 @@ public class Checkin {
             return false;
         });
 
-        var voUsers = voMembers;
         Map<String, CheckinUser> users = new HashMap<>();    // Users with assigned roles
         for(var role : records) {
             if(role.deleted || !role.status.equalsIgnoreCase("Active"))
@@ -593,7 +592,8 @@ public class Checkin {
                 // Skip invalid users too
                 continue;
 
-            if(voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
+            if(null != Checkin.voMembers && Checkin.voMembers.containsKey(user.checkinUserId) &&
+                    members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 if(users.containsKey(user.checkinUserId)) {
                     // This user already holds some role, add this role too
@@ -644,7 +644,7 @@ public class Checkin {
                 // called just to list members of the configured group.
                 return listVoMembersAsync(this.imsConfig.vo());
             })
-            .chain(voMembers -> {
+            .chain(vom -> {
                 // VO members are now cached, get group role records
                 log.info("Getting assigned roles in group " + groupName);
                 return getGroupMembersAndRolesAsync(groupName);
@@ -697,7 +697,6 @@ public class Checkin {
             return false;
         });
 
-        var voUsers = voMembers;
         Map<String, CheckinUser> users = new HashMap<>(); // Users with assigned roles
         Map<String, RoleInfo> roles = new HashMap<>();   // Roles assigned in the group
         Map<String, Set<String>> roleUsers = new HashMap<>(); // Tracks which role is assigned to which users
@@ -712,7 +711,8 @@ public class Checkin {
                 // Skip invalid users too
                 continue;
 
-            if (voUsers.containsKey(user.checkinUserId) && members.containsKey(user.checkinUserId)) {
+            if(null != Checkin.voMembers && Checkin.voMembers.containsKey(user.checkinUserId) &&
+                    members.containsKey(user.checkinUserId)) {
                 // The user mentioned in this role record is both a VO and group member
                 RoleInfo role = null;
                 Set<String> usersWithRole = null;
@@ -784,8 +784,7 @@ public class Checkin {
         }
 
         if(voMembersCached()) {
-            var voUsers = voMembers;
-            if(!voUsers.containsKey(checkinUserId)) {
+            if(!Checkin.voMembers.containsKey(checkinUserId)) {
                 log.error("Unknown user");
                 return Uni.createFrom().failure(new ActionException("notFound", "Unknown user"));
             }
@@ -807,7 +806,7 @@ public class Checkin {
                 // We need the list of VO members to be able to determine group membership
                 return listVoMembersAsync(this.imsConfig.vo());
             })
-            .chain(voMembers -> {
+            .chain(vom -> {
                 // Check-in allows multiple role records for the same role.
                 // However, once there are multiple records, with (at least) one being marked deleted,
                 // attempts to remove the role from the user (by marking it deleted) will fail,
@@ -1085,12 +1084,13 @@ public class Checkin {
 
         for(var role : records) {
             var checkinUserId = role.person.checkinUserId();
+            if(null == checkinUserId)
+                continue;
+
             var trace = "userId:" + checkinUserId;
             var user = users.get(checkinUserId);
-            if(null == user && onlyGroup && voMembersCached()) {
-                var voUsers = voMembers;
-                user = voUsers.get(checkinUserId);
-            }
+            if(null == user && onlyGroup && voMembersCached())
+                user = Checkin.voMembers.get(checkinUserId);
 
             MDC.put("roleId", role.roleId);
             MDC.put("roleStatus", role.status);
@@ -1138,12 +1138,14 @@ public class Checkin {
         Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         for(var role : records) {
-            var trace = "userId:" + role.person.Id;
-            var user = users.get(role.person.Id);
-            if(null == user && voMembersCached()) {
-                var voUsers = voMembers;
-                user = voUsers.get(role.person.Id);
-            }
+            var checkinUserId = role.person.checkinUserId();
+            if(null == checkinUserId)
+                continue;
+
+            var trace = "userId:" + checkinUserId;
+            var user = users.get(checkinUserId);
+            if(null == user && voMembersCached())
+                user = Checkin.voMembers.get(checkinUserId);
 
             MDC.put("roleId", role.roleId);
             MDC.put("roleName", role.role);

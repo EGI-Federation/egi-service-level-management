@@ -166,18 +166,17 @@ public class Configuration extends BaseResource {
     })
     public Uni<Response> updateConfiguration(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Process process)
     {
-        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
-        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        process.changeBy = new User(
+                (String)identity.getAttribute(CheckinUser.ATTR_USERID),
+                (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
+                (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
+
+        addToDC("userIdCaller", process.changeBy.checkinUserId);
+        addToDC("userNameCaller", process.changeBy.fullName);
         addToDC("processName", imsConfig.group());
         addToDC("process", process);
 
         log.info("Updating process");
-
-        if(null == process.changeBy || null == process.changeBy.checkinUserId || process.changeBy.checkinUserId.isBlank()) {
-            // No anonymous changes allowed
-            var ae = new ActionError("badRequest", "Check-in identity is required");
-            return Uni.createFrom().item(ae.toResponse());
-        }
 
         var latest = new ArrayList<ProcessEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
