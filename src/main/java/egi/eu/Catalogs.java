@@ -51,9 +51,10 @@ public class Catalogs extends BaseResource {
     /***
      * Page of catalogs
      */
-    public static class PageOfCatalogs extends Page<Catalog> {
-        public PageOfCatalogs(String baseUri, long offset, long limit, List<Catalog> catalogs) {
-            super(baseUri, offset, limit, catalogs); }
+    public static class PageOfCatalogs extends Page<Catalog, Long> {
+        public PageOfCatalogs(String baseUri, long from, int limit, List<Catalog> catalogs) {
+            super(baseUri, from, limit, catalogs, false);
+        }
     }
 
     /***
@@ -66,9 +67,10 @@ public class Catalogs extends BaseResource {
     /***
      * Page of catalog reviews
      */
-    public static class PageOfCatalogReviews extends Page<CatalogReview> {
-        public PageOfCatalogReviews(String baseUri, long offset, long limit, List<CatalogReview> reviews) {
-            super(baseUri, offset, limit, reviews); }
+    public static class PageOfCatalogReviews extends Page<CatalogReview, Long> {
+        public PageOfCatalogReviews(String baseUri, long from, int limit, List<CatalogReview> reviews) {
+            super(baseUri, from, limit, reviews, false);
+        }
     }
 
 
@@ -80,7 +82,7 @@ public class Catalogs extends BaseResource {
     /**
      * List all catalogs.
      * @param auth The access token needed to call the service.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfCatalogs>) or an ActionError entity
@@ -113,22 +115,22 @@ public class Catalogs extends BaseResource {
                                       @Schema(defaultValue = "false")
                                       boolean allVersions,
 
-                                      @RestQuery("offset")
+                                      @RestQuery("from")
                                       @Parameter(description = "Skip the first given number of results")
                                       @Schema(defaultValue = "0")
-                                      long offset,
+                                      long from,
 
                                       @RestQuery("limit")
                                       @Parameter(description = "Restrict the number of results returned")
                                       @Schema(defaultValue = "100")
-                                      long limit_)
+                                      int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing catalogs");
@@ -139,7 +141,7 @@ public class Catalogs extends BaseResource {
                 // Got catalog list, success
                 log.info("Got catalog list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfCatalogs(uri.toString(), offset, limit, null);
+                var page = new PageOfCatalogs(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -612,7 +614,7 @@ public class Catalogs extends BaseResource {
      * List catalog reviews.
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog to list reviews of.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfCatalogReviews>) or an ActionError entity
      */
@@ -643,22 +645,22 @@ public class Catalogs extends BaseResource {
                                             @Parameter(required = true, description = "ID of catalog to lists review of")
                                             int catalogId,
 
-                                            @RestQuery("offset")
+                                            @RestQuery("from")
                                             @Parameter(description = "Skip the first given number of results")
                                             @Schema(defaultValue = "0")
-                                            long offset,
+                                            long from,
 
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_)
+                                            int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("catalogID", catalogId);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing catalog reviews");
@@ -669,7 +671,7 @@ public class Catalogs extends BaseResource {
                     // Got reviews, success
                     log.info("Got review list");
                     var uri = getRealRequestUri(uriInfo, httpHeaders);
-                    var page = new PageOfCatalogReviews(uri.toString(), offset, limit, null);
+                    var page = new PageOfCatalogReviews(uri.toString(), from, limit, null);
                     return Uni.createFrom().item(Response.ok(page).build());
                 })
                 .onFailure().recoverWithItem(e -> {

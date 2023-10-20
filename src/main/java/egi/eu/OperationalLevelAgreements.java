@@ -53,9 +53,10 @@ public class OperationalLevelAgreements extends BaseResource {
     /***
      * Page of OLAs
      */
-    static class PageOfOperationalLevelAgreements extends Page<OperationalLevelAgreement> {
-        public PageOfOperationalLevelAgreements(String baseUri, long offset, long limit, List<OperationalLevelAgreement> olas) {
-            super(baseUri, offset, limit, olas); }
+    static class PageOfOperationalLevelAgreements extends Page<OperationalLevelAgreement, Long> {
+        public PageOfOperationalLevelAgreements(String baseUri, long from, int limit, List<OperationalLevelAgreement> olas) {
+            super(baseUri, from, limit, olas, false);
+        }
     }
 
 
@@ -68,7 +69,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * List all OLAs.
      * @param auth The access token needed to call the service.
      * @param slaId If provided, will only return OLAs supporting the SLA with this Id
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link OperationalLevelAgreement}>) or an ActionError entity
@@ -105,22 +106,22 @@ public class OperationalLevelAgreements extends BaseResource {
                                   @Schema(defaultValue = "false")
                                   boolean allVersions,
 
-                                  @RestQuery("offset")
+                                  @RestQuery("from")
                                   @Parameter(description = "Skip the first given number of results")
                                   @Schema(defaultValue = "0")
-                                  long offset,
+                                  long from,
 
                                   @RestQuery("limit")
                                   @Parameter(description = "Restrict the number of results returned")
                                   @Schema(defaultValue = "100")
-                                  long limit_)
+                                  int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing OLAs");
@@ -131,7 +132,7 @@ public class OperationalLevelAgreements extends BaseResource {
                 // Got OLA list, success
                 log.info("Got OLA list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfOperationalLevelAgreements(uri.toString(), offset, limit, null);
+                var page = new PageOfOperationalLevelAgreements(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {

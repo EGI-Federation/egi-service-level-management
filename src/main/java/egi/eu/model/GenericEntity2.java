@@ -3,15 +3,13 @@ package egi.eu.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
- * Base generic entity
+ * Base generic entity with 2 type parameters
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class GenericEntity<T> {
+public abstract class GenericEntity2<T, M> {
 
     public String kind;
 
@@ -22,7 +20,7 @@ public abstract class GenericEntity<T> {
      * @param pluralName Whether to make the prefix plural (append 's')
      * @param typeNameSuffix A suffix to use as part of the name
      */
-    protected GenericEntity(String typeNamePrefix, String typeNameSuffix, boolean pluralName) {
+    protected GenericEntity2(String typeNamePrefix, String typeNameSuffix, boolean pluralName) {
         var type = getFirstTypeParameter();
         if(null != type) {
             var name = type.getTypeName();
@@ -52,6 +50,21 @@ public abstract class GenericEntity<T> {
         try {
             ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
             return (Class<T>) superclass.getActualTypeArguments()[0];
+        }
+        catch(Exception e) {
+            return null;
+        }
+    }
+
+    /***
+     * Helper to get the name of the second type parameter (M).
+     * @return Class of the type parameter, null on error
+     */
+    @SuppressWarnings("unchecked")
+    protected Class<M> getSecondTypeParameter() {
+        try {
+            ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
+            return (Class<M>) superclass.getActualTypeArguments()[1];
         }
         catch(Exception e) {
             return null;

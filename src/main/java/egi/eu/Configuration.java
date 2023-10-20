@@ -69,9 +69,10 @@ public class Configuration extends BaseResource {
     /***
      * Page of process reviews
      */
-    public static class PageOfProcessReviews extends Page<ProcessReview> {
-        public PageOfProcessReviews(String baseUri, long offset, long limit, List<ProcessReview> reviews) {
-            super(baseUri, offset, limit, reviews); }
+    public static class PageOfProcessReviews extends Page<ProcessReview, Long> {
+        public PageOfProcessReviews(String baseUri, long from, int limit, List<ProcessReview> reviews) {
+            super(baseUri, from, limit, reviews, false);
+        }
     }
 
 
@@ -204,7 +205,7 @@ public class Configuration extends BaseResource {
                                     for(var resp : req.responsibles)
                                         ids.add(resp.checkinUserId);
 
-                        return UserEntity.findUsersWithCheckinUserIds(ids.stream().toList());
+                        return UserEntity.findByCheckinUserIds(ids.stream().toList());
                     })
                     .chain(existingUsers -> {
                         // Got the existing users
@@ -605,7 +606,7 @@ public class Configuration extends BaseResource {
     /**
      * List process reviews.
      * @param auth The access token needed to call the service.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfProcessReviews>) or an ActionError entity
      */
@@ -629,22 +630,22 @@ public class Configuration extends BaseResource {
                                             @Context UriInfo uriInfo,
                                             @Context HttpHeaders httpHeaders,
 
-                                            @RestQuery("offset")
+                                            @RestQuery("from")
                                             @Parameter(description = "Skip the first given number of results")
                                             @Schema(defaultValue = "0")
-                                            long offset,
+                                            long from,
 
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_)
+                                            int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing process reviews");
@@ -655,7 +656,7 @@ public class Configuration extends BaseResource {
                 // Got reviews, success
                 log.info("Got review list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfProcessReviews(uri.toString(), offset, limit, null);
+                var page = new PageOfProcessReviews(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {

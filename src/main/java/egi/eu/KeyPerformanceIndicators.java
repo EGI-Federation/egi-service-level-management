@@ -56,9 +56,10 @@ public class KeyPerformanceIndicators extends BaseResource {
     /***
      * Page of KPIs
      */
-    public static class PageOfKeyPerformanceIndicators extends Page<KeyPerformanceIndicator> {
-        public PageOfKeyPerformanceIndicators(String baseUri, long offset, long limit, List<KeyPerformanceIndicator> procedures) {
-            super(baseUri, offset, limit, procedures); }
+    public static class PageOfKeyPerformanceIndicators extends Page<KeyPerformanceIndicator, Long> {
+        public PageOfKeyPerformanceIndicators(String baseUri, long from, int limit, List<KeyPerformanceIndicator> procedures) {
+            super(baseUri, from, limit, procedures, false);
+        }
     }
 
     /***
@@ -71,9 +72,10 @@ public class KeyPerformanceIndicators extends BaseResource {
     /***
      * Page of KPI reviews
      */
-    public static class PageOfKeyPerformanceIndicatorReviews extends Page<KeyPerformanceIndicatorReview> {
-        public PageOfKeyPerformanceIndicatorReviews(String baseUri, long offset, long limit, List<KeyPerformanceIndicatorReview> reviews) {
-            super(baseUri, offset, limit, reviews); }
+    public static class PageOfKeyPerformanceIndicatorReviews extends Page<KeyPerformanceIndicatorReview, Long> {
+        public PageOfKeyPerformanceIndicatorReviews(String baseUri, long from, int limit, List<KeyPerformanceIndicatorReview> reviews) {
+            super(baseUri, from, limit, reviews, false);
+        }
     }
 
 
@@ -85,7 +87,7 @@ public class KeyPerformanceIndicators extends BaseResource {
     /**
      * List the KPIs in this process.
      * @param auth The access token needed to call the service.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfKeyPerformanceIndicators >) or an ActionError entity
@@ -118,23 +120,23 @@ public class KeyPerformanceIndicators extends BaseResource {
                                   @Schema(defaultValue = "false")
                                   boolean allVersions,
 
-                                  @RestQuery("offset")
+                                  @RestQuery("from")
                                   @Parameter(description = "Skip the first given number of results")
                                   @Schema(defaultValue = "0")
-                                  long offset,
+                                  long from,
 
                                   @RestQuery("limit")
                                   @Parameter(description = "Restrict the number of results returned")
                                   @Schema(defaultValue = "100")
-                                  long limit_)
+                                  int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing KPIs");
@@ -145,7 +147,7 @@ public class KeyPerformanceIndicators extends BaseResource {
                 // Got KPI list, success
                 log.info("Got KPI list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfKeyPerformanceIndicators(uri.toString(), offset, limit, null);
+                var page = new PageOfKeyPerformanceIndicators(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -323,7 +325,7 @@ public class KeyPerformanceIndicators extends BaseResource {
      * List KPI reviews.
      * @param auth The access token needed to call the service.
      * @param kpiId The ID of the KPI to list reviews of.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess(Page<{@link PageOfKeyPerformanceIndicatorReviews>) or an ActionError entity
      */
@@ -354,23 +356,23 @@ public class KeyPerformanceIndicators extends BaseResource {
                                         @Parameter(required = true, description = "ID of KPI to lists review of")
                                         int kpiId,
 
-                                        @RestQuery("offset")
+                                        @RestQuery("from")
                                         @Parameter(description = "Skip the first given number of results")
                                         @Schema(defaultValue = "0")
-                                        long offset,
+                                        long from,
 
                                         @RestQuery("limit")
                                         @Parameter(description = "Restrict the number of results returned")
                                         @Schema(defaultValue = "100")
-                                        long limit_)
+                                        int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("kpiId", kpiId);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing KPI reviews");
@@ -381,7 +383,7 @@ public class KeyPerformanceIndicators extends BaseResource {
                 // Got reviews, success
                 log.info("Got review list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfKeyPerformanceIndicatorReviews(uri.toString(), offset, limit, null);
+                var page = new PageOfKeyPerformanceIndicatorReviews(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {

@@ -53,9 +53,10 @@ public class UnderpinningAgreements extends BaseResource {
     /***
      * Page of UAs
      */
-    static class PageOfUnderpinningAgreements extends Page<UnderpinningAgreement> {
-        public PageOfUnderpinningAgreements(String baseUri, long offset, long limit, List<UnderpinningAgreement> uas) {
-            super(baseUri, offset, limit, uas); }
+    static class PageOfUnderpinningAgreements extends Page<UnderpinningAgreement, Long> {
+        public PageOfUnderpinningAgreements(String baseUri, long from, int limit, List<UnderpinningAgreement> uas) {
+            super(baseUri, from, limit, uas, false);
+        }
     }
 
 
@@ -68,7 +69,7 @@ public class UnderpinningAgreements extends BaseResource {
      * List all UAs.
      * @param auth The access token needed to call the service.
      * @param olaId If provided, will only return UAs supporting the OLA with this Id
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link UnderpinningAgreement}>) or an ActionError entity
@@ -105,23 +106,23 @@ public class UnderpinningAgreements extends BaseResource {
                                  @Schema(defaultValue = "false")
                                  boolean allVersions,
 
-                                 @RestQuery("offset")
+                                 @RestQuery("from")
                                  @Parameter(description = "Skip the first given number of results")
                                  @Schema(defaultValue = "0")
-                                 long offset,
+                                 long from,
 
                                  @RestQuery("limit")
                                  @Parameter(description = "Restrict the number of results returned")
                                  @Schema(defaultValue = "100")
-                                 long limit_)
+                                 int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("olaId", olaId);
         addToDC("allVersions", allVersions);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing UAs");
@@ -132,7 +133,7 @@ public class UnderpinningAgreements extends BaseResource {
                 // Got UA list, success
                 log.info("Got UA list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfUnderpinningAgreements(uri.toString(), offset, limit, null);
+                var page = new PageOfUnderpinningAgreements(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {

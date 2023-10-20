@@ -53,9 +53,10 @@ public class ServiceLevelAgreements extends BaseResource {
     /***
      * Page of SLAs
      */
-    static class PageOfServiceLevelAgreements extends Page<ServiceLevelAgreement> {
-        public PageOfServiceLevelAgreements(String baseUri, long offset, long limit, List<ServiceLevelAgreement> slas) {
-            super(baseUri, offset, limit, slas); }
+    static class PageOfServiceLevelAgreements extends Page<ServiceLevelAgreement, Long> {
+        public PageOfServiceLevelAgreements(String baseUri, long from, int limit, List<ServiceLevelAgreement> slas) {
+            super(baseUri, from, limit, slas, false);
+        }
     }
 
 
@@ -67,7 +68,7 @@ public class ServiceLevelAgreements extends BaseResource {
     /**
      * List all SLAs.
      * @param auth The access token needed to call the service.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @param allVersions True to return all versions of the items.
      * @return API Response, wraps an ActionSuccess(Page<{@link ServiceLevelAgreement}>) or an ActionError entity
@@ -100,22 +101,22 @@ public class ServiceLevelAgreements extends BaseResource {
                                   @Schema(defaultValue = "false")
                                   boolean allVersions,
 
-                                  @RestQuery("offset")
+                                  @RestQuery("from")
                                   @Parameter(description = "Skip the first given number of results")
                                   @Schema(defaultValue = "0")
-                                  long offset,
+                                  long from,
 
                                   @RestQuery("limit")
                                   @Parameter(description = "Restrict the number of results returned")
                                   @Schema(defaultValue = "100")
-                                  long limit_)
+                                  int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("allVersions", allVersions);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing SLAs");
@@ -126,7 +127,7 @@ public class ServiceLevelAgreements extends BaseResource {
                 // Got SLA list, success
                 log.info("Got SLA list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfServiceLevelAgreements(uri.toString(), offset, limit, null);
+                var page = new PageOfServiceLevelAgreements(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
