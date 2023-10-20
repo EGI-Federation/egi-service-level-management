@@ -130,7 +130,7 @@ public class RoleEntity extends PanacheEntityBase {
      * @return All role entities, sorted in reverse chronological order (head of the list is the latest).
      */
     public static Uni<List<RoleEntity>> getAllRoles() {
-        return findAll(Sort.by("changedOn").descending()).list();
+        return findAll().list();
     }
 
     /***
@@ -138,7 +138,7 @@ public class RoleEntity extends PanacheEntityBase {
      * @return Role entity
      */
     public static Uni<RoleEntity> getRoleLastVersion(String role) {
-        return find("role", Sort.by("version").descending(), role).firstResult();
+        return find("role = ?1 ORDER BY version DESC", role).firstResult();
     }
 
     /***
@@ -146,7 +146,7 @@ public class RoleEntity extends PanacheEntityBase {
      * @return Role entities
      */
     public static Uni<List<RoleEntity>> getRoleAllVersions(String role) {
-        return find("role", Sort.by("version").descending(), role).list();
+        return list("role = ?1 ORDER BY version DESC", role);
     }
 
     /***

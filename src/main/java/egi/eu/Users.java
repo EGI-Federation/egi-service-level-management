@@ -19,6 +19,8 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -68,29 +70,43 @@ public class Users extends BaseResource {
     /***
      * Page of users
      */
-    public static class PageOfUsers extends Page<UserInfo> {
-        public PageOfUsers(String baseUri, long offset, long limit, List<CheckinUser> checkinUsers) {
+    public static class PageOfUsers extends Page<UserInfo, Long> {
+        public PageOfUsers(String baseUri, long from, int limit, List<CheckinUser> checkinUsers) {
             super();
 
             var users = checkinUsers.stream().map(UserInfo::new).collect(Collectors.toList());
-            populate(baseUri, offset, limit, users);
+            populate(baseUri, from, limit, users, true);
         }
     }
 
     /***
      * Page of roles
      */
-    public static class PageOfRoles extends Page<Role> {
-        public PageOfRoles(String baseUri, long offset, long limit, List<Role> roles) {
-            super(baseUri, offset, limit, roles); }
+    public static class PageOfRoles extends Page<Role, Long> {
+        public PageOfRoles(String baseUri, long from, int limit, List<Role> roles) {
+            // Always loads all (from database)
+            super(baseUri, from, limit, roles, true); }
     }
 
     /***
      * Page of role infos
      */
-    public static class PageOfRoleInfos extends Page<RoleInfo> {
-        public PageOfRoleInfos(String baseUri, long offset, long limit, List<RoleInfo> roles) {
-            super(baseUri, offset, limit, roles); }
+    public static class PageOfRoleInfos extends Page<RoleInfo, Long> {
+        public PageOfRoleInfos(String baseUri, long from, int limit, List<RoleInfo> roles) {
+            // Always loads all (from Check-in)
+            super(baseUri, from, limit, roles, true); }
+    }
+
+    /***
+     * Page of role assignment logs
+     */
+    public static class PageOfRoleLogs extends Page<RoleLog, LocalDateTime> {
+        public PageOfRoleLogs(String baseUri, LocalDateTime from, int limit, List<RoleLogEntity> logs_) {
+            super();
+
+            var logs = logs_.stream().map(RoleLog::new).collect(Collectors.toList());
+            populate(baseUri, from, limit, logs, false);
+        }
     }
 
 
@@ -181,7 +197,7 @@ public class Users extends BaseResource {
      * List users that are members of the configured VO.
      * @param auth The access token needed to call the service.
      * @param onlyProcess Filter out users that are not included in the configured Check-in group
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
      */
@@ -210,22 +226,22 @@ public class Users extends BaseResource {
                                    @Schema(defaultValue = "false")
                                    boolean onlyProcess,
 
-                                   @RestQuery("offset")
+                                   @RestQuery("from")
                                    @Parameter(description = "Skip the first given number of results")
                                    @Schema(defaultValue = "0")
-                                   long offset,
+                                   long from,
 
                                    @RestQuery("limit")
                                    @Parameter(description = "Restrict the number of results returned")
                                    @Schema(defaultValue = "100")
-                                   long limit_)
+                                   int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("onlyProcess", onlyProcess);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing users");
@@ -250,7 +266,7 @@ public class Users extends BaseResource {
                 // Got users, success
                 log.info("Got user list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfUsers(uri.toString(), offset, limit, users);
+                var page = new PageOfUsers(uri.toString(), from, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -460,8 +476,8 @@ public class Users extends BaseResource {
      * @param roleNameFragment Only return users holding this role. If empty or null,
      *                         all users holding roles are returned.
      *                         Note: Using this parameter means the returned users will not have
-     *      *                        all their roles reported, just the ones matching this expression.
-     * @param offset The number of elements to skip
+     *                               all their roles reported, just the ones matching this expression.
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
      */
@@ -489,22 +505,22 @@ public class Users extends BaseResource {
                                             @Parameter(description = "Return only users holding roles matching this expression")
                                             String roleNameFragment,
 
-                                            @RestQuery("offset")
+                                            @RestQuery("from")
                                             @Parameter(description = "Skip the first given number of results")
                                             @Schema(defaultValue = "0")
-                                            long offset,
+                                            long from,
 
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_)
+                                            int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("roleNameFragment", roleNameFragment);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing users with roles");
@@ -527,7 +543,7 @@ public class Users extends BaseResource {
                 // Got users holding roles, success
                 log.info("Got users with roles");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfUsers(uri.toString(), offset, limit, users);
+                var page = new PageOfUsers(uri.toString(), from, limit, users);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -547,7 +563,7 @@ public class Users extends BaseResource {
 
         Uni<Void> result = sf.withTransaction((session, tx) -> { return
                 // Find the users involved in this log entry
-                UserEntity.findUsersWithCheckinUserIds(Arrays.asList(
+                UserEntity.findByCheckinUserIds(Arrays.asList(
                                 grant.roleHolder.checkinUserId,
                                 grant.changeBy.checkinUserId))
                     .chain(users -> {
@@ -807,7 +823,7 @@ public class Users extends BaseResource {
      * Note: Membership in the group is not considered a role, but a prerequisite to holding a role.
      * @param auth The access token needed to call the service.
      * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
-     * @param offset The number of elements to skip
+     * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
      * @return API Response, wraps an ActionSuccess({@link PageOfRoleInfos}) or an ActionError entity
      */
@@ -835,22 +851,22 @@ public class Users extends BaseResource {
                                             @Parameter(description = "Return only roles matching this expression")
                                             String roleName,
 
-                                            @RestQuery("offset")
+                                            @RestQuery("from")
                                             @Parameter(description = "Skip the first given number of results")
                                             @Schema(defaultValue = "0")
-                                            long offset,
+                                            long from,
 
                                             @RestQuery("limit")
                                             @Parameter(description = "Restrict the number of results returned")
                                             @Schema(defaultValue = "100")
-                                            long limit_)
+                                            int limit_)
     {
-        final long limit = (0 == limit_) ? 100 : limit_;
+        final int limit = (0 == limit_) ? 100 : limit_;
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("roleName", roleName);
-        addToDC("offset", offset);
+        addToDC("from", from);
         addToDC("limit", limit);
 
         log.info("Listing assigned roles");
@@ -873,7 +889,7 @@ public class Users extends BaseResource {
                 // Got roles, success
                 log.info("Got assigned roles");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfRoleInfos(uri.toString(), offset, limit, roles);
+                var page = new PageOfRoleInfos(uri.toString(), from, limit, roles);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
@@ -925,7 +941,7 @@ public class Users extends BaseResource {
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
-                return null != role && !role.trim().isEmpty() ?
+                return null != role && !role.isBlank() ?
                     sf.withSession(session -> RoleEntity.getRoleAllVersions(role.trim().toLowerCase())) :
                     sf.withSession(session -> RoleEntity.getAllRoles());
             })
@@ -1363,6 +1379,109 @@ public class Users extends BaseResource {
             .onFailure().recoverWithItem(e -> {
                 log.error("Failed to deprecate role");
                 return new ActionError(e).toResponse();
+            });
+
+        return result;
+    }
+
+    /**
+     * List assignment logs for a role.
+     * @param auth The access token needed to call the service.
+     * @param role The to return assignment logs for.
+     * @param from_ The first element to return
+     * @param limit_ The maximum number of elements to return
+     * @return API Response, wraps an ActionSuccess({@link PageOfRoleLogs}) or an ActionError entity
+     */
+    @GET
+    @Path("/role/logs")
+    @SecurityRequirement(name = "OIDC")
+    @RolesAllowed(Role.IMS_USER)
+    @Operation(operationId = "listRoleLogs",
+               summary = "List role assignment logs",
+               description = "Returns logs in reverse chronological order")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = PageOfRoleLogs.class))),
+            @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
+            @APIResponse(responseCode = "401", description="Authorization required"),
+            @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "503", description="Try again later")
+    })
+    public Uni<Response> listRoleLogs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                      @Context UriInfo uriInfo,
+                                      @Context HttpHeaders httpHeaders,
+
+                                      @RestQuery("role")
+                                      @Parameter(description = "Return assignment logs for this role")
+                                      @Schema(required = true, enumeration = {
+                                              Role.PROCESS_OWNER, Role.PROCESS_MANAGER, Role.PROCESS_DEVELOPER,
+                                              Role.CATALOG_OWNER, Role.REPORT_OWNER, Role.UA_OWNER,
+                                              Role.OLA_OWNER, Role.SLA_OWNER, Role.PROCESS_MEMBER })
+                                      String role,
+
+                                      @RestQuery("from")
+                                      @Parameter(description = "Only return logs before this date and time")
+                                      @Schema(format = "yyyy-mm-ddThh:mm:ss", defaultValue = "now")
+                                      String from_,
+
+                                      @RestQuery("limit")
+                                      @Parameter(description = "Restrict the number of results returned")
+                                      @Schema(defaultValue = "100")
+                                      int limit_)
+    {
+        final int limit = (0 == limit_) ? 100 : limit_;
+
+        addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
+        addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("roleName", role);
+        addToDC("from", from_);
+        addToDC("limit", limit);
+
+        log.info("Listing role assignment logs");
+
+        if(null == role || role.isEmpty()) {
+            // Role must be specified
+            var ae = new ActionError("badRequest", "Role constant is required");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        LocalDateTime from = null;
+        try {
+            if((null == from_ || from_.isBlank() || from_.equalsIgnoreCase("now")))
+                from = LocalDateTime.now();
+            else
+                from = LocalDateTime.parse(from_);
+        }
+        catch(DateTimeParseException e) {
+            var ae = new ActionError("badRequest", "Invalid parameter from");
+            return Uni.createFrom().item(ae.toResponse());
+        }
+
+        LocalDateTime finalFrom = from;
+        Uni<Response> result = Uni.createFrom().nullItem()
+
+            .chain(unused -> {
+                return sf.withSession(session -> RoleLogEntity.getRoleAssignments(role.trim().toLowerCase(), finalFrom, limit));
+            })
+            .chain(logs -> {
+                // Got role logs, success
+                log.info("Got role assignment logs");
+                var uri = getRealRequestUri(uriInfo, httpHeaders);
+                var page = new PageOfRoleLogs(uri.toString(), finalFrom, limit, logs);
+                var logCount = logs.size();
+                if(!logs.isEmpty() && logCount == limit) {
+                    var lastLog = logs.get(logCount - 1);
+                    page.setNextPage(lastLog.changedOn, limit);
+                }
+
+                return Uni.createFrom().item(Response.ok(page).build());
+            })
+            .onFailure().recoverWithItem(e -> {
+                log.error("Failed to list role assignment logs");
+                return new ActionError(e, Tuple2.of("oidcInstance", this.checkinConfig.server())).toResponse();
             });
 
         return result;
