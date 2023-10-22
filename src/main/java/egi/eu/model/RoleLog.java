@@ -26,7 +26,7 @@ public class RoleLog {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public User user;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public LocalDateTime changedOn;
 
