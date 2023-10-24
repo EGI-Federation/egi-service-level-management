@@ -23,7 +23,7 @@ public abstract class GenericEntity<T> {
      * @param typeNameSuffix A suffix to use as part of the name
      */
     protected GenericEntity(String typeNamePrefix, String typeNameSuffix, boolean pluralName) {
-        var type = getFirstTypeParameter();
+        var type = getTypeParameter();
         if(null != type) {
             var name = type.getTypeName();
             var index = name.lastIndexOf('.');
@@ -44,11 +44,11 @@ public abstract class GenericEntity<T> {
     }
 
     /***
-     * Helper to get the name of the first type parameter (T).
+     * Helper to get the name of the type parameter.
      * @return Class of the type parameter, null on error
      */
     @SuppressWarnings("unchecked")
-    protected Class<T> getFirstTypeParameter() {
+    protected Class<T> getTypeParameter() {
         try {
             ParameterizedType superclass = (ParameterizedType) getClass().getGenericSuperclass();
             return (Class<T>) superclass.getActualTypeArguments()[0];

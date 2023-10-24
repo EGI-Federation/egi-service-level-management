@@ -217,5 +217,4 @@ public abstract class Page<T, M> extends GenericEntity2<T, M> {
         }
     }
 
-
 }

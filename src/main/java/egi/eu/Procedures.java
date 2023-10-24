@@ -402,8 +402,8 @@ public class Procedures extends BaseResource {
     @POST
     @Path("/procedure/{procedureId}/review")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.PROCESS_OWNER)
     @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed(Role.PROCESS_OWNER)
     @Operation(operationId = "reviewProcedure",  summary = "Review existing procedure")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Reviewed",

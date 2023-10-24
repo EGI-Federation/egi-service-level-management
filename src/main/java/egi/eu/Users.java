@@ -1,7 +1,5 @@
 package egi.eu;
 
-import egi.eu.entity.RoleLogEntity;
-import egi.eu.model.*;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -32,8 +30,10 @@ import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.CheckinUser;
+import egi.eu.model.*;
 import egi.eu.entity.UserEntity;
 import egi.eu.entity.RoleEntity;
+import egi.eu.entity.RoleLogEntity;
 
 
 /***
@@ -1395,7 +1395,7 @@ public class Users extends BaseResource {
     @GET
     @Path("/role/logs")
     @SecurityRequirement(name = "OIDC")
-    @RolesAllowed(Role.IMS_USER)
+    @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
     @Operation(operationId = "listRoleLogs",
                summary = "List role assignment logs",
                description = "Returns logs in reverse chronological order")
