@@ -35,7 +35,7 @@ public class RoleLogEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.EAGER,
             cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "role_holder",
+    @JoinTable(name = "role_holder_map",
             joinColumns = { @JoinColumn(name = "role_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
     public UserEntity user = null;
@@ -45,7 +45,7 @@ public class RoleLogEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.EAGER,
             cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "role_assigner",
+    @JoinTable(name = "role_assigner_map",
             joinColumns = { @JoinColumn(name = "role_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
     public UserEntity changeBy = null;

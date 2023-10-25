@@ -37,7 +37,7 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Perform regular reviews of the UA
 - Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions');
 
-insert into slm.role_editor (role_id, user_id)
+insert into slm.role_editor_map (role_id, user_id)
 values (1, 2),
        (2, 2),
        (3, 2),
@@ -48,7 +48,7 @@ values (1, 2),
        (8, 2),
        (9, 2);
 
-insert into slm.processes (goals, scope, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
+insert into slm.process (goals, scope, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
 VALUES ('The primary purpose of this process is...',
         'The scope of this process is...',
         0, 1, 'year', '2021-05-14', '2021-02-19T19:23:18', 'First draft', null),
@@ -72,30 +72,30 @@ VALUES ('The primary purpose of this process is...',
     - **Other**: Corporate SLA, no custom SLAs are foreseen.',
         2, 8, 'day', '2023-11-14', '2021-05-14T22:03:18', 'Updated version', 'contact@egi.eu');
 
-insert into slm.process_editor (process_id, user_id)
+insert into slm.process_editor_map (process_id, user_id)
 values (1, 2),
        (2, 2);
 
-insert into slm.requirements (code, source, requirement)
+insert into slm.process_requirements (code, source, requirement)
 values ('PR2.2', 'FitSM', 'For all _services_ delivered to customers, **SLAs** shall be in place.'),
        ('PR2.3', 'FitSM', '**SLAs** shall be reviewed at planned intervals.'),
        (null, 'ISO20K:2018', 'The catalogue of services shall include:
 - the dependencies between services, and
 - service components.');
 
-insert into slm.process_requirements(process_id, requirement_id)
+insert into slm.process_requirements_map(process_id, requirement_id)
 values (1, 1),
        (2, 1),
        (2, 2),
        (2, 3);
 
-insert into slm.requirement_responsibles(requirement_id, user_id)
+insert into slm.process_requirement_responsibles_map(requirement_id, user_id)
 values (1, 1),
        (2, 1),
        (2, 2),
        (3, 2);
 
-insert into slm.interfaces(direction, interfaceswith, description, relevantmaterial)
+insert into slm.process_interfaces(direction, interfaceswith, description, relevantmaterial)
 values ('In', 'CAPM', 'Reflecting demands, planned upgrades, downgrades and re-allocations of resources.', 'Capacity Plan Database'),
        ('Out', 'Internal', 'Data is gathered under http://argo.egi.eu/', 'Records of monitoring the performance of services and internal groups providing service components
 
@@ -106,10 +106,8 @@ EGI OLA Services reporting data'),
 - OLA and UA
 - [Agreements](https://egi.eu)');
 
-insert into slm.process_interfaces(process_id, interface_id)
+insert into slm.process_interfaces_map(process_id, interface_id)
 values (1, 2),
        (2, 1),
        (2, 2),
        (2, 3);
-
-

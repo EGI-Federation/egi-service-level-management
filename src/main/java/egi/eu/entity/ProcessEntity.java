@@ -23,7 +23,7 @@ import egi.eu.Utils;
  * Information about this IMS process
  */
 @Entity
-@Table(name = "processes")
+@Table(name = "process")
 public class ProcessEntity extends PanacheEntityBase {
 
     @Id
@@ -43,14 +43,14 @@ public class ProcessEntity extends PanacheEntityBase {
 
     @ManyToMany(fetch = FetchType.EAGER,
                 cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "process_requirements",
+    @JoinTable(name = "process_requirements_map",
                joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "requirement_id") })
     public Set<Requirement> requirements = null;
 
     @ManyToMany(fetch = FetchType.EAGER,
                 cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "process_interfaces",
+    @JoinTable(name = "process_interfaces_map",
                joinColumns = { @JoinColumn(name = "process_id") },
                inverseJoinColumns = { @JoinColumn(name = "interface_id") })
     public Set<Interface> interfaces = null;
@@ -77,7 +77,7 @@ public class ProcessEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.EAGER,
                cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "process_editor",
+    @JoinTable(name = "process_editor_map",
             joinColumns = { @JoinColumn(name = "process_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
     public UserEntity changeBy = null;
@@ -270,7 +270,7 @@ public class ProcessEntity extends PanacheEntityBase {
      * Some process requirement
      */
     @Entity
-    @Table(name = "requirements")
+    @Table(name = "process_requirements")
     public static class Requirement extends PanacheEntityBase {
 
         @Id
@@ -288,7 +288,7 @@ public class ProcessEntity extends PanacheEntityBase {
 
         @ManyToMany(fetch = FetchType.EAGER,
                     cascade = { CascadeType.PERSIST })
-        @JoinTable(name = "requirement_responsibles",
+        @JoinTable(name = "process_requirement_responsibles_map",
                    joinColumns = { @JoinColumn(name = "requirement_id") },
                    inverseJoinColumns = { @JoinColumn(name = "user_id") })
         public Set<UserEntity> responsibles = null;
@@ -330,7 +330,7 @@ public class ProcessEntity extends PanacheEntityBase {
      * Process input or output
      */
     @Entity
-    @Table(name = "interfaces")
+    @Table(name = "process_interfaces")
     public static class Interface extends PanacheEntityBase {
 
         @Id

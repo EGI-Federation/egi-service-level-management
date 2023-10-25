@@ -56,7 +56,7 @@ public class RoleEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.EAGER,
             cascade = { CascadeType.PERSIST })
-    @JoinTable(name = "role_editor",
+    @JoinTable(name = "role_editor_map",
             joinColumns = { @JoinColumn(name = "role_id") },
             inverseJoinColumns = { @JoinColumn(name = "user_id") })
     public UserEntity changeBy = null;
