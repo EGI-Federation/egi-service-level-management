@@ -33,7 +33,7 @@ import egi.eu.model.*;
 
 
 /***
- * Resource for process configuration queries and operations.
+ * Resource for process queries and operations.
  */
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -199,8 +199,7 @@ public class TheProcess extends BaseResource {
 
                         // Get users linked to this process that already exist in the database
                         var ids = new HashSet<String>();
-                        if(null != process.changeBy)
-                            ids.add(process.changeBy.checkinUserId);
+                        ids.add(process.changeBy.checkinUserId);
                         if(null != process.requirements)
                             for(var req : process.requirements)
                                 if(null != req.responsibles)
