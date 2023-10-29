@@ -30,14 +30,8 @@ public class ProcessEntity extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(length = 4096)
-    public String goals;
-
-    @Column(length = 4096)
-    public String scope;
-
-    @Schema(format = "url")
-    public String urlDiagram;
+    @Column(length = 10240)
+    public String description;
 
     public String contact;
 
@@ -97,13 +91,11 @@ public class ProcessEntity extends PanacheEntityBase {
         super();
 
         // Copy simple fields
-        this.goals = process.goals;
-        this.scope = process.scope;
+        this.description = process.description;
         this.contact = process.contact;
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
-        this.urlDiagram = process.urlDiagram;
         this.status = newStatus.getValue();
 
         // Copy requirements
@@ -137,13 +129,11 @@ public class ProcessEntity extends PanacheEntityBase {
                 this.changeBy = new UserEntity(process.changeBy);
         }
 
-        this.goals = process.goals;
-        this.scope = process.scope;
+        this.description = process.description;
         this.contact = process.contact;
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
         this.nextReview = process.nextReview;
-        this.urlDiagram = process.urlDiagram;
 
         final var latestStatus = ProcessStatus.of(latest.status);
         if(ProcessStatus.APPROVED == latestStatus)

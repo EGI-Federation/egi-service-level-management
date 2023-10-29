@@ -48,14 +48,7 @@ public class Process extends VersionInfo {
     public String code = PROCESS_CODE;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String goals; // Markdown
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public String scope; // Markdown
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @Schema(format = "url")
-    public String urlDiagram;
+    public String description; // Markdown
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @Schema(format = "email")
@@ -126,9 +119,7 @@ public class Process extends VersionInfo {
             return;
 
         this.id = process.id;
-        this.goals = process.goals;
-        this.scope = process.scope;
-        this.urlDiagram = process.urlDiagram;
+        this.description = process.description;
         this.contact = process.contact;
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;

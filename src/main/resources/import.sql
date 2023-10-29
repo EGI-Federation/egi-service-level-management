@@ -48,16 +48,25 @@ values (1, 2),
        (8, 2),
        (9, 2);
 
-insert into slm.process (goals, scope, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
+insert into slm.process (description, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
 VALUES ('The primary purpose of this process is...',
-        'The scope of this process is...',
         0, 1, 'year', '2021-05-14', '2021-02-19T19:23:18', 'First draft', null),
 
-       ('The primary purpose of this process is to
+       ('## Table of contents
+- [Goals](#goals)
+    - [Scope](#scope)
+    - [Requirements](#requirements)
+    - [Roles and responsibilities](/slm/roles)
+    - [Inputs and Outputs](#inputs-and-outputs)
+
+## Goals
+The primary purpose of this process is to
 - Define, agree (with customers), and monitor service level agreements (SLAs)
 - Define, agree (with federation members and suppliers), and monitor operation level agreements (OLAs)
-- Define, agree (with suppliers), and monitor underpinning agreements (UA).',
-        '- **Internal catalogue** - services are covered by Corporate SLA, no custom SLAs are foreseen.
+- Define, agree (with suppliers), and monitor underpinning agreements (UA).
+
+### Scope
+- **Internal catalogue** - services are covered by Corporate SLA, no custom SLAs are foreseen.
 - **External catalogue**:
     - **Category**:  dedicated custom SLA (VO SLA) upon customer request. If no VO SLA in place, Corporate SLA is applicable.
         - Online Storage
