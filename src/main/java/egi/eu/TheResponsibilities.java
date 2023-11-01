@@ -241,7 +241,7 @@ public class TheResponsibilities extends BaseResource {
     @Path("/responsibilities/readyforapproval")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.IMS_MANAGER })
+    @RolesAllowed({ Role.PROCESS_MANAGER })
     @Operation(operationId = "requestResponsibilityApproval", summary = "Request approval of the responsibility changes")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Requested",
@@ -332,7 +332,7 @@ public class TheResponsibilities extends BaseResource {
     @Path("/responsibilities/approve")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.IMS_OWNER })
+    @RolesAllowed({ Role.PROCESS_OWNER })
     @Operation(operationId = "approveResponsibility", summary = "Approve or reject responsibility changes")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Approved",
@@ -436,7 +436,7 @@ public class TheResponsibilities extends BaseResource {
     @Path("/responsibilities")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.IMS_OWNER })
+    @RolesAllowed({ Role.PROCESS_OWNER })
     @Operation(operationId = "deprecateResponsibility", summary = "Deprecate process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Deprecated",
@@ -527,7 +527,7 @@ public class TheResponsibilities extends BaseResource {
     @Path("/responsibilities/review")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.IMS_OWNER })
+    @RolesAllowed({ Role.PROCESS_OWNER })
     @Operation(operationId = "reviewResponsibility", summary = "Review process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Reviewed",
