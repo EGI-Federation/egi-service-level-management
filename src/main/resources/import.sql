@@ -2,8 +2,8 @@ insert into slm.users (checkinuserid, fullname, email)
 values ('e9c37aa0d1cf14c56e560f9f9915da6761f54383badb501a2867bc43581b835c@egi.eu', 'Levente Farkas', 'levente.farkas@egi.eu'),
        ('025166931789a0f57793a6092726c2ad89387a4cc167e7c63c5d85fc91021d18@egi.eu', 'Giuseppe La Rocca', 'giuseppe.larocca@egi.eu');
 
-insert into slm.responsibility (changedon, changedescription, description)
-VALUES ('2023-10-19T21:05:22', 'First draft',
+insert into slm.responsibility (status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, description)
+VALUES (0, 1, 'year', '2024-05-14', '2023-10-19T21:05:22', 'First draft',
 '### Table of contents
 - [Goals](#goals)
 - [Roles and Responsibilities](#roles-and-responsibilities)
