@@ -93,28 +93,28 @@ public class OperationalLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listOLAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                  @Context UriInfo uriInfo,
-                                  @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                  @RestQuery("slaId")
-                                  @Parameter(description = "Filter to the ones supporting specific SLA")
-                                  int slaId,
+                              @RestQuery("slaId")
+                              @Parameter(description = "Filter to the ones supporting specific SLA")
+                              int slaId,
 
-                                  @RestQuery("allVersions")
-                                  @Parameter(description = "Whether to retrieve all versions")
-                                  @Schema(defaultValue = "false")
-                                  boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                  @RestQuery("from")
-                                  @Parameter(description = "Skip the first given number of results")
-                                  @Schema(defaultValue = "0")
-                                  long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                  @RestQuery("limit")
-                                  @Parameter(description = "Restrict the number of results returned")
-                                  @Schema(defaultValue = "100")
-                                  int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -167,13 +167,13 @@ public class OperationalLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("slaId")
-                                   @Parameter(required = true, description = "ID of supported Service Level Agreement")
-                                   int slaId,
+                                @RestPath("slaId")
+                                @Parameter(required = true, description = "ID of supported Service Level Agreement")
+                                int slaId,
 
-                                   OperationalLevelAgreement ola)
+                                OperationalLevelAgreement ola)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -228,13 +228,13 @@ public class OperationalLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("olaId")
-                                   @Parameter(required = true, description = "ID of agreement to update")
-                                   int olaId,
+                                @RestPath("olaId")
+                                @Parameter(required = true, description = "ID of agreement to update")
+                                int olaId,
 
-                                   OperationalLevelAgreement ola)
+                                OperationalLevelAgreement ola)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -284,16 +284,16 @@ public class OperationalLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("olaId")
-                                  @Parameter(required = true, description = "ID of agreement to get")
-                                  int olaId,
+                             @RestPath("olaId")
+                             @Parameter(required = true, description = "ID of agreement to get")
+                             int olaId,
 
-                                  @RestQuery("allVersions")
-                                  @Parameter(description = "Whether to retrieve all versions")
-                                  @Schema(defaultValue = "false")
-                                  boolean allVersions)
+                             @RestQuery("allVersions")
+                             @Parameter(description = "Whether to retrieve all versions")
+                             @Schema(defaultValue = "false")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -347,11 +347,11 @@ public class OperationalLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> signOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> sign(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                 @RestPath("olaId")
-                                 @Parameter(required = true, description = "ID of agreement to sign")
-                                 int olaId)
+                              @RestPath("olaId")
+                              @Parameter(required = true, description = "ID of agreement to sign")
+                              int olaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -399,11 +399,11 @@ public class OperationalLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> revokeOLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> revoke(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("olaId")
-                                   @Parameter(required = true, description = "ID of agreement to revoke")
-                                   int olaId)
+                                @RestPath("olaId")
+                                @Parameter(required = true, description = "ID of agreement to revoke")
+                                int olaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));

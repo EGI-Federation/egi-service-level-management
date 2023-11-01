@@ -92,24 +92,24 @@ public class ServiceLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listSLAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                  @Context UriInfo uriInfo,
-                                  @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                  @RestQuery("allVersions")
-                                  @Parameter(description = "Whether to retrieve all versions")
-                                  @Schema(defaultValue = "false")
-                                  boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                  @RestQuery("from")
-                                  @Parameter(description = "Skip the first given number of results")
-                                  @Schema(defaultValue = "0")
-                                  long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                  @RestQuery("limit")
-                                  @Parameter(description = "Restrict the number of results returned")
-                                  @Schema(defaultValue = "100")
-                                  int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -161,7 +161,7 @@ public class ServiceLevelAgreements extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, ServiceLevelAgreement sla)
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, ServiceLevelAgreement sla)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -215,13 +215,13 @@ public class ServiceLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("slaId")
-                                   @Parameter(required = true, description = "ID of agreement to update")
-                                   int slaId,
+                                @RestPath("slaId")
+                                @Parameter(required = true, description = "ID of agreement to update")
+                                int slaId,
 
-                                   ServiceLevelAgreement sla)
+                                ServiceLevelAgreement sla)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -271,16 +271,16 @@ public class ServiceLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("slaId")
-                                  @Parameter(required = true, description = "ID of agreement to get")
-                                  int slaId,
+                             @RestPath("slaId")
+                             @Parameter(required = true, description = "ID of agreement to get")
+                             int slaId,
 
-                                  @RestQuery("allVersions")
-                                  @Parameter(description = "Whether to retrieve all versions")
-                                  @Schema(defaultValue = "false")
-                                  boolean allVersions)
+                             @RestQuery("allVersions")
+                             @Parameter(description = "Whether to retrieve all versions")
+                             @Schema(defaultValue = "false")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -334,11 +334,11 @@ public class ServiceLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> signSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> sign(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                 @RestPath("slaId")
-                                 @Parameter(required = true, description = "ID of agreement to sign")
-                                 int slaId)
+                              @RestPath("slaId")
+                              @Parameter(required = true, description = "ID of agreement to sign")
+                              int slaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -386,11 +386,11 @@ public class ServiceLevelAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> revokeSLA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> revoke(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("slaId")
-                                   @Parameter(required = true, description = "ID of agreement to revoke")
-                                   int slaId)
+                                @RestPath("slaId")
+                                @Parameter(required = true, description = "ID of agreement to revoke")
+                                int slaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));

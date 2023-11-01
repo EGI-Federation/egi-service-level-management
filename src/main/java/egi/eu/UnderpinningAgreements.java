@@ -93,28 +93,28 @@ public class UnderpinningAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listUAs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                 @Context UriInfo uriInfo,
-                                 @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                 @RestQuery("olaId")
-                                 @Parameter(description = "Filter to the ones supporting specific OLA")
-                                 int olaId,
+                              @RestQuery("olaId")
+                              @Parameter(description = "Filter to the ones supporting specific OLA")
+                              int olaId,
 
-                                 @RestQuery("allVersions")
-                                 @Parameter(description = "Whether to retrieve all versions")
-                                 @Schema(defaultValue = "false")
-                                 boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                 @RestQuery("from")
-                                 @Parameter(description = "Skip the first given number of results")
-                                 @Schema(defaultValue = "0")
-                                 long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                 @RestQuery("limit")
-                                 @Parameter(description = "Restrict the number of results returned")
-                                 @Schema(defaultValue = "100")
-                                 int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -168,13 +168,13 @@ public class UnderpinningAgreements extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("olaId")
-                                  @Parameter(required = true, description = "ID of supported Operating Level Agreement")
-                                  int olaId,
+                                @RestPath("olaId")
+                                @Parameter(required = true, description = "ID of supported Operating Level Agreement")
+                                int olaId,
 
-                                  UnderpinningAgreement ua)
+                                UnderpinningAgreement ua)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -229,13 +229,13 @@ public class UnderpinningAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("uaId")
-                                  @Parameter(required = true, description = "ID of agreement to update")
-                                  int uaId,
+                                @RestPath("uaId")
+                                @Parameter(required = true, description = "ID of agreement to update")
+                                int uaId,
 
-                                  UnderpinningAgreement ua)
+                                UnderpinningAgreement ua)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -285,16 +285,16 @@ public class UnderpinningAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                 @RestPath("uaId")
-                                 @Parameter(required = true, description = "ID of agreement to get")
-                                 int uaId,
+                             @RestPath("uaId")
+                             @Parameter(required = true, description = "ID of agreement to get")
+                             int uaId,
 
-                                 @RestQuery("allVersions")
-                                 @Parameter(description = "Whether to retrieve all versions")
-                                 @Schema(defaultValue = "false")
-                                 boolean allVersions)
+                             @RestQuery("allVersions")
+                             @Parameter(description = "Whether to retrieve all versions")
+                             @Schema(defaultValue = "false")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -348,11 +348,11 @@ public class UnderpinningAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> signUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> sign(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                @RestPath("uaId")
-                                @Parameter(required = true, description = "ID of agreement to sign")
-                                int uaId)
+                              @RestPath("uaId")
+                              @Parameter(required = true, description = "ID of agreement to sign")
+                              int uaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -400,11 +400,11 @@ public class UnderpinningAgreements extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> revokeUA(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> revoke(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("uaId")
-                                  @Parameter(required = true, description = "ID of agreement to revoke")
-                                  int uaId)
+                                @RestPath("uaId")
+                                @Parameter(required = true, description = "ID of agreement to revoke")
+                                int uaId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));

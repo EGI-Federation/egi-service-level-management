@@ -111,24 +111,24 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listKPIs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                  @Context UriInfo uriInfo,
-                                  @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                  @RestQuery("allVersions")
-                                  @Parameter(description = "Whether to retrieve all versions")
-                                  @Schema(defaultValue = "false")
-                                  boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                  @RestQuery("from")
-                                  @Parameter(description = "Skip the first given number of results")
-                                  @Schema(defaultValue = "0")
-                                  long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                  @RestQuery("limit")
-                                  @Parameter(description = "Restrict the number of results returned")
-                                  @Schema(defaultValue = "100")
-                                  int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -181,7 +181,7 @@ public class KeyPerformanceIndicators extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, KeyPerformanceIndicator kpi)
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, KeyPerformanceIndicator kpi)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -231,15 +231,15 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                  @RestPath("kpiId")
-                                  @Parameter(required = true, description = "ID of KPI to get")
-                                  int kpiId,
+                             @RestPath("kpiId")
+                             @Parameter(required = true, description = "ID of KPI to get")
+                             int kpiId,
 
-                                  @RestQuery("allVersions") @DefaultValue("false")
-                                  @Parameter(required = false, description = "Whether to retrieve all versions")
-                                  boolean allVersions)
+                             @RestQuery("allVersions") @DefaultValue("false")
+                             @Parameter(required = false, description = "Whether to retrieve all versions")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -290,13 +290,13 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("kpiId")
-                                   @Parameter(required = true, description = "ID of KPI to update")
-                                   int kpiId,
+                                @RestPath("kpiId")
+                                @Parameter(required = true, description = "ID of KPI to update")
+                                int kpiId,
 
-                                   KeyPerformanceIndicator kpi)
+                                KeyPerformanceIndicator kpi)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -348,23 +348,23 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listKPIReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                        @Context UriInfo uriInfo,
-                                        @Context HttpHeaders httpHeaders,
+    public Uni<Response> listReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                     @Context UriInfo uriInfo,
+                                     @Context HttpHeaders httpHeaders,
 
-                                        @RestPath("kpiId")
-                                        @Parameter(required = true, description = "ID of KPI to lists review of")
-                                        int kpiId,
+                                     @RestPath("kpiId")
+                                     @Parameter(required = true, description = "ID of KPI to lists review of")
+                                     int kpiId,
 
-                                        @RestQuery("from")
-                                        @Parameter(description = "Skip the first given number of results")
-                                        @Schema(defaultValue = "0")
-                                        long from,
+                                     @RestQuery("from")
+                                     @Parameter(description = "Skip the first given number of results")
+                                     @Schema(defaultValue = "0")
+                                     long from,
 
-                                        @RestQuery("limit")
-                                        @Parameter(description = "Restrict the number of results returned")
-                                        @Schema(defaultValue = "100")
-                                        int limit_)
+                                     @RestQuery("limit")
+                                     @Parameter(description = "Restrict the number of results returned")
+                                     @Schema(defaultValue = "100")
+                                     int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -421,13 +421,13 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> reviewKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> review(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                   @RestPath("kpiId")
-                                   @Parameter(required = true, description = "ID of KPI to review")
-                                   int kpiId,
+                                @RestPath("kpiId")
+                                @Parameter(required = true, description = "ID of KPI to review")
+                                int kpiId,
 
-                                   KeyPerformanceIndicatorReview review)
+                                KeyPerformanceIndicatorReview review)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -477,11 +477,11 @@ public class KeyPerformanceIndicators extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> deprecateKPI(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> deprecate(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                      @RestPath("kpiId")
-                                      @Parameter(required = true, description = "ID of KPI to deprecate")
-                                      int kpiId)
+                                   @RestPath("kpiId")
+                                   @Parameter(required = true, description = "ID of KPI to deprecate")
+                                   int kpiId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));

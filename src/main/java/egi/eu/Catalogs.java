@@ -106,24 +106,24 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listCatalogs(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                      @Context UriInfo uriInfo,
-                                      @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                      @RestQuery("allVersions")
-                                      @Parameter(description = "Whether to retrieve all versions")
-                                      @Schema(defaultValue = "false")
-                                      boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                      @RestQuery("from")
-                                      @Parameter(description = "Skip the first given number of results")
-                                      @Schema(defaultValue = "0")
-                                      long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                      @RestQuery("limit")
-                                      @Parameter(description = "Restrict the number of results returned")
-                                      @Schema(defaultValue = "100")
-                                      int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -175,7 +175,7 @@ public class Catalogs extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Catalog catalog)
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Catalog catalog)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -224,15 +224,15 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                      @RestPath("catalogId")
-                                      @Parameter(required = true, description = "ID of catalog to get")
-                                      int catalogId,
+                             @RestPath("catalogId")
+                             @Parameter(required = true, description = "ID of catalog to get")
+                             int catalogId,
 
-                                      @RestQuery("allVersions") @DefaultValue("false")
-                                      @Parameter(required = false, description = "Whether to retrieve all versions")
-                                      boolean allVersions)
+                             @RestQuery("allVersions") @DefaultValue("false")
+                             @Parameter(required = false, description = "Whether to retrieve all versions")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -282,13 +282,13 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                       @RestPath("catalogId")
-                                       @Parameter(required = true, description = "ID of catalog to update")
-                                       int catalogId,
+                                @RestPath("catalogId")
+                                @Parameter(required = true, description = "ID of catalog to update")
+                                int catalogId,
 
-                                       Catalog catalog)
+                                Catalog catalog)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -396,19 +396,19 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> getService(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                      @RestPath("catalogId")
-                                      @Parameter(required = true, description = "ID of catalog that contains the service")
-                                      int catalogId,
+                                    @RestPath("catalogId")
+                                    @Parameter(required = true, description = "ID of catalog that contains the service")
+                                    int catalogId,
 
-                                      @RestPath("serviceId")
-                                      @Parameter(required = true, description = "ID of service to get")
-                                      int serviceId,
+                                    @RestPath("serviceId")
+                                    @Parameter(required = true, description = "ID of service to get")
+                                    int serviceId,
 
-                                      @RestQuery("allVersions") @DefaultValue("false")
-                                      @Parameter(required = false, description = "Whether to retrieve all versions")
-                                      boolean allVersions)
+                                    @RestQuery("allVersions") @DefaultValue("false")
+                                    @Parameter(required = false, description = "Whether to retrieve all versions")
+                                    boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -580,13 +580,13 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> reviewCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> review(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                       @RestPath("catalogId")
-                                       @Parameter(required = true, description = "ID of catalog to review")
-                                       int catalogId,
+                                @RestPath("catalogId")
+                                @Parameter(required = true, description = "ID of catalog to review")
+                                int catalogId,
 
-                                       CatalogReview review)
+                                CatalogReview review)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -637,23 +637,23 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listCatalogReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                            @Context UriInfo uriInfo,
-                                            @Context HttpHeaders httpHeaders,
+    public Uni<Response> listReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                     @Context UriInfo uriInfo,
+                                     @Context HttpHeaders httpHeaders,
 
-                                            @RestPath("catalogId")
-                                            @Parameter(required = true, description = "ID of catalog to lists review of")
-                                            int catalogId,
+                                     @RestPath("catalogId")
+                                     @Parameter(required = true, description = "ID of catalog to lists review of")
+                                     int catalogId,
 
-                                            @RestQuery("from")
-                                            @Parameter(description = "Skip the first given number of results")
-                                            @Schema(defaultValue = "0")
-                                            long from,
+                                     @RestQuery("from")
+                                     @Parameter(description = "Skip the first given number of results")
+                                     @Schema(defaultValue = "0")
+                                     long from,
 
-                                            @RestQuery("limit")
-                                            @Parameter(description = "Restrict the number of results returned")
-                                            @Schema(defaultValue = "100")
-                                            int limit_)
+                                     @RestQuery("limit")
+                                     @Parameter(description = "Restrict the number of results returned")
+                                     @Schema(defaultValue = "100")
+                                     int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -707,11 +707,11 @@ public class Catalogs extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> retireCatalog(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> retire(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                       @RestPath("catalogId")
-                                       @Parameter(required = true, description = "ID of catalog to retire")
-                                       int catalogId)
+                                @RestPath("catalogId")
+                                @Parameter(required = true, description = "ID of catalog to retire")
+                                int catalogId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));

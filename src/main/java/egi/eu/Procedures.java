@@ -109,24 +109,24 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listProcedures(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                        @Context UriInfo uriInfo,
-                                        @Context HttpHeaders httpHeaders,
+    public Uni<Response> list(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                              @Context UriInfo uriInfo,
+                              @Context HttpHeaders httpHeaders,
 
-                                        @RestQuery("allVersions")
-                                        @Parameter(description = "Whether to retrieve all versions")
-                                        @Schema(defaultValue = "false")
-                                        boolean allVersions,
+                              @RestQuery("allVersions")
+                              @Parameter(description = "Whether to retrieve all versions")
+                              @Schema(defaultValue = "false")
+                              boolean allVersions,
 
-                                        @RestQuery("from")
-                                        @Parameter(description = "Skip the first given number of results")
-                                        @Schema(defaultValue = "0")
-                                        long from,
+                              @RestQuery("from")
+                              @Parameter(description = "Skip the first given number of results")
+                              @Schema(defaultValue = "0")
+                              long from,
 
-                                        @RestQuery("limit")
-                                        @Parameter(description = "Restrict the number of results returned")
-                                        @Schema(defaultValue = "100")
-                                        int limit_)
+                              @RestQuery("limit")
+                              @Parameter(description = "Restrict the number of results returned")
+                              @Schema(defaultValue = "100")
+                              int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -179,7 +179,7 @@ public class Procedures extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> createProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Procedure procedure)
+    public Uni<Response> create(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Procedure procedure)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -229,15 +229,15 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> fetchProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> get(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                        @RestPath("procedureId")
-                                        @Parameter(required = true, description = "ID of procedure to get")
-                                        int procedureId,
+                             @RestPath("procedureId")
+                             @Parameter(required = true, description = "ID of procedure to get")
+                             int procedureId,
 
-                                        @RestQuery("allVersions") @DefaultValue("false")
-                                        @Parameter(required = false, description = "Whether to retrieve all versions")
-                                        boolean allVersions)
+                             @RestQuery("allVersions") @DefaultValue("false")
+                             @Parameter(required = false, description = "Whether to retrieve all versions")
+                             boolean allVersions)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -288,13 +288,13 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> updateProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                         @RestPath("procedureId")
-                                         @Parameter(required = true, description = "ID of procedure to update")
-                                         int procedureId,
+                                @RestPath("procedureId")
+                                @Parameter(required = true, description = "ID of procedure to update")
+                                int procedureId,
 
-                                         Procedure procedure)
+                                Procedure procedure)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -346,23 +346,23 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> listProcedureReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
-                                             @Context UriInfo uriInfo,
-                                             @Context HttpHeaders httpHeaders,
+    public Uni<Response> listReviews(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+                                     @Context UriInfo uriInfo,
+                                     @Context HttpHeaders httpHeaders,
 
-                                             @RestPath("procedureId")
-                                             @Parameter(required = true, description = "ID of procedure to lists review of")
-                                             int procedureId,
+                                     @RestPath("procedureId")
+                                     @Parameter(required = true, description = "ID of procedure to lists review of")
+                                     int procedureId,
 
-                                             @RestQuery("from")
-                                             @Parameter(description = "Skip the first given number of results")
-                                             @Schema(defaultValue = "0")
-                                             long from,
+                                     @RestQuery("from")
+                                     @Parameter(description = "Skip the first given number of results")
+                                     @Schema(defaultValue = "0")
+                                     long from,
 
-                                             @RestQuery("limit")
-                                             @Parameter(description = "Restrict the number of results returned")
-                                             @Schema(defaultValue = "100")
-                                             int limit_)
+                                     @RestQuery("limit")
+                                     @Parameter(description = "Restrict the number of results returned")
+                                     @Schema(defaultValue = "100")
+                                     int limit_)
     {
         final int limit = (0 == limit_) ? 100 : limit_;
 
@@ -419,13 +419,13 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> reviewProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> review(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                         @RestPath("procedureId")
-                                         @Parameter(required = true, description = "ID of procedure to review")
-                                         int procedureId,
+                                @RestPath("procedureId")
+                                @Parameter(required = true, description = "ID of procedure to review")
+                                int procedureId,
 
-                                         ProcedureReview review)
+                                ProcedureReview review)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
@@ -475,11 +475,11 @@ public class Procedures extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> deprecateProcedure(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
+    public Uni<Response> deprecate(@RestHeader(HttpHeaders.AUTHORIZATION) String auth,
 
-                                            @RestPath("procedureId")
-                                            @Parameter(required = true, description = "ID of procedure to deprecate")
-                                            int procedureId)
+                                   @RestPath("procedureId")
+                                   @Parameter(required = true, description = "ID of procedure to deprecate")
+                                   int procedureId)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
