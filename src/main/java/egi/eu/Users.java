@@ -30,10 +30,8 @@ import jakarta.ws.rs.core.*;
 
 import egi.checkin.CheckinConfig;
 import egi.checkin.model.CheckinUser;
+import egi.eu.entity.*;
 import egi.eu.model.*;
-import egi.eu.entity.UserEntity;
-import egi.eu.entity.RoleEntity;
-import egi.eu.entity.RoleLogEntity;
 
 
 /***
@@ -135,7 +133,7 @@ public class Users extends BaseResource {
     @Path("/user/info")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.IMS_USER)
-    @Operation(operationId = "getUserInfo",  summary = "Retrieve information about authenticated user")
+    @Operation(operationId = "getUserInfo", summary = "Retrieve information about authenticated user")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -151,6 +149,7 @@ public class Users extends BaseResource {
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
 
         log.info("Getting user info");
 
@@ -205,7 +204,7 @@ public class Users extends BaseResource {
     @Path("/users")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_USER})
-    @Operation(operationId = "listUsers",  summary = "List IMS users")
+    @Operation(operationId = "listUsers", summary = "List users")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -240,6 +239,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
         addToDC("onlyProcess", onlyProcess);
         addToDC("from", from);
         addToDC("limit", limit);
@@ -289,7 +289,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "addUserToGroup",  summary = "Include user in the SLM process")
+    @Operation(operationId = "addUserToGroup", summary = "Include user in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Included",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -322,6 +322,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", grant.changeBy.checkinUserId);
         addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("user", user);
 
         log.info("Adding user to group");
@@ -385,7 +386,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "removeUserFromGroup",  summary = "Exclude user from the SLM process")
+    @Operation(operationId = "removeUserFromGroup", summary = "Exclude user from the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Excluded",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -418,6 +419,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", grant.changeBy.checkinUserId);
         addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("user", user);
 
         log.info("Removing user from group");
@@ -485,7 +487,7 @@ public class Users extends BaseResource {
     @Path("/users/roles")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_USER })
-    @Operation(operationId = "listUsersWithRoles",  summary = "List users with roles in the SLM process")
+    @Operation(operationId = "listUsersWithRoles", summary = "List users with roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -519,6 +521,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
         addToDC("roleNameFragment", roleNameFragment);
         addToDC("from", from);
         addToDC("limit", limit);
@@ -599,7 +602,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "assignRoleToUser",  summary = "Assign a role to a user",
+    @Operation(operationId = "assignRoleToUser", summary = "Assign a role to a user",
                description ="To assign roles to a user, the user must be included in the SLM process.")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Assigned",
@@ -630,6 +633,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", grant.changeBy.checkinUserId);
         addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("grant", grant);
 
         log.info("Assigning role to user");
@@ -715,7 +719,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.IMS_ADMIN, Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "revokeRoleFromUser",  summary = "Revoke a role from a user")
+    @Operation(operationId = "revokeRoleFromUser", summary = "Revoke a role from a user")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Revoked",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -745,6 +749,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", grant.changeBy.checkinUserId);
         addToDC("userNameCaller", grant.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("grant", grant);
 
         log.info("Revoking role from user");
@@ -831,7 +836,7 @@ public class Users extends BaseResource {
     @Path("/roles/assigned")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed({ Role.IMS_USER })
-    @Operation(operationId = "listAssignedRoles",  summary = "List assigned roles in the SLM process")
+    @Operation(operationId = "listAssignedRoles", summary = "List assigned roles in the SLM process")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -865,6 +870,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
         addToDC("roleName", roleName);
         addToDC("from", from);
         addToDC("limit", limit);
@@ -934,6 +940,7 @@ public class Users extends BaseResource {
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
         addToDC("roleName", role);
 
         log.info("Listing role definitions");
@@ -1003,7 +1010,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "addRole",  summary = "Add new role")
+    @Operation(operationId = "addRole", summary = "Add new role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Added",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -1027,6 +1034,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", role.changeBy.checkinUserId);
         addToDC("userNameCaller", role.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("role", role);
 
         log.info("Adding role");
@@ -1087,7 +1095,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "updateRole",  summary = "Update role definition")
+    @Operation(operationId = "updateRole", summary = "Update role definition")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -1111,6 +1119,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", role.changeBy.checkinUserId);
         addToDC("userNameCaller", role.changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("role", role);
 
         log.info("Updating role");
@@ -1184,7 +1193,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_DEVELOPER })
-    @Operation(operationId = "implementRole",  summary = "Implement role")
+    @Operation(operationId = "implementRole", summary = "Implement role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Implemented",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -1214,6 +1223,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", changeBy.checkinUserId);
         addToDC("userNameCaller", changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("roleName", role);
         addToDC("change", change);
 
@@ -1290,7 +1300,7 @@ public class Users extends BaseResource {
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "deprecateRole",  summary = "Deprecate role")
+    @Operation(operationId = "deprecateRole", summary = "Deprecate role")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Deprecated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -1320,6 +1330,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", changeBy.checkinUserId);
         addToDC("userNameCaller", changeBy.fullName);
+        addToDC("processName", imsConfig.group());
         addToDC("roleName", role);
         addToDC("change", change);
 
@@ -1436,6 +1447,7 @@ public class Users extends BaseResource {
 
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
+        addToDC("processName", imsConfig.group());
         addToDC("roleName", role);
         addToDC("from", from_);
         addToDC("limit", limit);

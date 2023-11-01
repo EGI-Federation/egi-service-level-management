@@ -26,21 +26,20 @@ import java.util.*;
 
 import egi.checkin.model.CheckinUser;
 import egi.eu.entity.UserEntity;
-import egi.eu.entity.ProcessEntity;
-import egi.eu.model.Process;
-import egi.eu.model.Process.ProcessStatus;
+import egi.eu.entity.ResponsibilityEntity;
+import egi.eu.model.Responsibility.ResponsibilityStatus;
 import egi.eu.model.*;
 
 
 /***
- * Resource for process queries and operations.
+ * Resource for responsibilities queries and operations.
  */
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
-@Tag(name = "Process")
-public class TheProcess extends BaseResource {
+@Tag(name = "Responsibilities")
+public class TheResponsibilities extends BaseResource {
 
-    private static final Logger log = Logger.getLogger(TheProcess.class);
+    private static final Logger log = Logger.getLogger(TheResponsibilities.class);
 
     @Inject
     MeterRegistry registry;
@@ -62,17 +61,26 @@ public class TheProcess extends BaseResource {
 
 
     /***
-     * Review of the process
+     * Page of responsibilities
      */
-    public static class ProcessReview extends Review<Process> {
-        public ProcessReview() { super(); }
+    public static class PageOfResponsibilities extends Page<Responsibility, Long> {
+        public PageOfResponsibilities(String baseUri, long from, int limit, List<Responsibility> resps) {
+            // Always loads all (from database)
+            super(baseUri, from, limit, resps, true); }
     }
 
     /***
-     * Page of process reviews
+     * Review of the responsibilities
      */
-    public static class PageOfProcessReviews extends Page<ProcessReview, Long> {
-        public PageOfProcessReviews(String baseUri, long from, int limit, List<ProcessReview> reviews) {
+    public static class ResponsibilityReview extends Review<Responsibility> {
+        public ResponsibilityReview() { super(); }
+    }
+
+    /***
+     * Page of responsibility reviews
+     */
+    public static class PageOfResponsibilityReviews extends Page<ResponsibilityReview, Long> {
+        public PageOfResponsibilityReviews(String baseUri, long from, int limit, List<ResponsibilityReview> reviews) {
             super(baseUri, from, limit, reviews, false);
         }
     }
@@ -81,25 +89,23 @@ public class TheProcess extends BaseResource {
     /***
      * Constructor
      */
-    public TheProcess() { super(log); }
+    public TheResponsibilities() { super(log); }
 
     /**
-     * Get process configuration.
+     * List process responsibilities.
      * @param auth The access token needed to call the service.
-     * @param allVersions True to return all versions of the process.
-     * @return API Response, wraps an ActionSuccess({@link Process}) or an ActionError entity
+     * @param allVersions True to return all versions of the responsibilities.
+     * @return API Response, wraps an ActionSuccess({@link PageOfResponsibilities}) or an ActionError entity
      */
     @GET
-    @Path("/process")
+    @Path("/responsibilities")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed(Role.IMS_USER)
-    @Operation(operationId = "getProcess", summary = "Get process details",
-               description = "When all versions are requested the field history will hold versions prior " +
-                             "to the latest one, sorted by version in descending order.")
+    @Operation(operationId = "getResponsibility", summary = "List process responsibilities")
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK",
+            @APIResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = Process.class))),
+                    schema = @Schema(implementation = PageOfResponsibilities.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -118,25 +124,25 @@ public class TheProcess extends BaseResource {
         addToDC("processName", imsConfig.group());
         addToDC("allVersions", allVersions);
 
-        log.info("Getting process info");
+        log.info("Getting responsibilities");
 
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 return allVersions ?
-                        sf.withSession(session -> ProcessEntity.getAllVersions()) :
-                        sf.withSession(session -> ProcessEntity.getLastVersionAsList());
+                        sf.withSession(session -> ResponsibilityEntity.getAllVersions()) :
+                        sf.withSession(session -> ResponsibilityEntity.getLastVersionAsList());
             })
             .chain(versions -> {
-                // Got a list of versions
-                if (!versions.isEmpty())
-                    log.info("Got process versions");
+                // Got a list of responsibilities
+                if(!versions.isEmpty())
+                    log.info("Got responsibility versions");
 
-                var proc = new Process(versions);
-                return Uni.createFrom().item(Response.ok(proc).build());
+                var resp = new Responsibility(versions);
+                return Uni.createFrom().item(Response.ok(resp).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to get process info");
+                log.error("Failed to get responsibilities");
                 return new ActionError(e).toResponse();
             });
 
@@ -144,17 +150,16 @@ public class TheProcess extends BaseResource {
     }
 
     /**
-     * Update process configuration.
+     * Update process responsibilities.
      * @param auth The access token needed to call the service.
-     * @param process The new process version, includes details about who is making the change.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PUT
-    @Path("/process")
+    @Path("/responsibilities")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed({ Role.PROCESS_OWNER, Role.PROCESS_MANAGER })
-    @Operation(operationId = "updateProcess", summary = "Update process details")
+    @Operation(operationId = "updateResponsibility", summary = "Update process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -164,88 +169,80 @@ public class TheProcess extends BaseResource {
                     schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "401", description="Authorization required"),
             @APIResponse(responseCode = "403", description="Permission denied"),
+            @APIResponse(responseCode = "404", description="Not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ActionError.class))),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Process process)
+    public Uni<Response> update(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, Responsibility resp)
     {
-        process.changeBy = new User(
+        resp.changeBy = new User(
                 (String)identity.getAttribute(CheckinUser.ATTR_USERID),
                 (String)identity.getAttribute(CheckinUser.ATTR_FULLNAME),
                 (String)identity.getAttribute(CheckinUser.ATTR_EMAIL) );
 
-        addToDC("userIdCaller", process.changeBy.checkinUserId);
-        addToDC("userNameCaller", process.changeBy.fullName);
+        addToDC("userIdCaller", resp.changeBy.checkinUserId);
+        addToDC("userNameCaller", resp.changeBy.fullName);
         addToDC("processName", imsConfig.group());
-        addToDC("process", process);
+        addToDC("resp", resp);
 
-        log.info("Updating process");
+        log.info("Updating responsibilities");
 
-        var latest = new ArrayList<ProcessEntity>();
+        var latest = new ArrayList<ResponsibilityEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 return sf.withTransaction((session, tx) -> { return
-                    // Get the latest process version
-                    ProcessEntity.getLastVersion()
-                    .chain(latestProcess -> {
-                        // Got the latest version
-                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
-                        if(ProcessStatus.DEPRECATED == latestStatus)
-                            // Cannot update deprecated entities
-                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot update deprecated process"));
+                    // Get the latest responsibilities version
+                    ResponsibilityEntity.getLastVersion()
+                        .chain(latestResp -> {
+                            // Got the latest version
+                            latest.add(latestResp);
 
-                        latest.add(latestProcess);
+                            // Get users linked to this responsibility that already exist in the database
+                            var ids = new HashSet<String>();
+                            ids.add(resp.changeBy.checkinUserId);
 
-                        // Get users linked to this process that already exist in the database
-                        var ids = new HashSet<String>();
-                        ids.add(process.changeBy.checkinUserId);
-                        if(null != process.requirements)
-                            for(var req : process.requirements)
-                                if(null != req.responsibles)
-                                    for(var resp : req.responsibles)
-                                        ids.add(resp.checkinUserId);
+                            return UserEntity.findByCheckinUserIds(ids.stream().toList());
+                        })
+                        .chain(existingUsers -> {
+                            // Got the existing users
+                            var users = new HashMap<String, UserEntity>();
+                            for(var user : existingUsers)
+                                users.put(user.checkinUserId, user);
 
-                        return UserEntity.findByCheckinUserIds(ids.stream().toList());
-                    })
-                    .chain(existingUsers -> {
-                        // Got the existing users
-                        var users = new HashMap<String, UserEntity>();
-                        for(var user : existingUsers)
-                            users.put(user.checkinUserId, user);
-
-                        // Create new process version
-                        var latestProcess = latest.get(0);
-                        var newProcess = new ProcessEntity(process, latestProcess, users);
-                        return session.persist(newProcess);
-                    });
+                            // Create new responsibility version
+                            var latestResp = latest.get(0);
+                            var newResp = new ResponsibilityEntity(resp, latestResp, users);
+                            return session.persist(newResp);
+                        });
                 });
             })
             .chain(unused -> {
                 // Update complete, success
-                log.info("Updated process");
+                log.info("Updated responsibilities");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Updated"))
-                                                     .status(Response.Status.CREATED).build());
+                        .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to update process");
+                log.error("Failed to update responsibilities");
                 return new ActionError(e).toResponse();
             });
 
         return result;
     }
-
     /**
-     * Mark process as ready for approval.
+     * Mark responsibilities as ready for approval.
      * @param auth The access token needed to call the service.
      * @param change The motivation for requesting approval.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
-    @Path("/process/readyforapproval")
+    @Path("/responsibilities/readyforapproval")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.PROCESS_MANAGER })
-    @Operation(operationId = "requestProcessApproval", summary = "Request approval of the process changes")
+    @RolesAllowed({ Role.IMS_MANAGER })
+    @Operation(operationId = "requestResponsibilityApproval", summary = "Request approval of the responsibility changes")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Requested",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -269,40 +266,28 @@ public class TheProcess extends BaseResource {
         addToDC("processName", imsConfig.group());
         addToDC("change", change);
 
-        log.info("Requesting process approval");
+        log.info("Requesting responsibilities approval");
 
-        var latest = new ArrayList<ProcessEntity>();
+        var latest = new ArrayList<ResponsibilityEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 return sf.withTransaction((session, tx) -> { return
-                    // Get the latest process version
-                    ProcessEntity.getLastVersion()
-                    .chain(latestProcess -> {
+                    // Get the latest responsibility version
+                    ResponsibilityEntity.getLastVersion()
+                    .chain(latestResponsibility -> {
                         // Got the latest version
-                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
-                        if(ProcessStatus.DRAFT != latestStatus)
+                        final var latestStatus = ResponsibilityStatus.of(latestResponsibility.status);
+                        if(ResponsibilityStatus.DRAFT != latestStatus)
                             // Cannot request approval if not draft
                             return Uni.createFrom().failure(new ActionException("badRequest", "Cannot request approval in this status"));
 
-                        latest.add(latestProcess);
+                        latest.add(latestResponsibility);
 
                         // Check if the calling user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
-                            existingUser = latestProcess.changeBy;
-                        else if(null != latestProcess.requirements) {
-                            for(var req : latestProcess.requirements) {
-                                if (null != req.responsibles)
-                                    for(var resp : req.responsibles)
-                                        if (changeBy.checkinUserId.equals(resp.checkinUserId)) {
-                                            existingUser = resp;
-                                            break;
-                                        }
-                                if(null != existingUser)
-                                    break;
-                            }
-                        }
+                        if(null != latestResponsibility.changeBy && changeBy.checkinUserId.equals(latestResponsibility.changeBy.checkinUserId))
+                            existingUser = latestResponsibility.changeBy;
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
@@ -313,24 +298,24 @@ public class TheProcess extends BaseResource {
                         if(null == existingUser)
                             existingUser = new UserEntity(changeBy);
 
-                        // Create new process version
-                        var latestProcess = latest.get(0);
-                        var newProcess = new ProcessEntity(latestProcess, ProcessStatus.READY_FOR_APPROVAL);
-                        newProcess.changeBy = existingUser;
-                        newProcess.changeDescription = change.changeDescription;
+                        // Create new responsibility version
+                        var latestResponsibility = latest.get(0);
+                        var newResponsibility = new ResponsibilityEntity(latestResponsibility, ResponsibilityStatus.READY_FOR_APPROVAL);
+                        newResponsibility.changeBy = existingUser;
+                        newResponsibility.changeDescription = change.changeDescription;
 
-                        return session.persist(newProcess);
+                        return session.persist(newResponsibility);
                     });
                 });
             })
             .chain(unused -> {
                 // Request complete, success
-                log.info("Requested process approval");
+                log.info("Requested responsibilities approval");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Requested"))
                                                      .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to request process approval");
+                log.error("Failed to request responsibilities approval");
                 return new ActionError(e).toResponse();
             });
 
@@ -338,17 +323,17 @@ public class TheProcess extends BaseResource {
     }
 
     /**
-     * Approve or reject the changes to the process.
+     * Approve or reject the changes to the responsibilities.
      * @param auth The access token needed to call the service.
      * @param approval The approval operation/decision and the motivation.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @PATCH
-    @Path("/process/approve")
+    @Path("/responsibilities/approve")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "approveProcess", summary = "Approve or reject process changes")
+    @RolesAllowed({ Role.IMS_OWNER })
+    @Operation(operationId = "approveResponsibility", summary = "Approve or reject responsibility changes")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Approved",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -382,40 +367,28 @@ public class TheProcess extends BaseResource {
         }
 
         boolean approve = approval.operation.equals(Change.OPERATION_APPROVE);
-        log.infof("%s process changes", approve ? "Approving" : "Rejecting");
+        log.infof("%s responsibility changes", approve ? "Approving" : "Rejecting");
 
-        var latest = new ArrayList<ProcessEntity>();
+        var latest = new ArrayList<ResponsibilityEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 return sf.withTransaction((session, tx) -> { return
-                    // Get the latest process version
-                    ProcessEntity.getLastVersion()
-                    .chain(latestProcess -> {
+                    // Get the latest responsibility version
+                    ResponsibilityEntity.getLastVersion()
+                    .chain(latestResponsibility -> {
                         // Got the latest version
-                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
-                        if(ProcessStatus.READY_FOR_APPROVAL != latestStatus)
+                        final var latestStatus = ResponsibilityStatus.of(latestResponsibility.status);
+                        if(ResponsibilityStatus.READY_FOR_APPROVAL != latestStatus)
                             // Nothing to approve/reject in this state
                             return Uni.createFrom().failure(new ActionException("badRequest", "Nothing to approve or reject"));
 
-                        latest.add(latestProcess);
+                        latest.add(latestResponsibility);
 
                         // Check if the approving user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
-                            existingUser = latestProcess.changeBy;
-                        else if(null != latestProcess.requirements) {
-                            for(var req : latestProcess.requirements) {
-                                if (null != req.responsibles)
-                                    for(var resp : req.responsibles)
-                                        if(changeBy.checkinUserId.equals(resp.checkinUserId)) {
-                                            existingUser = resp;
-                                            break;
-                                        }
-                                if(null != existingUser)
-                                    break;
-                            }
-                        }
+                        if(null != latestResponsibility.changeBy && changeBy.checkinUserId.equals(latestResponsibility.changeBy.checkinUserId))
+                            existingUser = latestResponsibility.changeBy;
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
@@ -426,15 +399,15 @@ public class TheProcess extends BaseResource {
                         if(null == existingUser)
                             existingUser = new UserEntity(changeBy);
 
-                        // Create new process version
-                        var latestProcess = latest.get(0);
+                        // Create new responsibility version
+                        var Responsibility = latest.get(0);
                         var newStatus = approval.operation.equalsIgnoreCase(Change.OPERATION_APPROVE) ?
-                                        ProcessStatus.APPROVED : ProcessStatus.DRAFT;
-                        var newProcess = new ProcessEntity(latestProcess, newStatus);
-                        newProcess.changeBy = existingUser;
-                        newProcess.changeDescription = approval.changeDescription;
+                                        ResponsibilityStatus.APPROVED : ResponsibilityStatus.DRAFT;
+                        var newResponsibility = new ResponsibilityEntity(Responsibility, newStatus);
+                        newResponsibility.changeBy = existingUser;
+                        newResponsibility.changeDescription = approval.changeDescription;
 
-                        return session.persist(newProcess);
+                        return session.persist(newResponsibility);
                     });
                 });
             })
@@ -454,17 +427,17 @@ public class TheProcess extends BaseResource {
     }
 
     /**
-     * Deprecate process.
+     * Deprecate responsibilities.
      * @param auth The access token needed to call the service.
      * @param change The reason for deprecation.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @DELETE
-    @Path("/process")
+    @Path("/responsibilities")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "deprecateProcess", summary = "Deprecate the process")
+    @RolesAllowed({ Role.IMS_OWNER })
+    @Operation(operationId = "deprecateResponsibility", summary = "Deprecate process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "201", description = "Deprecated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -488,40 +461,28 @@ public class TheProcess extends BaseResource {
         addToDC("processName", imsConfig.group());
         addToDC("change", change);
 
-        log.info("Deprecating process");
+        log.info("Deprecating responsibilities");
 
-        var latest = new ArrayList<ProcessEntity>();
+        var latest = new ArrayList<ResponsibilityEntity>();
         Uni<Response> result = Uni.createFrom().nullItem()
 
             .chain(unused -> {
                 return sf.withTransaction((session, tx) -> { return
-                    // Get the latest process version
-                    ProcessEntity.getLastVersion()
-                    .chain(latestProcess -> {
+                    // Get the latest responsibility version
+                        ResponsibilityEntity.getLastVersion()
+                    .chain(latestResponsibility -> {
                         // Got the latest version
-                        final var latestStatus = Process.ProcessStatus.of(latestProcess.status);
-                        if(ProcessStatus.APPROVED != latestStatus)
+                        final var latestStatus = ResponsibilityStatus.of(latestResponsibility.status);
+                        if(ResponsibilityStatus.APPROVED != latestStatus)
                             // Cannot deprecate if not approved
-                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot deprecate non-approved process"));
+                            return Uni.createFrom().failure(new ActionException("badRequest", "Cannot deprecate non-approved responsibilities"));
 
-                        latest.add(latestProcess);
+                        latest.add(latestResponsibility);
 
                         // Check if the calling user already exists in the database
                         UserEntity existingUser = null;
-                        if(null != latestProcess.changeBy && changeBy.checkinUserId.equals(latestProcess.changeBy.checkinUserId))
-                            existingUser = latestProcess.changeBy;
-                        else if(null != latestProcess.requirements) {
-                            for(var req : latestProcess.requirements) {
-                                if (null != req.responsibles)
-                                    for(var resp : req.responsibles)
-                                        if(changeBy.checkinUserId.equals(resp.checkinUserId)) {
-                                            existingUser = resp;
-                                            break;
-                                        }
-                                if(null != existingUser)
-                                    break;
-                            }
-                        }
+                        if(null != latestResponsibility.changeBy && changeBy.checkinUserId.equals(latestResponsibility.changeBy.checkinUserId))
+                            existingUser = latestResponsibility.changeBy;
                         if(null != existingUser)
                             return Uni.createFrom().item(existingUser);
 
@@ -532,24 +493,24 @@ public class TheProcess extends BaseResource {
                         if(null == existingUser)
                             existingUser = new UserEntity(changeBy);
 
-                        // Create new process version
-                        var latestProcess = latest.get(0);
-                        var newProcess = new ProcessEntity(latestProcess, ProcessStatus.DEPRECATED);
-                        newProcess.changeBy = existingUser;
-                        newProcess.changeDescription = change.changeDescription;
+                        // Create new responsibility version
+                        var latestResponsibility = latest.get(0);
+                        var newResponsibility = new ResponsibilityEntity(latestResponsibility, ResponsibilityStatus.DEPRECATED);
+                        newResponsibility.changeBy = existingUser;
+                        newResponsibility.changeDescription = change.changeDescription;
 
-                        return session.persist(newProcess);
+                        return session.persist(newResponsibility);
                     });
                 });
             })
             .chain(revoked -> {
                 // Deprecation complete, success
-                log.info("Deprecated process");
+                log.info("Deprecated responsibilities");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Deprecated"))
                                                      .status(Response.Status.CREATED).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to deprecate process");
+                log.error("Failed to deprecate responsibilities");
                 return new ActionError(e).toResponse();
             });
 
@@ -557,17 +518,17 @@ public class TheProcess extends BaseResource {
     }
 
     /**
-     * Review process.
+     * Review process responsibilities.
      * @param auth The access token needed to call the service.
      * @param review The details of the review.
      * @return API Response, wraps an ActionSuccess or an ActionError entity
      */
     @POST
-    @Path("/process/review")
+    @Path("/responsibilities/review")
     @SecurityRequirement(name = "OIDC")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed({ Role.PROCESS_OWNER })
-    @Operation(operationId = "reviewProcess", summary = "Review the process")
+    @RolesAllowed({ Role.IMS_OWNER })
+    @Operation(operationId = "reviewResponsibility", summary = "Review process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Reviewed",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -579,24 +540,24 @@ public class TheProcess extends BaseResource {
             @APIResponse(responseCode = "403", description="Permission denied"),
             @APIResponse(responseCode = "503", description="Try again later")
     })
-    public Uni<Response> review(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, ProcessReview review)
+    public Uni<Response> review(@RestHeader(HttpHeaders.AUTHORIZATION) String auth, ResponsibilityReview review)
     {
         addToDC("userIdCaller", identity.getAttribute(CheckinUser.ATTR_USERID));
         addToDC("userNameCaller", identity.getAttribute(CheckinUser.ATTR_FULLNAME));
         addToDC("processName", imsConfig.group());
         addToDC("review", review);
 
-        log.info("Reviewing process");
+        log.info("Reviewing responsibilities");
 
-        Uni<Response> result = Uni.createFrom().item(new Process())
+        Uni<Response> result = Uni.createFrom().item(new Responsibility())
 
             .chain(signed -> {
                 // Review complete, success
-                log.info("Reviewed process");
+                log.info("Reviewed responsibilities");
                 return Uni.createFrom().item(Response.ok(new ActionSuccess("Reviewed")).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to review process");
+                log.error("Failed to review responsibilities");
                 return new ActionError(e).toResponse();
             });
 
@@ -604,21 +565,21 @@ public class TheProcess extends BaseResource {
     }
 
     /**
-     * List process reviews.
+     * List responsibilities reviews.
      * @param auth The access token needed to call the service.
      * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess(Page<{@link PageOfProcessReviews>) or an ActionError entity
+     * @return API Response, wraps an ActionSuccess(Page<{@link PageOfResponsibilityReviews>) or an ActionError entity
      */
     @GET
-    @Path("/process/reviews")
+    @Path("/responsibilities/reviews")
     @SecurityRequirement(name = "OIDC")
     @RolesAllowed( Role.IMS_USER)
-    @Operation(operationId = "listProcessReviews", summary = "List process reviews")
+    @Operation(operationId = "listResponsibilityReviews", summary = "List reviews of process responsibilities")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "OK",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = PageOfProcessReviews.class))),
+                    schema = @Schema(implementation = PageOfResponsibilityReviews.class))),
             @APIResponse(responseCode = "400", description="Invalid parameters or configuration",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(implementation = ActionError.class))),
@@ -648,19 +609,19 @@ public class TheProcess extends BaseResource {
         addToDC("from", from);
         addToDC("limit", limit);
 
-        log.info("Listing process reviews");
+        log.info("Listing responsibilities reviews");
 
-        Uni<Response> result = Uni.createFrom().item(new Process())
+        Uni<Response> result = Uni.createFrom().item(new Responsibility())
 
             .chain(signed -> {
                 // Got reviews, success
                 log.info("Got review list");
                 var uri = getRealRequestUri(uriInfo, httpHeaders);
-                var page = new PageOfProcessReviews(uri.toString(), from, limit, null);
+                var page = new PageOfResponsibilityReviews(uri.toString(), from, limit, null);
                 return Uni.createFrom().item(Response.ok(page).build());
             })
             .onFailure().recoverWithItem(e -> {
-                log.error("Failed to list process reviews");
+                log.error("Failed to list responsibilities reviews");
                 return new ActionError(e).toResponse();
             });
 

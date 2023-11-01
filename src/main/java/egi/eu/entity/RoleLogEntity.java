@@ -2,12 +2,9 @@ package egi.eu.entity;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;

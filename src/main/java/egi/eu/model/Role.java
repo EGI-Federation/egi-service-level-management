@@ -1,13 +1,11 @@
 package egi.eu.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.CheckinUser;
-import egi.eu.entity.RoleEntity;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
+
+import egi.eu.entity.RoleEntity;
 
 
 /***
@@ -57,6 +55,8 @@ public class Role extends VersionInfo {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String name; // Human-readable version of the role field
+
+    public boolean handover = false;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public String tasks; // Markdown
@@ -118,6 +118,7 @@ public class Role extends VersionInfo {
         this.globalRoleId = role.globalRoleId;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
+        this.handover = role.handover;
         this.status = RoleStatus.of(role.status);
 
         this.version = role.version;

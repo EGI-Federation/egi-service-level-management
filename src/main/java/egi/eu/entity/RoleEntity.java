@@ -2,7 +2,6 @@ package egi.eu.entity;
 
 import org.hibernate.annotations.UpdateTimestamp;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
@@ -43,6 +42,8 @@ public class RoleEntity extends PanacheEntityBase {
     @Column(length = 4096)
     public String globalRoleTasks; // Markdown
 
+    public boolean handover;
+
     public int status;
 
     // Change tracking
@@ -51,7 +52,7 @@ public class RoleEntity extends PanacheEntityBase {
     @UpdateTimestamp
     public LocalDateTime changedOn;
 
-    @Column(length = 1024)
+    @Column(length = 2048)
     public String changeDescription;
 
     @ManyToOne(fetch = FetchType.EAGER,
@@ -65,7 +66,11 @@ public class RoleEntity extends PanacheEntityBase {
     /***
      * Constructor
      */
-    public RoleEntity() { super(); }
+    public RoleEntity() {
+        super();
+
+        this.handover = false;
+    }
 
     /***
      * Copy constructor with new status
@@ -82,6 +87,7 @@ public class RoleEntity extends PanacheEntityBase {
         this.globalRoleId = role.globalRoleId;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
+        this.handover = role.handover;
         this.status = newStatus.getValue();
 
         this.version = role.version + 1;
@@ -112,6 +118,7 @@ public class RoleEntity extends PanacheEntityBase {
         this.globalRoleId = role.globalRoleId;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
+        this.handover = role.handover;
 
         if(null == latest)
             this.status = Role.RoleStatus.DRAFT.getValue();
