@@ -122,6 +122,9 @@ quarkus:
     trust-all: false
   test:
     continuous-testing: disabled
+  keycloak:
+    devservices:
+      enabled: false
   datasource:
     db-kind: postgresql
     reactive:

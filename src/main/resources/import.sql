@@ -6,13 +6,14 @@ insert into slm.responsibility (status, reviewfrequency, frequencyunit, nextrevi
 VALUES (0, 1, 'year', '2024-05-14', '2023-10-19T21:05:22', 'First draft',
 '### Table of contents
 - [Goals](#goals)
-- [Roles and Responsibilities](#roles-and-responsibilities)
+- [Roles and responsibilities](#roles-and-responsibilities)
+    - [Process-specific roles and assignment](#role-category-process)
 
 ### Goals
 This is a description of the roles and responsibilities within the Service Level Management (SLM) process, and an overview of all active roles holders in the process. For an overview of the role hierarchy in the EGI Integrated Management System (IMS), [look here](/ims/plan/roles).
 
-### Roles and Responsibilities
-The following roles are relevant in the context of this process and need to be assigned to persons or teams / groups involved in the process.');
+### Roles and responsibilities
+The following roles are relevant in the context of this process and need to be assigned to persons or teams/groups involved in the process.');
 
 insert into slm.responsibility_editor_map (responsibility_id, user_id)
 values (1, 1);
@@ -30,7 +31,7 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Decide on the provision of resources dedicated to the process and its activities
 - Based on process monitoring and reviews, decide on necessary changes in the process-specific goals, policies and provided resources', null),
 
-       ('process-manager', 'Process Manager', 1, 1, '2021-02-19T19:23:18', 'First version', true, 3, 'Process Manager',
+       ('process-manager', 'Process Manager', 1, 0, '2021-02-19T19:23:18', 'First version', true, 3, 'Process Manager',
 'Act as the primary contact point for operational concerns in the context of the process.
 - Maintain the process definition/description and ensure it is available to relevant persons
 - Maintain an adequate level of awareness and competence of the people involved in the process
@@ -69,7 +70,16 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Evaluate the fulfillment of the UA
 - Ensure that violations of the targets defined in the UA are identified and investigated to prevent future recurrence
 - Perform regular reviews of the UA
-- Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions');
+- Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions'),
+
+        ('process-manager', 'Process Manager', 2, 1, '2021-02-19T19:23:18', 'Second version', true, 3, 'Process Manager',
+'Act as the primary contact point for operational concerns in the context of the process.
+- Maintain the process definition/description and ensure it is available to relevant persons
+- Maintain an adequate level of awareness and competence of the people involved in the process
+- Monitor and keep track of the process execution and results (incl. process reviews)
+- Report on process performance to the process owner
+- Escalate to the process owner, if necessary
+- Identify opportunities for improving the effectiveness and efficiency of the process', null);
 
 insert into slm.role_editor_map (role_id, user_id)
 values (1, 2),
@@ -80,7 +90,8 @@ values (1, 2),
        (6, 2),
        (7, 2),
        (8, 2),
-       (9, 2);
+       (9, 2),
+       (10, 1);
 
 insert into slm.process (description, status, reviewfrequency, frequencyunit, nextreview, changedon, changedescription, contact)
 VALUES ('The primary purpose of this process is...',

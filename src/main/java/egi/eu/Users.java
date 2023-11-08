@@ -962,26 +962,13 @@ public class Users extends BaseResource {
                 }
 
                 var roleList = new ArrayList<Role>();
-                if(null == role) {
+                if(null == role || role.isBlank()) {
                     // These are role records for multiple roles, we need to group them
                     var roleMap = RoleEntity.groupRoles(roles);
                     for(var entry : roleMap.entrySet()) {
                         var roleWithHistory = new Role(entry.getValue());
                         roleList.add(roleWithHistory);
                     }
-
-                    roleList.sort(new Comparator<Role>() {
-                        @Override
-                        public int compare(Role lhs, Role rhs) {
-                            // -1 means lhs < rhs, 1 means lhs > rhs, 0 means equal for ascending sort
-                            if(null == lhs.globalRoleId && null != rhs.globalRoleId)
-                                return 1;
-                            else if(null != lhs.globalRoleId && null == rhs.globalRoleId)
-                                return -1;
-
-                            return lhs.name.compareTo(rhs.name);
-                        }
-                    });
                 }
                 else {
                     // These are role records (versions) of a single role

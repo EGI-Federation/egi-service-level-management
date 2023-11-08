@@ -1,6 +1,7 @@
 package egi.eu.entity;
 
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.reactive.mutiny.Mutiny;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Uni;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import egi.eu.model.Role;
+import egi.eu.model.Role.RoleStatus;
 
 
 /**
@@ -77,7 +79,7 @@ public class RoleEntity extends PanacheEntityBase {
      * @param role The role to copy
      * @param newStatus The new status
      */
-    public RoleEntity(RoleEntity role, Role.RoleStatus newStatus) {
+    public RoleEntity(RoleEntity role, RoleStatus newStatus) {
         super();
 
         // Copy simple fields
@@ -121,15 +123,39 @@ public class RoleEntity extends PanacheEntityBase {
         this.handover = role.handover;
 
         if(null == latest)
-            this.status = Role.RoleStatus.DRAFT.getValue();
+            this.status = RoleStatus.DRAFT.getValue();
         else {
-            final var latestStatus = Role.RoleStatus.of(latest.status);
-            if (Role.RoleStatus.IMPLEMENTED == latestStatus)
+            final var latestStatus = RoleStatus.of(latest.status);
+            if(RoleStatus.IMPLEMENTED == latestStatus)
                 // Changing an implemented role will require a new implementation
-                this.status = Role.RoleStatus.DRAFT.getValue();
+                this.status = RoleStatus.DRAFT.getValue();
             else
                 this.status = latestStatus.getValue();
         }
+    }
+
+    /***
+     * Get only the last versions (without history)
+     * @return All role entities, sorted in reverse chronological order (head of the list is the latest).
+     */
+    public static Uni<List<RoleEntity>> getAllRoles(Mutiny.Session session) {
+        final String sql = """
+            SELECT id,role,name,version,status,handover,tasks,globalroleid,globalrolename,globalroletasks,
+                   changedon,changedescription FROM slm.roles\s
+            JOIN (
+                SELECT DISTINCT ON (role)\s
+                    last_value(id) OVER wnd AS last_id\s
+                FROM slm.roles WINDOW wnd AS (\s
+                    PARTITION BY role ORDER BY version ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\s
+                )\s
+            ) AS last\s
+                ON id = last_id\s
+            LEFT JOIN slm.role_editor_map editors\s
+                ON id = editors.role_id
+            """;
+
+        var query = session.createNativeQuery(sql, RoleEntity.class);
+        return query.getResultList();
     }
 
     /***
@@ -171,6 +197,24 @@ public class RoleEntity extends PanacheEntityBase {
             var versions = map.computeIfAbsent(role.role, k -> new ArrayList<RoleEntity>());
 
             versions.add(role);
+        }
+
+        for(var entry : map.entrySet()) {
+            var versions = entry.getValue();
+            if(versions.size() > 1) {
+                versions.sort(new Comparator<RoleEntity>() {
+                    @Override
+                    public int compare(RoleEntity lhs, RoleEntity rhs) {
+                        // -1 means lhs < rhs, 1 means lhs > rhs, 0 means equal for ascending sort
+                        if(lhs.version < rhs.version)
+                            return 1;
+                        else if(lhs.version > rhs.version)
+                            return -1;
+
+                        return 0;
+                    }
+                });
+            }
         }
 
         return map;

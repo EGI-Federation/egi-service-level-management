@@ -98,12 +98,17 @@ public class Role extends VersionInfo {
     /***
      * Constructor
      */
-    public Role() {}
+    public Role() {
+        this.status = RoleStatus.DRAFT;
+    }
 
     /***
      * Construct with a role
      */
-    public Role(String role) { this.role = role; }
+    public Role(String role) {
+        this.role = role;
+        this.status = RoleStatus.DRAFT;
+    }
 
     /***
      * Copy constructor
