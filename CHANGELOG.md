@@ -12,7 +12,7 @@ and this project adheres to
 - Takes caller's identity for _changeBy_ instead of relying on API parameter  
 - Added logging of role assignments
 - Added endpoint to list role assignments
-- Updated permission for user/role endpoints
+- Updated permissions for user/role endpoints
 
 ## 1.0.37
 - Process management complete
