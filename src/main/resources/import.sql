@@ -18,12 +18,12 @@ The following roles are relevant in the context of this process and need to be a
 insert into slm.responsibility_editor_map (responsibility_id, user_id)
 values (1, 1);
 
-insert into slm.roles (role, name, version, status, changedon, changedescription, handover, globalRoleId, globalRoleName, globalRoleTasks, tasks)
-values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First version', false, 1, 'Process Staff',
+insert into slm.roles (role, name, version, status, changedon, changedescription, handover, globalRole, globalRoleName, globalRoleTasks, tasks)
+values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First version', false, 'process-staff', 'Process Staff',
 '- Carry out defined activities according to the process and, as applicable, its procedures
 - Report to the process manager', null),
 
-       ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First version', true, 2, 'Process Owner',
+       ('process-owner', 'Process Owner', 1, 1, '2021-02-19T19:23:18', 'First version', true, 'process-owner', 'Process Owner',
 'Act as the primary contact point for concerns in the context of governing one specific IMS process.
 - Define and approve goals and policies in the context of the process according to the overall IMS goals and policies
 - Nominate the process manager, and ensure he/she is competent to fulfill this role
@@ -31,7 +31,7 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Decide on the provision of resources dedicated to the process and its activities
 - Based on process monitoring and reviews, decide on necessary changes in the process-specific goals, policies and provided resources', null),
 
-       ('process-manager', 'Process Manager', 1, 0, '2021-02-19T19:23:18', 'First version', true, 3, 'Process Manager',
+       ('process-manager', 'Process Manager', 1, 0, '2021-02-19T19:23:18', 'First version', true, 'process-manager', 'Process Manager',
 'Act as the primary contact point for operational concerns in the context of the process.
 - Maintain the process definition/description and ensure it is available to relevant persons
 - Maintain an adequate level of awareness and competence of the people involved in the process
@@ -40,7 +40,7 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Escalate to the process owner, if necessary
 - Identify opportunities for improving the effectiveness and efficiency of the process', null),
 
-       ('report-owner', 'Report Owner', 1, 1, '2021-02-19T19:23:18', 'First version', false, 4, 'Report Owner',
+       ('report-owner', 'Report Owner', 1, 1, '2021-02-19T19:23:18', 'First version', false, 'report-owner', 'Report Owner',
 'TBD', null),
 
        ('process-developer', 'Process Developer', 1, 1, '2023-09-02T19:23:18', 'First version', false, null, null, null,
@@ -72,7 +72,7 @@ values ('process-staff', 'Process Staff', 1, 1, '2021-02-19T19:23:18', 'First ve
 - Perform regular reviews of the UA
 - Understand new or changed requirements of the UA under his/her ownership, and initiate necessary updates or other follow-up actions'),
 
-        ('process-manager', 'Process Manager', 2, 1, '2021-02-19T19:23:18', 'Second version', true, 3, 'Process Manager',
+        ('process-manager', 'Process Manager', 2, 1, '2021-02-19T19:23:18', 'Second version', true, 'process-manager', 'Process Manager',
 'Act as the primary contact point for operational concerns in the context of the process.
 - Maintain the process definition/description and ensure it is available to relevant persons
 - Maintain an adequate level of awareness and competence of the people involved in the process

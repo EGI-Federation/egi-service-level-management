@@ -36,7 +36,8 @@ public class RoleEntity extends PanacheEntityBase {
     @Column(length = 4096)
     public String tasks; // Markdown
 
-    public Long globalRoleId;
+    @Column(length = 50)
+    public String globalRole;
 
     @Column(length = 50)
     public String globalRoleName;
@@ -86,7 +87,7 @@ public class RoleEntity extends PanacheEntityBase {
         this.role = role.role;
         this.name = role.name;
         this.tasks = role.tasks;
-        this.globalRoleId = role.globalRoleId;
+        this.globalRole = role.globalRole;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
         this.handover = role.handover;
@@ -117,7 +118,7 @@ public class RoleEntity extends PanacheEntityBase {
         this.role = role.role;
         this.name = role.name;
         this.tasks = role.tasks;
-        this.globalRoleId = role.globalRoleId;
+        this.globalRole = role.globalRole;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
         this.handover = role.handover;
@@ -140,7 +141,7 @@ public class RoleEntity extends PanacheEntityBase {
      */
     public static Uni<List<RoleEntity>> getAllRoles(Mutiny.Session session) {
         final String sql = """
-            SELECT id,role,name,version,status,handover,tasks,globalroleid,globalrolename,globalroletasks,
+            SELECT id,role,name,version,status,handover,tasks,globalrole,globalrolename,globalroletasks,
                    changedon,changedescription FROM slm.roles\s
             JOIN (
                 SELECT DISTINCT ON (role)\s

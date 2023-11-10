@@ -66,9 +66,9 @@ public class Role extends VersionInfo {
     public List<User> users;
 
     // The fields below are linking this role to a global IMS role
-    @Schema(description="ID of a global role to inherit tasks from")
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public Long globalRoleId;
+    @Schema(description="A global role to inherit tasks from")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String globalRole;
 
     @Schema(description="Name of a global role to inherit tasks from")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -120,7 +120,7 @@ public class Role extends VersionInfo {
         this.role = role.role;
         this.name = role.name;
         this.tasks = role.tasks;
-        this.globalRoleId = role.globalRoleId;
+        this.globalRole = role.globalRole;
         this.globalRoleName = role.globalRoleName;
         this.globalRoleTasks = role.globalRoleTasks;
         this.handover = role.handover;
