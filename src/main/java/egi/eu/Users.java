@@ -682,8 +682,7 @@ public class Users extends BaseResource {
                 return checkin.assignUserRoleAsync(grant.roleHolder.checkinUserId, this.imsConfig.group(), grant.role);
             })
             .chain(addedOrUpdated -> {
-                // Assigned role, log it
-                assigned.add(true);
+                // Role assignment complete, log it
                 return logRoleAssignment(grant);
             })
             .chain(unused -> {

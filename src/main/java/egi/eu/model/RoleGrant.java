@@ -22,6 +22,8 @@ public class RoleGrant {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public User roleHolder;
 
+    public Boolean handover = false;
+
     @Schema(hidden = true)
     public User changeBy;
 
