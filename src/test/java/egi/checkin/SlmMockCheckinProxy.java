@@ -116,7 +116,8 @@ public class SlmMockCheckinProxy implements QuarkusTestResourceLifecycleManager 
      */
     @Override
     public void inject(TestInjector testInjector) {
-        testInjector.injectIntoFields(mockCheckin, new TestInjector.AnnotatedAndMatchesType(InjectSlmMockCheckin.class, SlmMockCheckin.class));
+        testInjector.injectIntoFields(mockCheckin,
+                new TestInjector.AnnotatedAndMatchesType(InjectSlmMockCheckin.class, SlmMockCheckin.class));
     }
 
     /**

@@ -1025,13 +1025,13 @@ public class Users extends BaseResource {
 
         log.info("Adding role");
 
-        if(null == role.role || role.role.isEmpty()) {
+        if(null == role.role || role.role.isBlank()) {
             // Role must be specified
             var ae = new ActionError("badRequest", "Role constant is required");
             return Uni.createFrom().item(ae.toResponse());
         }
-        if(null == role.name || role.name.isEmpty()) {
-            // Role name be specified
+        if(null == role.name || role.name.isBlank()) {
+            // Role name must be specified
             var ae = new ActionError("badRequest", "Role name is required");
             return Uni.createFrom().item(ae.toResponse());
         }

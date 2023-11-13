@@ -1006,7 +1006,8 @@ public class Checkin {
         MDC.put("coId", coId);
 
         // First check if we have them cached
-        if(this.imsConfig.group().equals(groupName) && rolesCached()) {
+        final var group = this.imsConfig.group();
+        if(null != group && !group.isBlank() && group.equals(groupName) && rolesCached()) {
             // We have a cache, and it's not stale
             log.info("Using cached group role records");
             return Uni.createFrom().item(roleRecords);
@@ -1052,7 +1053,7 @@ public class Checkin {
                 if(!this.checkinConfig.traceRoles())
                     log.debug("Got Check-in records");
 
-                if(this.imsConfig.group().equals(groupName)) {
+                if(null != group && !group.isBlank() && group.equals(groupName)) {
                     // Cache group role records
                     roleRecords = roles;
                     rolesUpdatedAt = Instant.now().toEpochMilli();
