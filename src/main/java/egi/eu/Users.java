@@ -127,7 +127,7 @@ public class Users extends BaseResource {
     /**
      * Retrieve information about current user.
      * @param auth The access token needed to call the service.
-     * @return API Response, wraps an ActionSuccess({@link UserInfo}) or an ActionError entity
+     * @return API Response, wraps a {@link UserInfo} or an ActionError entity
      */
     @GET
     @Path("/user/info")
@@ -198,7 +198,7 @@ public class Users extends BaseResource {
      * @param onlyProcess Filter out users that are not included in the configured Check-in group
      * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfUsers} or an ActionError entity
      */
     @GET
     @Path("/users")
@@ -481,7 +481,7 @@ public class Users extends BaseResource {
      *                               all their roles reported, just the ones matching this expression.
      * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfUsers}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfUsers} or an ActionError entity
      */
     @GET
     @Path("/users/roles")
@@ -829,7 +829,7 @@ public class Users extends BaseResource {
      * @param roleName Only return role matching this expression. If empty or null, all roles are returned.
      * @param from The number of elements to skip
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfRoleInfos}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfRoleInfos} or an ActionError entity
      */
     @GET
     @Path("/roles/assigned")
@@ -909,7 +909,7 @@ public class Users extends BaseResource {
      * List defined roles in the process.
      * @param auth The access token needed to call the service.
      * @param role Only return role matching this expression. If empty or null, all roles are returned.
-     * @return API Response, wraps an ActionSuccess({@link PageOfRoles}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfRoles} or an ActionError entity
      */
     @GET
     @Path("/role/definitions")
@@ -1387,7 +1387,7 @@ public class Users extends BaseResource {
      * @param role The to return assignment logs for.
      * @param from_ The first element to return
      * @param limit_ The maximum number of elements to return
-     * @return API Response, wraps an ActionSuccess({@link PageOfRoleLogs}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfRoleLogs} or an ActionError entity
      */
     @GET
     @Path("/role/logs")

@@ -148,7 +148,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param slaId The ID of the SLA to support.
      * @param ola The new OLA.
-     * @return API Response, wraps an ActionSuccess({@link OperationalLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps an {@link OperationalLevelAgreement} or an ActionError entity
      */
     @POST
     @Path("/sla/{slaId}/ola")
@@ -202,7 +202,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param olaId The ID of the OLA to update.
      * @param ola The updated OLA.
-     * @return API Response, wraps an ActionSuccess({@link OperationalLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps an {@link OperationalLevelAgreement} or an ActionError entity
      */
     @PUT
     @Path("/ola/{olaId}")
@@ -263,7 +263,7 @@ public class OperationalLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param olaId The ID of the OLA to fetch.
      * @param allVersions True to return all versions.
-     * @return API Response, wraps an ActionSuccess({@link OperationalLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps an {@link OperationalLevelAgreement} or an ActionError entity
      */
     @GET
     @Path("/ola/{olaId}")

@@ -160,7 +160,7 @@ public class Procedures extends BaseResource {
      * Create new procedure.
      * @param auth The access token needed to call the service.
      * @param procedure The new procedure.
-     * @return API Response, wraps an ActionSuccess({@link Procedure}) or an ActionError entity
+     * @return API Response, wraps a {@link Procedure} or an ActionError entity
      */
     @POST
     @Path("/procedure")
@@ -208,7 +208,7 @@ public class Procedures extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param procedureId The ID of the procedure to fetch.
      * @param allVersions True to return all versions of the items.
-     * @return API Response, wraps an ActionSuccess({@link Procedure}) or an ActionError entity
+     * @return API Response, wraps a {@link Procedure} or an ActionError entity
      */
     @GET
     @Path("/procedure/{procedureId}")
@@ -266,7 +266,7 @@ public class Procedures extends BaseResource {
      * Update existing procedure.
      * @param auth The access token needed to call the service.
      * @param procedureId The ID of the procedure to update.
-     * @return API Response, wraps an ActionSuccess({@link Procedure}) or an ActionError entity
+     * @return API Response, wraps a {@link Procedure} or an ActionError entity
      */
     @PUT
     @Path("/procedure/{procedureId}")

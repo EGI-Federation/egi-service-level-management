@@ -95,7 +95,7 @@ public class TheResponsibilities extends BaseResource {
      * List process responsibilities.
      * @param auth The access token needed to call the service.
      * @param allVersions True to return all versions of the responsibilities.
-     * @return API Response, wraps an ActionSuccess({@link PageOfResponsibilities}) or an ActionError entity
+     * @return API Response, wraps a {@link PageOfResponsibilities} or an ActionError entity
      */
     @GET
     @Path("/responsibilities")

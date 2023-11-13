@@ -87,7 +87,7 @@ public class TheProcess extends BaseResource {
      * Get process configuration.
      * @param auth The access token needed to call the service.
      * @param allVersions True to return all versions of the process.
-     * @return API Response, wraps an ActionSuccess({@link Process}) or an ActionError entity
+     * @return API Response, wraps a {@link Process} or an ActionError entity
      */
     @GET
     @Path("/process")

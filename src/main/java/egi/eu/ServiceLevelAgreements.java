@@ -142,7 +142,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * Create new SLA.
      * @param auth The access token needed to call the service.
      * @param sla The new SLA.
-     * @return API Response, wraps an ActionSuccess({@link ServiceLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps a {@link ServiceLevelAgreement} or an ActionError entity
      */
     @POST
     @Path("/sla")
@@ -189,7 +189,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param slaId The ID of the SLA to update.
      * @param sla The updated SLA.
-     * @return API Response, wraps an ActionSuccess({@link ServiceLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps a {@link ServiceLevelAgreement} or an ActionError entity
      */
     @PUT
     @Path("/sla/{slaId}")
@@ -250,7 +250,7 @@ public class ServiceLevelAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param slaId The ID of the SLA to fetch.
      * @param allVersions True to return all versions.
-     * @return API Response, wraps an ActionSuccess({@link ServiceLevelAgreement}) or an ActionError entity
+     * @return API Response, wraps a {@link ServiceLevelAgreement} or an ActionError entity
      */
     @GET
     @Path("/sla/{slaId}")

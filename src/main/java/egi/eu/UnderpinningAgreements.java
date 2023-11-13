@@ -149,7 +149,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param olaId The ID of the OLA to support.
      * @param ua The new UA.
-     * @return API Response, wraps an ActionSuccess({@link UnderpinningAgreement}) or an ActionError entity
+     * @return API Response, wraps an {@link UnderpinningAgreement} or an ActionError entity
      */
     @POST
     @Path("/ola/{olaId}/ua")
@@ -203,7 +203,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param uaId The ID of the UA to update.
      * @param ua The updated UA.
-     * @return API Response, wraps an ActionSuccess({@link UnderpinningAgreement}) or an ActionError entity
+     * @return API Response, wraps a {@link UnderpinningAgreement} or an ActionError entity
      */
     @PUT
     @Path("/ua/{uaId}")
@@ -264,7 +264,7 @@ public class UnderpinningAgreements extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param uaId The ID of the UA to fetch.
      * @param allVersions True to return all versions.
-     * @return API Response, wraps an ActionSuccess({@link UnderpinningAgreement}) or an ActionError entity
+     * @return API Response, wraps an {@link UnderpinningAgreement} or an ActionError entity
      */
     @GET
     @Path("/ua/{uaId}")

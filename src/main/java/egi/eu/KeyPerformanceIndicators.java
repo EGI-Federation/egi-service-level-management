@@ -162,7 +162,7 @@ public class KeyPerformanceIndicators extends BaseResource {
      * Create new KPI.
      * @param auth The access token needed to call the service.
      * @param kpi The new KPI.
-     * @return API Response, wraps an ActionSuccess({@link KeyPerformanceIndicator}) or an ActionError entity
+     * @return API Response, wraps a {@link KeyPerformanceIndicator} or an ActionError entity
      */
     @POST
     @Path("/kpi")
@@ -210,7 +210,7 @@ public class KeyPerformanceIndicators extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param kpiId The ID of the KPI to fetch.
      * @param allVersions True to return all versions of the items.
-     * @return API Response, wraps an ActionSuccess({@link KeyPerformanceIndicator}) or an ActionError entity
+     * @return API Response, wraps a {@link KeyPerformanceIndicator} or an ActionError entity
      */
     @GET
     @Path("/kpi/{kpiId}")
@@ -268,7 +268,7 @@ public class KeyPerformanceIndicators extends BaseResource {
      * Update existing KPI.
      * @param auth The access token needed to call the service.
      * @param kpiId The ID of the KPI to update.
-     * @return API Response, wraps an ActionSuccess({@link KeyPerformanceIndicator}) or an ActionError entity
+     * @return API Response, wraps a {@link KeyPerformanceIndicator} or an ActionError entity
      */
     @PUT
     @Path("/kpi/{kpiId}")

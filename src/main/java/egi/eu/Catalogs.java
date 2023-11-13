@@ -156,7 +156,7 @@ public class Catalogs extends BaseResource {
      * Create new catalog.
      * @param auth The access token needed to call the service.
      * @param catalog The new catalog.
-     * @return API Response, wraps an ActionSuccess({@link Catalog}) or an ActionError entity
+     * @return API Response, wraps a {@link Catalog} or an ActionError entity
      */
     @POST
     @Path("/catalog")
@@ -203,7 +203,7 @@ public class Catalogs extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog to fetch.
      * @param allVersions True to return all versions of the items.
-     * @return API Response, wraps an ActionSuccess({@link Catalog}) or an ActionError entity
+     * @return API Response, wraps a {@link Catalog} or an ActionError entity
      */
     @GET
     @Path("/catalog/{catalogId}")
@@ -260,7 +260,7 @@ public class Catalogs extends BaseResource {
      * Update existing catalog.
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog to update.
-     * @return API Response, wraps an ActionSuccess({@link Catalog}) or an ActionError entity
+     * @return API Response, wraps a {@link Catalog} or an ActionError entity
      */
     @PUT
     @Path("/catalog/{catalogId}")
@@ -317,7 +317,7 @@ public class Catalogs extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog where to include the service.
      * @param service The service to add to the catalog.
-     * @return API Response, wraps an ActionSuccess({@link Service}) or an ActionError entity
+     * @return API Response, wraps a {@link Service} or an ActionError entity
      */
     @POST
     @Path("/catalog/{catalogId}/service")
@@ -375,7 +375,7 @@ public class Catalogs extends BaseResource {
      * @param catalogId The ID of the catalog that contains the service.
      * @param serviceId The ID of the service to fetch.
      * @param allVersions True to return all versions of the items.
-     * @return API Response, wraps an ActionSuccess({@link Service}) or an ActionError entity
+     * @return API Response, wraps a {@link Service} or an ActionError entity
      */
     @GET
     @Path("/catalog/{catalogId}/service/{serviceId}")
@@ -438,7 +438,7 @@ public class Catalogs extends BaseResource {
      * @param auth The access token needed to call the service.
      * @param catalogId The ID of the catalog that contains the service.
      * @param serviceId The ID of the service to update.
-     * @return API Response, wraps an ActionSuccess({@link Service}) or an ActionError entity
+     * @return API Response, wraps a {@link Service} or an ActionError entity
      */
     @PUT
     @Path("/catalog/{catalogId}/service/{serviceId}")
