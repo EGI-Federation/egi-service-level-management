@@ -1421,7 +1421,7 @@ public class Users extends BaseResource {
 
                                       @RestQuery("from")
                                       @Parameter(description = "Only return logs before this date and time")
-                                      @Schema(format = "yyyy-mm-ddThh:mm:ss", defaultValue = "now")
+                                      @Schema(format = "yyyy-mm-ddThh:mm:ss.SSSSSS", defaultValue = "now")
                                       String from_,
 
                                       @RestQuery("limit")
