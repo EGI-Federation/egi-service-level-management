@@ -1,10 +1,13 @@
 package egi.eu.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,8 +70,10 @@ public class Process extends VersionInfo {
     @Schema(enumeration={ "day", "month", "year" })
     public String frequencyUnit;
 
+    @Schema(description="Date and time of the next review. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public LocalDateTime nextReview;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    public LocalDateTime nextReview; // UTC
 
     public ProcessStatus status = ProcessStatus.DRAFT;
 
@@ -121,10 +126,14 @@ public class Process extends VersionInfo {
         this.id = process.id;
         this.description = process.description;
         this.contact = process.contact;
+        this.status = ProcessStatus.of(process.status);
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
-        this.nextReview = process.nextReview;
-        this.status = ProcessStatus.of(process.status);
+        this.nextReview = (null == process.nextReview) ? null :
+                process.nextReview
+                        .atZone(ZoneId.systemDefault())
+                        .withZoneSameInstant(ZoneOffset.UTC)
+                        .toLocalDateTime();
 
         if(null != process.requirements)
             this.requirements = process.requirements.stream().map(Process.Requirement::new).collect(Collectors.toSet());
@@ -133,8 +142,12 @@ public class Process extends VersionInfo {
             this.interfaces = process.interfaces.stream().map(Process.Interface::new).collect(Collectors.toSet());
 
         this.version = process.version;
-        this.changedOn = process.changedOn;
         this.changeDescription = process.changeDescription;
+        this.changedOn = (null == process.changedOn) ? null :
+                process.changedOn
+                        .atZone(ZoneId.systemDefault())
+                        .withZoneSameInstant(ZoneOffset.UTC)
+                        .toLocalDateTime();
         if(null != process.changeBy)
             this.changeBy = new User(process.changeBy);
     }

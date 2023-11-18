@@ -1,11 +1,13 @@
 package egi.eu.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import egi.checkin.model.CheckinUser;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import egi.checkin.model.CheckinUser;
 
 
 /***
@@ -83,20 +85,16 @@ public class KeyPerformanceIndicator extends VersionInfo {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<Measurement> measurements;
 
+    @Schema(description="Date and time of the next measurement. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public LocalDateTime nextMeasurement;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    public LocalDateTime nextMeasurement; // UTC
 
     @Schema(description="Updated on each measurement")
     public boolean onTrack;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public CheckinUser owner;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public CheckinUser approver;
-
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    public LocalDateTime approvedOn;
 
     public KeyPerformanceIndicatorStatus status;
 
@@ -132,7 +130,10 @@ public class KeyPerformanceIndicator extends VersionInfo {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public String escalateIf;
 
-        public LocalDateTime measuredOn;
+        @Schema(description="Date and time of the measurement. Always returned as UTC date and time.")
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+        public LocalDateTime measuredOn; // UTC
 
         // Links to escalation Jira tickets
         @JsonInclude(JsonInclude.Include.NON_NULL)

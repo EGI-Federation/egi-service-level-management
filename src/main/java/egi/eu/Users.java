@@ -1420,7 +1420,8 @@ public class Users extends BaseResource {
                                       String role,
 
                                       @RestQuery("from")
-                                      @Parameter(description = "Only return logs before this date and time")
+                                      @Parameter(description = "Only return logs before this UTC date and time.\n" +
+                                                               "Do not include time zone in this parameter.")
                                       @Schema(format = "yyyy-mm-ddThh:mm:ss.SSSSSS", defaultValue = "now")
                                       String from_,
 
