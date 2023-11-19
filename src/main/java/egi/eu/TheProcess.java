@@ -1,6 +1,5 @@
 package egi.eu;
 
-import io.smallrye.mutiny.tuples.Tuple2;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -16,6 +15,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.hibernate.reactive.mutiny.Mutiny;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;

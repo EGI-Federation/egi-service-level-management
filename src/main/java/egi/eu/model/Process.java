@@ -1,13 +1,11 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -72,7 +70,7 @@ public class Process extends VersionInfo {
 
     @Schema(description="Date and time of the next review. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = UtcLocalDateTimeSerializer.class)
     public LocalDateTime nextReview; // UTC
 
     public ProcessStatus status = ProcessStatus.DRAFT;
@@ -129,11 +127,7 @@ public class Process extends VersionInfo {
         this.status = ProcessStatus.of(process.status);
         this.reviewFrequency = process.reviewFrequency;
         this.frequencyUnit = process.frequencyUnit;
-        this.nextReview = (null == process.nextReview) ? null :
-                process.nextReview
-                        .atZone(ZoneId.systemDefault())
-                        .withZoneSameInstant(ZoneOffset.UTC)
-                        .toLocalDateTime();
+        this.nextReview = process.nextReview;
 
         if(null != process.requirements)
             this.requirements = process.requirements.stream().map(Process.Requirement::new).collect(Collectors.toSet());
@@ -143,11 +137,7 @@ public class Process extends VersionInfo {
 
         this.version = process.version;
         this.changeDescription = process.changeDescription;
-        this.changedOn = (null == process.changedOn) ? null :
-                process.changedOn
-                        .atZone(ZoneId.systemDefault())
-                        .withZoneSameInstant(ZoneOffset.UTC)
-                        .toLocalDateTime();
+        this.changedOn = process.changedOn;
         if(null != process.changeBy)
             this.changeBy = new User(process.changeBy);
     }

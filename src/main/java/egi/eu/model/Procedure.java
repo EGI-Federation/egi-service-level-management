@@ -1,7 +1,7 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.Column;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
@@ -68,7 +68,7 @@ public class Procedure extends VersionInfo {
 
     @Schema(description="Date and time of the next review. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = UtcLocalDateTimeSerializer.class)
     public LocalDateTime nextReview; // UTC
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

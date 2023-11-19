@@ -1,8 +1,8 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -28,7 +28,7 @@ public class Review<T> extends GenericEntity<T> {
 
     @Schema(description="Date and time of the review. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = VersionInfo.UtcLocalDateTimeSerializer.class)
     public LocalDateTime date; // UTC
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

@@ -1,7 +1,7 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -87,7 +87,7 @@ public class KeyPerformanceIndicator extends VersionInfo {
 
     @Schema(description="Date and time of the next measurement. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = UtcLocalDateTimeSerializer.class)
     public LocalDateTime nextMeasurement; // UTC
 
     @Schema(description="Updated on each measurement")
@@ -132,7 +132,7 @@ public class KeyPerformanceIndicator extends VersionInfo {
 
         @Schema(description="Date and time of the measurement. Always returned as UTC date and time.")
         @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+        @JsonSerialize(using = UtcLocalDateTimeSerializer.class)
         public LocalDateTime measuredOn; // UTC
 
         // Links to escalation Jira tickets

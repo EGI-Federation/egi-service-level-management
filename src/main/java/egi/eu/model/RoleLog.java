@@ -1,12 +1,10 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 import egi.eu.entity.RoleLogEntity;
 
@@ -31,7 +29,7 @@ public class RoleLog {
     @Schema(description="Date and time of the role assignment. Assigned automatically, you should never send this.\n" +
                         "Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = VersionInfo.UtcLocalDateTimeSerializer.class)
     public LocalDateTime changedOn; // UTC
 
     @Schema(description="User who assigned/revoked the role")
@@ -52,11 +50,7 @@ public class RoleLog {
 
         this.role = roleAssign.role;
         this.assigned = roleAssign.assigned;
-        this.changedOn = (null == roleAssign.changedOn) ? null :
-                roleAssign.changedOn
-                          .atZone(ZoneId.systemDefault())
-                          .withZoneSameInstant(ZoneOffset.UTC)
-                          .toLocalDateTime();
+        this.changedOn = roleAssign.changedOn;
         if(null != roleAssign.user)
             this.user = new User(roleAssign.user);
         if(null != roleAssign.changeBy)

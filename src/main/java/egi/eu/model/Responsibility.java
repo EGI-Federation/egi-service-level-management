@@ -1,12 +1,10 @@
 package egi.eu.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import egi.eu.entity.ResponsibilityEntity;
@@ -54,7 +52,7 @@ public class Responsibility extends VersionInfo {
 
     @Schema(description="Date and time of the next review. Always returned as UTC date and time.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS", timezone = "UTC")
+    @JsonSerialize(using = UtcLocalDateTimeSerializer.class)
     public LocalDateTime nextReview; // UTC
 
     public ResponsibilityStatus status = ResponsibilityStatus.DRAFT;
@@ -91,21 +89,13 @@ public class Responsibility extends VersionInfo {
         this.status = ResponsibilityStatus.of(resp.status);
         this.reviewFrequency = resp.reviewFrequency;
         this.frequencyUnit = resp.frequencyUnit;
-        this.nextReview = (null == resp.nextReview) ? null :
-                resp.nextReview
-                    .atZone(ZoneId.systemDefault())
-                    .withZoneSameInstant(ZoneOffset.UTC)
-                    .toLocalDateTime();
+        this.nextReview = resp.nextReview;
 
         this.version = resp.version;
         this.changeDescription = resp.changeDescription;
         if(null != resp.changeBy)
             this.changeBy = new User(resp.changeBy);
-        this.changedOn = (null == resp.changedOn) ? null :
-                resp.changedOn
-                    .atZone(ZoneId.systemDefault())
-                    .withZoneSameInstant(ZoneOffset.UTC)
-                    .toLocalDateTime();
+        this.changedOn = resp.changedOn;
     }
 
     /***
