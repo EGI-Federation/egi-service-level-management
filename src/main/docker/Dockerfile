@@ -35,7 +35,7 @@ RUN mkdir /deployments/logs && \
 # Additionally you will have to set -e JAVA_DEBUG=true and -e JAVA_DEBUG_PORT=*:5005
 # when running the container
 
-EXPOSE 8083
+EXPOSE 8084
 USER 185
 
 ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
