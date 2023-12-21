@@ -13,7 +13,7 @@ the project folder and run the following command:
 quarkus dev
 ```
 
-> Quarkus now ships with a Dev UI, which is available at http://localhost:8083/q/dev/ (in dev mode only).
+> Quarkus now ships with a Dev UI, which is available at http://localhost:8084/q/dev/ (in dev mode only).
 > The port on which the API runs can be changed from the [configuration](README.md#configuration).
 
 ## Packaging and running the application
