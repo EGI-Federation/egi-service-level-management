@@ -159,7 +159,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -252,7 +252,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -340,7 +340,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -437,7 +437,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -534,7 +534,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -673,7 +673,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -788,7 +788,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })
@@ -882,7 +882,7 @@ public class Users extends BaseResource {
                 // Get REST client for Check-in
                 if (!checkin.init(this.checkinConfig, this.imsConfig, stub))
                     // Could not get REST client
-                    return Uni.createFrom().failure(new ServiceException("invalidConfig"));
+                    return Uni.createFrom().failure(new ActionException("invalidConfig"));
 
                 return Uni.createFrom().item(unused);
             })

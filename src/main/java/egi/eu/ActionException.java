@@ -14,7 +14,7 @@ public class ActionException extends RuntimeException {
 
     private String id;
     private Map<String, String> details;
-    private Response.Status status = Response.Status.INTERNAL_SERVER_ERROR;;
+    private Response.Status status = Response.Status.INTERNAL_SERVER_ERROR;
 
 
     /**
