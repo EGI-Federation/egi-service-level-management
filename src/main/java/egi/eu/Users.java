@@ -565,22 +565,22 @@ public class Users extends BaseResource {
     private Uni<Void> logRoleAssignment(RoleGrant grant) {
 
         Uni<Void> result = sf.withTransaction((session, tx) -> { return
-                // Find the users involved in this log entry
-                UserEntity.findByCheckinUserIds(Arrays.asList(
-                                grant.roleHolder.checkinUserId,
-                                grant.changeBy.checkinUserId))
-                    .chain(users -> {
-                        // Got users with the specified Ids
-                        var roleHolderL = filterList(users, user -> user.checkinUserId.equals(grant.roleHolder.checkinUserId));
-                        var changeByL = filterList(users, user -> user.checkinUserId.equals(grant.changeBy.checkinUserId));
+            // Find the users involved in this log entry
+            UserEntity.findByCheckinUserIds(Arrays.asList(
+                            grant.roleHolder.checkinUserId,
+                            grant.changeBy.checkinUserId))
+                .chain(users -> {
+                    // Got users with the specified Ids
+                    var roleHolderL = filterList(users, user -> user.checkinUserId.equals(grant.roleHolder.checkinUserId));
+                    var changeByL = filterList(users, user -> user.checkinUserId.equals(grant.changeBy.checkinUserId));
 
-                        var roleHolder = roleHolderL.isEmpty() ? new UserEntity(grant.roleHolder) : roleHolderL.get(0);
-                        var changeBy = changeByL.isEmpty() ? new UserEntity(grant.changeBy) : changeByL.get(0);
+                    var roleHolder = roleHolderL.isEmpty() ? new UserEntity(grant.roleHolder) : roleHolderL.get(0);
+                    var changeBy = changeByL.isEmpty() ? new UserEntity(grant.changeBy) : changeByL.get(0);
 
-                        // Create new role assignment log entry
-                        var newRoleLog = new RoleLogEntity(grant.role, grant.assign, roleHolder, changeBy);
-                        return session.persist(newRoleLog);
-                    });
+                    // Create new role assignment log entry
+                    var newRoleLog = new RoleLogEntity(grant.role, grant.assign, roleHolder, changeBy);
+                    return session.persist(newRoleLog);
+                });
             })
             .chain(unused -> {
                 // Role grant logged, success

@@ -76,12 +76,12 @@ public class ActionException extends RuntimeException {
         this.id = id;
 
         var type = e.getClass();
-        if (ActionException.class.isAssignableFrom(type)) {
+        if(ActionException.class.isAssignableFrom(type)) {
             // Build from action exception
             var ae = (ActionException)e;
             this.status = ae.status();
         }
-        else if (WebApplicationException.class.isAssignableFrom(type)) {
+        else if(WebApplicationException.class.isAssignableFrom(type)) {
             // Build from web exception
             var we = (WebApplicationException)e;
             this.status = Response.Status.fromStatusCode(we.getResponse().getStatus());
